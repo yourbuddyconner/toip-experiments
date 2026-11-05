@@ -1,0 +1,24 @@
+{
+  "name": "@zk-toip/shared-todo",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "policies": "opa build -t wasm -e todo/authz/decision -o policies/bundle.tar.gz policies/todo.rego && tar -xzf policies/bundle.tar.gz -C policies /policy.wasm && rm policies/bundle.tar.gz",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build"
+  },
+  "dependencies": {
+    "@openvtc/trust-tasks": "0.28.17",
+    "@openvtc/trust-tasks-tsp": "0.1.2",
+    "@zk-toip/trust-core": "0.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  }
+}
