@@ -1,0 +1,13 @@
+{
+  "name": "zk-toip",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/trust-core",
+    "projects/shared-todo"
+  ],
+  "scripts": {
+    "test": "npm test --workspaces --if-present",
+    "licenses": "node scripts/check-licenses.mjs"
+  }
+}
