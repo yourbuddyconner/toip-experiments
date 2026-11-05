@@ -37,3 +37,11 @@ Limits: the facts are as good as the community app that signs them, and are not 
 
 - Prove over their two-party credentials directly: parse a W3C credential and check its Ed25519 signatures inside the circuit. One signature check costs about 437,000 gates today (zk-pdp E13), and a credential signed by both parties needs two.
 - Unlinkable proofs, so the same signed root does not tie a member's proofs together across peers.
+
+## Corrections from S02
+
+Read after the above.
+
+- **Policy languages.** The trusttasks.org registry specifies Rego policy tasks (`policy/upsert` 0.3). The P2P Trust Stack's own code uses its own JSON rule format, `LocalPolicyEngine` (S03). Neither is Cedar. Opportunity 1 either argues for Cedar alongside them, or compiles their rules. zk-pdp only compiles Cedar.
+- **They already use zero-knowledge proofs** for "hidden vetting" (`vta/pcs/prove`, `vtc/vetting/pcs-challenge`): a member's agent proves that distinct eligible vetters attested for it, bound to a single-use challenge. This is the closest prior art to opportunity 2 inside their stack, and the first thing to ask about.
+- **Trust Tasks are well specified.** The registry has about 1,400 entries, an envelope (`trust-task/0.6.0`), and TypeScript, Rust, Go and Dart libraries. Opportunity 4 can target a real envelope: a proved decision can be a Trust Task response.
