@@ -59,13 +59,14 @@ Scripted steps, one or more presses of "next" each:
 2. **Alice creates the list.** Her device makes a new key pair and DID for "Maple St House" and records the rules: who may add, check off, edit and delete. Alice holds an admin membership credential issued by the list.
 3. **Alice invites Bob.** Alice shows an invitation QR, and Bob's device "scans" it. They connect, and the first encrypted message appears on the wire panel. The list issues Bob an `editor` membership credential, and Bob's device signs an acknowledgement back. That's the two-way relationship. Bob's device gets a copy of the list.
 4. **Alice invites Carol** the same way, as `viewer`.
-5. **Bob adds "Milk" and "Fix the porch light".** Each addition is an operation Bob's device signs and sends, encrypted, to each other member. Alice's and Carol's devices each check it before showing it: the signature is Bob's, Bob's membership is valid and not revoked, and an editor may add. The wire panel shows only ciphertext.
+5. **Bob adds "Milk", and Alice adds "Fix the porch light".** Each addition is an operation the author's device signs and sends, encrypted, to each other member. The other devices each check it before showing it: the signature is the author's, the author's membership is valid and not revoked, and their role may add. The wire panel shows only ciphertext.
 6. **Alice adds a private item.** "Carol's birthday present", readable only by Alice and Bob. It goes into everyone's copy of the list, but its text is encrypted so that only Alice and Bob can read it. Carol's pane shows "🔒 private item by Alice". Carol's device still checked it and accepted it: the signature is Alice's and an admin may add, so permission can be verified without reading the content. The caption says what still leaks: that a private item exists, who wrote it, when, and who can read it.
 7. **Carol tries to add "Raise rent".** Her app refuses locally, because viewers can't add. In free play there is a "send anyway" switch that sends it regardless, and the scripted demo uses it. Alice's and Bob's devices reject it: "viewer may not add". The rejection shows in each pane's "rejected" list, and the item appears nowhere.
 8. **Mallory tries to sneak in.** Bob once showed Mallory his membership credential, to prove he lives there. Credentials are not secrets. She sends an operation with it. Everyone rejects it: "credential is for someone else". The message is signed by Mallory's key, not Bob's.
-9. **Bob goes offline and catches up.** Bob's device disconnects. Alice checks off "Milk". Her message to Bob can't be delivered, so her device leaves it, still sealed for Bob, at the relay. The relay pane shows a message it can't read. Bob reconnects, collects it from the relay, and his device checks Alice's signature before applying it. The caption: "the relay delivered it, but Alice's signature says who wrote it".
-10. **Alice removes Bob.** Alice revokes Bob's membership. The list's signed revocation list goes to every member. Bob's next edit is rejected by Alice and Carol: "membership revoked". The caption says Bob still has his old copy. Revocation stops future changes; it can't make anyone forget.
-11. **Tampering.** Bob, now removed, edits a copy of one of Alice's old operations to say "Give Bob his deposit back" and forwards it to Carol. Carol's device rejects it: "operation: signature does not verify".
+9. **Bob goes offline.** Bob's device disconnects. Alice checks off "Milk". Her message to Bob can't be delivered, so her device leaves it, still sealed for Bob, at the relay. The relay pane shows a message it can't read.
+10. **Bob catches up.** Bob reconnects, collects the message from the relay, and his device checks Alice's signature before applying it. The caption: "the relay delivered it, but Alice's signature says who wrote it".
+11. **Alice removes Bob.** Alice revokes Bob's membership. The list's signed revocation list goes to every member. Bob's next edit is rejected by Alice and Carol: "membership revoked". The caption says Bob still has his old copy. Revocation stops future changes; it can't make anyone forget.
+12. **Tampering.** Bob, now removed, edits a copy of Alice's "Fix the porch light" operation to say "Give Bob his deposit back" and forwards it to Carol. Carol's device rejects it: "operation: signature does not verify".
 
 Free play allows any of these actions from any pane: invite, add (shared or private, choosing the readers), check, uncheck, edit, delete, go offline, collect from the relay, sync from a chosen member, revoke, "send anyway", and forward a tampered copy of a held operation.
 
@@ -194,9 +195,9 @@ Both apps need the same core: identities, the demo clock, the in-memory bus, the
 
 - Tests for the shared core as in Community Rides' plan, Tasks 1 to 4.
 - App tests: each check in section 4.5 rejects with its reason string; the role table in 4.6, one test per cell; sync from a third party accepts forwarded operations and rejects tampered ones; revocation takes effect at every member.
-- A headless scenario test that runs steps 1 to 11 and asserts each pane's list and rejected list after each step.
+- A headless scenario test that runs steps 1 to 12 and asserts each pane's list and rejected list after each step.
 - A disclosure test: no wire record contains item text in plaintext; the relay's stored state contains no item text; Carol's state never contains the private item's text.
-- Done: steps 1 to 11 run in the browser from a fresh install, the tests pass, and the README explains how to run it and lists section 8's guesses.
+- Done: steps 1 to 12 run in the browser from a fresh install, the tests pass, and the README explains how to run it and lists section 8's guesses.
 
 ## 10. Left to the builder
 
