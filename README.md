@@ -7,7 +7,7 @@ A monorepo of ideas and straw-man builds for the Trust over IP (ToIP) model and 
 | Project | What | State |
 |---|---|---|
 | `projects/zk-pdp-fit/` | Applying zero-knowledge proofs to ToIP, starting from zk-pdp (`~/code/zk-pdp`), which compiles Cedar policies to circuits. | Ideation, notes only. |
-| `projects/shared-todo/` | A shared to-do list with no trusted server, showing the basic ToIP ideas. Built first. | Design written, being built. |
+| `projects/shared-todo/` | A shared to-do list with no trusted server, showing the basic ToIP ideas. Built first. | Built: a 12-step demo in the browser. |
 | `projects/community-rides/` | A straw-man ride-share app for a local community, built on the Apache-2.0 OpenVTC libraries for TSP and Trust Tasks. For show and tell. | Design written, not built. |
 
 Each project has its own `README.md`. A project may be notes only, or notes and code.

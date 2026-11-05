@@ -441,7 +441,7 @@ export class MemberAgent {
 
   nameOf(did: string): string {
     if (did === this.did) return this.name;
-    return this.members.get(did)?.name ?? shortDid(did);
+    return this.members.get(did)?.name ?? `an unknown key (${shortDid(did)})`;
   }
 
   /** Everything this device holds, for the UI and the disclosure tests. Never includes key material. */

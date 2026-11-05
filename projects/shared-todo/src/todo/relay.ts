@@ -10,7 +10,7 @@ export interface HeldMessage {
   wire: string;
 }
 
-const hex = (b: Uint8Array) => Array.from(b.slice(0, 24), (x) => x.toString(16).padStart(2, "0")).join("");
+const hex = (b: Uint8Array) => Array.from(b.slice(-24), (x) => x.toString(16).padStart(2, "0")).join("");
 
 /**
  * A mailbox for members who are offline (design 4.4a). It stores already-sealed TSP messages

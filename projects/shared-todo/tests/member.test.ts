@@ -63,6 +63,7 @@ describe("MemberAgent", () => {
     expect(h.lastReason(h.alice)).toBe("credential is for someone else");
     expect(h.lastReason(h.carol)).toBe("credential is for someone else");
     expect(h.texts(h.alice)).toEqual([]);
+    expect(h.alice.nameOf(h.mallory.did)).toMatch(/^an unknown key \(/);
   });
 
   it("leaves messages for an offline member at the relay, which can't read them", async () => {

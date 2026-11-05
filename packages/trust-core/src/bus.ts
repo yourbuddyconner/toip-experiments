@@ -8,7 +8,7 @@ export interface WireRecord {
   from: string;
   to: string;
   bytes: number;
-  /** Hex of the first 24 bytes: all an observer gets to look at. */
+  /** Hex of the last 24 bytes (ciphertext and signature). The first bytes are the cleartext TSP envelope, the same for every message. */
   head: string;
   raw: Uint8Array;
   undelivered?: true;
@@ -58,7 +58,7 @@ export class Bus {
       from,
       to,
       bytes: wire.length,
-      head: hex(wire.slice(0, 24)),
+      head: hex(wire.slice(-24)),
       raw: wire,
     };
     const deliver = this.peers.get(to);
