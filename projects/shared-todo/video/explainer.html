@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Shared lists, no server to trust</title>
+<style>
+  @font-face { font-family: "Atkinson"; font-weight: 400; src: url("../../../node_modules/@fontsource/atkinson-hyperlegible/files/atkinson-hyperlegible-latin-400-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Atkinson"; font-weight: 700; src: url("../../../node_modules/@fontsource/atkinson-hyperlegible/files/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2"); }
+  :root { --bg: #e7f0ea; --ink: #1c2420; --muted: #5f6b65; --go: #2e6a4f; --slate: #4f5f79; --rust: #b04a2f; --gold: #f0b429; --alice: #e8a93a; --bob: #4c9ccd; --mallory: #c8553d; --paper: #ffffff; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); font-family: "Atkinson", system-ui, sans-serif; color: var(--ink); }
+  .scene { position: absolute; inset: 0; opacity: 0; }
+  .abs { position: absolute; }
+  h1, h2 { margin: 0; }
+  .title { font-size: 104px; font-weight: 700; letter-spacing: -1px; line-height: 1.05; }
+  .heading { position: absolute; top: 90px; left: 0; right: 0; text-align: center; font-size: 72px; font-weight: 700; }
+  .caption { position: absolute; bottom: 90px; left: 260px; right: 260px; text-align: center; font-size: 40px; line-height: 1.3; color: var(--ink); }
+  .pill { display: inline-block; padding: 10px 26px; border-radius: 999px; background: var(--paper); font-size: 34px; box-shadow: 0 6px 0 rgba(28,36,32,.08); }
+  .mono { font-family: ui-monospace, Menlo, monospace; }
+  .phone { position: absolute; width: 300px; height: 520px; border-radius: 44px; background: var(--ink); padding: 16px; box-shadow: 0 24px 40px -18px rgba(28,36,32,.45); }
+  .phone .screen { width: 100%; height: 100%; border-radius: 30px; background: var(--paper); position: relative; overflow: hidden; }
+  .phone .who { position: absolute; top: -70px; left: 0; right: 0; text-align: center; font-size: 40px; font-weight: 700; }
+  .row { position: absolute; left: 22px; right: 22px; height: 54px; border-radius: 12px; background: #f1f5f2; display: flex; align-items: center; gap: 12px; padding: 0 14px; font-size: 26px; }
+  .box { width: 26px; height: 26px; border: 3px solid var(--ink); border-radius: 6px; flex: none; display: grid; place-items: center; color: var(--go); font-weight: 700; font-size: 20px; }
+  .card { position: absolute; width: 360px; height: 220px; border-radius: 22px; background: var(--paper); box-shadow: 0 14px 0 rgba(28,36,32,.08); padding: 26px 30px; }
+  .card h3 { margin: 0 0 10px; font-size: 34px; }
+  .card p { margin: 0; font-size: 26px; color: var(--muted); }
+  .stamp { position: absolute; right: 22px; bottom: 18px; width: 110px; height: 110px; border-radius: 50%; border: 6px solid var(--go); color: var(--go); display: grid; place-items: center; text-align: center; font-weight: 700; font-size: 22px; line-height: 1.1; }
+  .envelope { position: absolute; width: 150px; height: 100px; }
+  .check { position: absolute; left: 30px; font-size: 32px; display: flex; gap: 14px; align-items: center; }
+  .check .mark { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; }
+  .footage { position: absolute; top: 190px; width: 820px; height: 820px; border-radius: 22px; overflow: hidden; background: #f7f8f6; box-shadow: 0 24px 40px -18px rgba(28,36,32,.45); }
+  .footage video { width: 100%; height: 100%; display: block; }
+  .footage .wait { position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; color: var(--muted); background: #f7f8f6; }
+  .flabel { position: absolute; top: 120px; width: 820px; text-align: center; font-size: 40px; font-weight: 700; }
+  .badge { display: inline-flex; align-items: center; gap: 16px; padding: 18px 30px; background: var(--paper); border-radius: 22px; font-size: 38px; box-shadow: 0 8px 0 rgba(28,36,32,.07); }
+</style>
+</head>
+<body>
+
+<!-- Characters are inline SVG: a round face in each person's colour. -->
+<template id="face">
+  <svg viewBox="0 0 120 120" width="120" height="120">
+    <circle cx="60" cy="60" r="56" class="skin" />
+    <circle cx="42" cy="54" r="7" fill="#1c2420" class="eye" />
+    <circle cx="78" cy="54" r="7" fill="#1c2420" class="eye" />
+    <circle cx="32" cy="72" r="8" fill="#ffffff" opacity=".35" />
+    <circle cx="88" cy="72" r="8" fill="#ffffff" opacity=".35" />
+    <path d="M42 78 Q60 94 78 78" stroke="#1c2420" stroke-width="6" fill="none" stroke-linecap="round" class="mouth" />
+  </svg>
+</template>
+
+<template id="key">
+  <svg viewBox="0 0 120 60" width="120" height="60">
+    <circle cx="24" cy="30" r="20" fill="none" stroke="#f0b429" stroke-width="10" />
+    <rect x="42" y="25" width="70" height="10" rx="5" fill="#f0b429" />
+    <rect x="86" y="33" width="9" height="16" rx="3" fill="#f0b429" />
+    <rect x="100" y="33" width="9" height="12" rx="3" fill="#f0b429" />
+  </svg>
+</template>
+
+<template id="envelope">
+  <svg viewBox="0 0 150 100" width="150" height="100">
+    <rect x="3" y="3" width="144" height="94" rx="10" fill="#ffffff" stroke="#1c2420" stroke-width="5" />
+    <path d="M6 8 L75 58 L144 8" fill="none" stroke="#1c2420" stroke-width="5" stroke-linejoin="round" />
+    <circle cx="75" cy="58" r="17" class="seal" fill="#c8553d" />
+  </svg>
+</template>
+
+<!-- 1. Title -->
+<section class="scene" id="s-title">
+  <div class="abs" id="title-faces" style="left:0;right:0;top:250px;display:flex;justify-content:center;gap:40px"></div>
+  <div class="abs" style="left:0;right:0;top:450px;text-align:center">
+    <h1 class="title" id="title-main">Shared lists,<br/>no server to trust</h1>
+    <p id="title-sub" style="font-size:38px;color:var(--muted);margin-top:30px">A small Trust over IP experiment</p>
+  </div>
+</section>
+
+<!-- 2. Keys -->
+<section class="scene" id="s-keys">
+  <h2 class="heading">Everyone makes their own key</h2>
+  <div class="phone" id="k-phone-a" style="left:470px;top:300px"><div class="who">Alice</div><div class="screen"></div></div>
+  <div class="phone" id="k-phone-b" style="left:1150px;top:300px"><div class="who">Bob</div><div class="screen"></div></div>
+  <div class="abs" id="k-key-a" style="left:560px;top:470px"></div>
+  <div class="abs" id="k-key-b" style="left:1240px;top:470px"></div>
+  <div class="abs mono" id="k-did-a" style="left:470px;width:332px;top:570px;text-align:center;font-size:22px;line-height:1.4;white-space:pre;color:var(--slate)"></div>
+  <div class="abs mono" id="k-did-b" style="left:1150px;width:332px;top:570px;text-align:center;font-size:22px;line-height:1.4;white-space:pre;color:var(--slate)"></div>
+  <p class="caption" id="k-cap">Your identity is a key made on your own device.<br/>No sign-up. No account server.</p>
+</section>
+
+<!-- 3. Community -->
+<section class="scene" id="s-community">
+  <h2 class="heading">A list is a tiny community</h2>
+  <div class="card" id="c-list" style="left:780px;top:250px;width:360px;height:180px;text-align:center">
+    <h3>Maple St House</h3><p>has its own key too</p>
+  </div>
+  <div class="abs" id="c-listkey" style="left:900px;top:395px"></div>
+  <div class="abs" id="c-alice" style="left:420px;top:560px"></div>
+  <div class="abs" id="c-bob" style="left:1380px;top:560px"></div>
+  <div class="abs" style="left:395px;top:690px;width:170px;text-align:center;font-size:32px;font-weight:700">Alice</div>
+  <div class="abs" style="left:1355px;top:690px;width:170px;text-align:center;font-size:32px;font-weight:700">Bob</div>
+  <div class="card" id="c-card" style="left:780px;top:560px">
+    <h3>Membership</h3><p>Bob · can edit</p><p style="font-size:22px;margin-top:8px">Maple St House</p>
+    <div class="stamp" id="c-stamp">signed<br/>by the<br/>list</div>
+  </div>
+  <p class="caption" id="c-cap">Alice invites Bob with a link. The list signs him a membership card, and Bob signs one back.</p>
+</section>
+
+<!-- 4. Sealed -->
+<section class="scene" id="s-sealed">
+  <h2 class="heading">Changes travel sealed</h2>
+  <div class="phone" id="e-phone-b" style="left:180px;top:300px;transform:scale(.8);transform-origin:top left"><div class="who">Bob</div><div class="screen">
+    <div class="row" style="top:40px"><span class="box"></span>Eggs</div></div></div>
+  <div class="phone" id="e-phone-a" style="left:1500px;top:300px;transform:scale(.8);transform-origin:top left"><div class="who">Alice</div><div class="screen"></div></div>
+  <div class="abs" id="e-relay" style="left:800px;top:390px;width:320px;height:230px">
+    <svg viewBox="0 0 320 230" width="320" height="230">
+      <path d="M70 190 Q10 190 14 140 Q18 98 66 100 Q76 40 140 44 Q196 18 230 70 Q300 64 300 132 Q302 190 240 190 Z" fill="#ffffff" stroke="#1c2420" stroke-width="6" />
+      <text x="160" y="150" text-anchor="middle" font-size="36" font-family="Atkinson" font-weight="700" fill="#1c2420">Relay</text>
+    </svg>
+  </div>
+  <div class="abs" id="e-think" style="left:1020px;top:290px;font-size:34px;background:#fff;border-radius:22px;padding:10px 20px;box-shadow:0 6px 0 rgba(28,36,32,.08)">Can't open it 🤷</div>
+  <div class="envelope" id="e-env"></div>
+  <p class="caption" id="e-cap">Each change is signed by its author and sealed for each recipient. The relay just passes it along. It can't read it, and it can't fake one.</p>
+</section>
+
+<!-- 5. Checks -->
+<section class="scene" id="s-checks">
+  <h2 class="heading">Every device checks every change</h2>
+  <div class="card" id="x-panel" style="left:560px;top:250px;width:800px;height:430px">
+    <h3 id="x-title">A change from Bob: add "Eggs"</h3>
+    <div class="check" id="x-c1" style="top:110px"><span class="mark" style="background:var(--go)">✓</span>Signed by Bob, and not tampered with</div>
+    <div class="check" id="x-c2" style="top:180px"><span class="mark" style="background:var(--go)">✓</span>Bob holds a membership the list signed</div>
+    <div class="check" id="x-c3" style="top:250px"><span class="mark" style="background:var(--go)">✓</span>Editors are allowed to add items</div>
+    <div class="check" id="x-ok" style="top:330px;color:var(--go);font-weight:700">Added to Alice's list</div>
+  </div>
+  <div class="card" id="x-bad" style="left:560px;top:250px;width:800px;height:430px">
+    <h3>A change from Mallory, using Bob's card</h3>
+    <div class="check" id="x-b1" style="top:110px"><span class="mark" style="background:var(--go)">✓</span>Signed by Mallory</div>
+    <div class="check" id="x-b2" style="top:180px"><span class="mark" style="background:var(--rust)">✗</span>That membership card is Bob's, not hers</div>
+    <div class="check" id="x-no" style="top:270px;color:var(--rust);font-weight:700">Refused, on every device, on its own</div>
+  </div>
+  <div class="abs" id="x-mallory" style="left:240px;top:420px"></div>
+  <p class="caption" id="x-cap">No central server decides. Each device runs the list's rules itself.</p>
+</section>
+
+<!-- 6. Footage -->
+<section class="scene" id="s-footage">
+  <h2 class="heading" style="top:30px;font-size:60px" id="f-head">Here it is, for real</h2>
+  <div class="flabel" style="left:120px">Alice's device</div>
+  <div class="flabel" style="left:980px">Bob's device</div>
+  <div class="footage" style="left:120px"><video id="v-alice" src="out/alice.webm" muted preload="auto"></video></div>
+  <div class="footage" style="left:980px"><video id="v-bob" src="out/bob.webm" muted preload="auto"></video><div class="wait" id="v-bob-wait">Bob hasn't opened the app yet</div></div>
+  <div class="abs" id="f-cap" style="left:0;right:0;top:1022px;text-align:center"><span class="pill" id="f-cap-text"></span></div>
+</section>
+
+<!-- 7. Outro -->
+<section class="scene" id="s-outro">
+  <div class="abs" id="o-faces" style="left:0;right:0;top:150px;display:flex;justify-content:center;gap:40px"></div>
+  <h1 class="abs title" id="o-title" style="left:0;right:0;top:330px;text-align:center;font-size:88px">No server you have to trust</h1>
+  <div class="abs" style="left:0;right:0;top:500px;display:flex;justify-content:center;gap:28px">
+    <span class="badge" id="o-b1"><span style="color:var(--gold)">●</span> Keys on your own device</span>
+    <span class="badge" id="o-b2"><span style="color:var(--rust)">●</span> Sealed messages</span>
+    <span class="badge" id="o-b3"><span style="color:var(--go)">●</span> Every device checks</span>
+  </div>
+  <p class="abs" id="o-foot" style="left:0;right:0;top:700px;text-align:center;font-size:32px;color:var(--muted);line-height:1.6">
+    Built on the Trust over IP specs with the open-source OpenVTC libraries<br/>
+    <span class="mono" style="color:var(--ink)">github.com/yourbuddyconner/toip-experiments</span>
+  </p>
+</section>
+
+<script>
+const FPS = 30;
+// [start, end] in seconds for each scene.
+const SCENES = {
+  title: [0, 5.5], keys: [5.5, 14], community: [14, 23], sealed: [23, 33], checks: [33, 43], footage: [43, 74], outro: [74, 82],
+};
+window.TOTAL = 82;
+const FOOTAGE_SPEED = 1.6;
+const BOB_OFFSET = 18.5; // Bob's recording starts this many seconds into Alice's
+const CAPTIONS = [
+  [0, "Alice makes a list on her own device"],
+  [14.5, "…and invites Bob with a link"],
+  [18.5, "Bob opens it on his own device and asks to join"],
+  [23.4, "Alice's device lets him in"],
+  [26.5, "Changes flow both ways, through the relay"],
+  [33, "A private item: only Alice and Bob can read it"],
+  [35.3, "Bob loses his connection and keeps working"],
+  [39.5, "…and it syncs as soon as he's back"],
+  [43.5, "Under the hood: every message, signed and sealed"],
+];
+
+const $ = (id) => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+const easeInOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const back = (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const pop = (t, a, d = 0.5) => back(prog(t, a, a + d));
+const lerp = (a, b, x) => a + (b - a) * x;
+
+function face(color, size = 120) {
+  const n = document.getElementById("face").content.cloneNode(true);
+  const svg = n.querySelector("svg");
+  svg.setAttribute("width", size); svg.setAttribute("height", size);
+  svg.querySelector(".skin").setAttribute("fill", color);
+  return svg;
+}
+function mount(id, tpl) { $(id).appendChild(document.getElementById(tpl).content.cloneNode(true)); }
+
+// Build static pieces once.
+for (const c of ["--alice", "--bob", "--mallory"]) {
+  $("title-faces").appendChild(face(getComputedStyle(document.documentElement).getPropertyValue(c), 140));
+  $("o-faces").appendChild(face(getComputedStyle(document.documentElement).getPropertyValue(c), 110));
+}
+$("c-alice").appendChild(face("#e8a93a", 120));
+$("c-bob").appendChild(face("#4c9ccd", 120));
+$("x-mallory").appendChild(face("#c8553d", 140));
+mount("k-key-a", "key"); mount("k-key-b", "key"); mount("c-listkey", "key"); mount("e-env", "envelope");
+
+const DID_A = "did:key:\nz6MkjtpD9o…mw9u";
+const DID_B = "did:key:\nz6MkmPrqXq…Saibo";
+
+function sceneOpacity(name, t) {
+  const [a, b] = SCENES[name];
+  const fade = 0.45;
+  if (t < a - 0.01 || t > b + 0.01) return 0;
+  return Math.min(prog(t, a, a + fade), 1 - prog(t, b - fade, b));
+}
+function bob(t, speed = 1.6, amp = 6) { return Math.sin(t * speed * Math.PI) * amp; }
+function blink(svg, t, offset = 0) {
+  const p = (t + offset) % 3.2;
+  const s = p < 0.12 ? 0.1 : 1;
+  svg.querySelectorAll(".eye").forEach((e) => e.setAttribute("transform", `translate(0 ${54 * (1 - s)}) scale(1 ${s})`));
+}
+
+async function seek(video, time) {
+  const target = clamp(time, 0, (video.duration || 1000) - 0.05);
+  if (Math.abs(video.currentTime - target) < 0.001) return;
+  await new Promise((res) => { video.addEventListener("seeked", res, { once: true }); video.currentTime = target; });
+}
+
+window.render = async function render(t) {
+  for (const name of Object.keys(SCENES)) $("s-" + name).style.opacity = sceneOpacity(name, t);
+
+  // 1. Title
+  {
+    const l = t - SCENES.title[0];
+    [...$("title-faces").children].forEach((f, i) => {
+      const p = pop(l, 0.2 + i * 0.18, 0.55);
+      f.style.transform = `translateY(${(1 - p) * 120 + bob(l + i * 0.3)}px) scale(${p})`;
+      blink(f, l, i * 0.7);
+    });
+    $("title-main").style.transform = `translateY(${(1 - easeOut(prog(l, 0.6, 1.4))) * 40}px)`;
+    $("title-main").style.opacity = prog(l, 0.6, 1.3);
+    $("title-sub").style.opacity = prog(l, 1.4, 2.0);
+  }
+
+  // 2. Keys
+  {
+    const l = t - SCENES.keys[0];
+    for (const [s, k, d, at, did] of [["a", "k-key-a", "k-did-a", 1.0, DID_A], ["b", "k-key-b", "k-did-b", 1.6, DID_B]]) {
+      const p = pop(l, at, 0.6);
+      $(k).style.transform = `translateY(${(1 - p) * 60}px) rotate(${(1 - p) * -40 + Math.sin(l * 2) * 4}deg) scale(${p})`;
+      const chars = Math.floor(clamp((l - at - 0.6) * 22, 0, did.length));
+      $(d).textContent = did.slice(0, chars);
+      $("k-phone-" + s).style.transform = `translateY(${bob(l + (s === "b" ? 0.5 : 0), 1.2, 4)}px)`;
+    }
+    $("k-cap").style.opacity = prog(l, 2.6, 3.2);
+  }
+
+  // 3. Community
+  {
+    const l = t - SCENES.community[0];
+    $("c-list").style.transform = `scale(${pop(l, 0.3)})`;
+    $("c-listkey").style.transform = `scale(${pop(l, 0.9)}) rotate(${Math.sin(l * 2) * 6}deg)`;
+    $("c-alice").style.transform = `translateY(${bob(l, 1.4, 5)}px) scale(${pop(l, 0.5)})`;
+    $("c-bob").style.transform = `translateY(${bob(l + 0.4, 1.4, 5)}px) scale(${pop(l, 0.7)})`;
+    blink($("c-alice").firstChild, l); blink($("c-bob").firstChild, l, 1.1);
+    // The card slides from Alice towards Bob, then gets stamped.
+    const slide = easeInOut(prog(l, 1.6, 3.2));
+    const cardIn = pop(l, 1.3, 0.5);
+    $("c-card").style.transform = `translateX(${lerp(-330, 0, slide)}px) scale(${cardIn * 0.9})`;
+    const st = prog(l, 3.6, 3.95);
+    $("c-stamp").style.opacity = st;
+    $("c-stamp").style.transform = `scale(${lerp(2.2, 1, easeOut(st))}) rotate(-14deg)`;
+    $("c-cap").style.opacity = prog(l, 4.2, 4.8);
+  }
+
+  // 4. Sealed
+  {
+    const l = t - SCENES.sealed[0];
+    const env = $("e-env");
+    // Bob's phone (left) → relay (middle) → Alice's phone (right), with a wobble.
+    const leg1 = easeInOut(prog(l, 1.2, 3.0));
+    const leg2 = easeInOut(prog(l, 4.6, 6.4));
+    const x = l < 4 ? lerp(330, 885, leg1) : lerp(885, 1580, leg2);
+    const yArc = l < 4 ? -Math.sin(leg1 * Math.PI) * 120 : -Math.sin(leg2 * Math.PI) * 120;
+    const y = (l < 4 ? lerp(470, 470, leg1) : 470) + yArc;
+    env.style.left = `${x}px`; env.style.top = `${y}px`;
+    env.style.opacity = l < 1.0 ? prog(l, 0.6, 1.0) : 1 - prog(l, 6.4, 6.7);
+    env.style.transform = `rotate(${Math.sin(l * 6) * 6}deg) scale(${l > 3 && l < 4.6 ? 0.85 : 1})`;
+    $("e-think").style.opacity = prog(l, 3.1, 3.4) * (1 - prog(l, 4.4, 4.7));
+    $("e-think").style.transform = `scale(${pop(l, 3.1, 0.4)})`;
+    $("e-relay").style.transform = `translateY(${bob(l, 1, 5)}px)`;
+    // Eggs appears on Alice's phone once the envelope lands.
+    const scr = $("e-phone-a").querySelector(".screen");
+    if (l > 6.6 && !scr.firstChild) scr.innerHTML = '<div class="row" style="top:40px"><span class="box"></span>Eggs</div>';
+    if (l <= 6.6) scr.innerHTML = "";
+    if (scr.firstChild) scr.firstChild.style.transform = `scale(${pop(l, 6.6, 0.4)})`;
+    $("e-cap").style.opacity = prog(l, 6.9, 7.5);
+  }
+
+  // 5. Checks
+  {
+    const l = t - SCENES.checks[0];
+    const good = l < 5.2;
+    $("x-panel").style.opacity = good ? prog(l, 0.2, 0.6) : 0;
+    $("x-panel").style.transform = `scale(${pop(l, 0.2)})`;
+    ["x-c1", "x-c2", "x-c3", "x-ok"].forEach((id, i) => {
+      const p = pop(l, 0.9 + i * 0.75, 0.4);
+      $(id).style.opacity = prog(l, 0.9 + i * 0.75, 1.1 + i * 0.75);
+      $(id).style.transform = `translateX(${(1 - p) * -30}px)`;
+    });
+    $("x-bad").style.opacity = good ? 0 : prog(l, 5.2, 5.6);
+    $("x-bad").style.transform = `translateX(${good ? 0 : Math.sin(prog(l, 7.4, 7.9) * Math.PI * 4) * 14}px)`;
+    ["x-b1", "x-b2", "x-no"].forEach((id, i) => ($(id).style.opacity = prog(l, 5.8 + i * 0.75, 6.0 + i * 0.75)));
+    $("x-mallory").style.opacity = good ? 0 : prog(l, 5.2, 5.6);
+    $("x-mallory").style.transform = `translateY(${bob(l, 2, 6)}px) rotate(${l > 7.4 ? -8 : 0}deg)`;
+    if (!good) {
+      const m = $("x-mallory").firstChild;
+      m.querySelector(".mouth").setAttribute("d", l > 7.4 ? "M44 86 Q60 74 76 86" : "M42 78 Q60 94 78 78");
+    }
+    $("x-cap").style.opacity = prog(l, 8.2, 8.8);
+  }
+
+  // 6. Footage
+  {
+    const [a, b] = SCENES.footage;
+    const l = clamp(t - a, 0, b - a);
+    const ft = l * FOOTAGE_SPEED;
+    if (t >= a - 0.5 && t <= b + 0.5) {
+      await seek($("v-alice"), ft);
+      await seek($("v-bob"), ft - BOB_OFFSET);
+    }
+    $("v-bob-wait").style.opacity = ft < BOB_OFFSET ? 1 : 0;
+    let text = "";
+    for (const [at, c] of CAPTIONS) if (ft >= at) text = c;
+    $("f-cap-text").textContent = text;
+  }
+
+  // 7. Outro
+  {
+    const l = t - SCENES.outro[0];
+    [...$("o-faces").children].forEach((f, i) => {
+      const p = pop(l, 0.2 + i * 0.15, 0.5);
+      f.style.transform = `translateY(${bob(l + i * 0.4, 1.6, 8)}px) scale(${p})`;
+      blink(f, l, i);
+    });
+    $("o-title").style.opacity = prog(l, 0.5, 1.1);
+    ["o-b1", "o-b2", "o-b3"].forEach((id, i) => ($(id).style.transform = `scale(${pop(l, 1.2 + i * 0.3, 0.45)})`));
+    $("o-foot").style.opacity = prog(l, 2.4, 3.0);
+  }
+};
+
+window.ready = Promise.all([document.fonts.ready, ...["v-alice", "v-bob"].map((id) => new Promise((r) => {
+  const v = $(id); if (v.readyState >= 1) r(); else v.addEventListener("loadedmetadata", r, { once: true });
+}))]);
+</script>
+</body>
+</html>

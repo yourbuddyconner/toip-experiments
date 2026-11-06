@@ -83,6 +83,18 @@ function Shell({ device, inviteBase }: { device: Device; inviteBase: string }) {
   const current = selected && lists.some((l) => l.did === selected) ? selected : (lists[0]?.did ?? null);
   const status = device.connection();
 
+  // Follow the browser's own idea of being online, so a phone losing signal shows "Offline" at once.
+  useEffect(() => {
+    const off = () => device.goOffline();
+    const on = () => device.goOnline();
+    window.addEventListener("offline", off);
+    window.addEventListener("online", on);
+    return () => {
+      window.removeEventListener("offline", off);
+      window.removeEventListener("online", on);
+    };
+  }, [device]);
+
   return (
     <div className={`shell ${inspecting ? "with-inspector" : ""}`}>
       <header className="topbar">
