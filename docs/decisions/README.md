@@ -6,3 +6,4 @@ Numbered from 0001. Format as in zk-pdp's `docs/decisions/`.
 - 0002: Community Rides is independent of zk-pdp.
 - 0003: Build Shared To-Do first, on a shared core package.
 - 0004: Shared To-Do becomes a working app.
+- 0005: Settle, the open payments standard, comes before the Commons business.
