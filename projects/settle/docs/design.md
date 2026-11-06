@@ -228,3 +228,13 @@ The protocol is chain-agnostic: terms, Trust Tasks, policies and rulings don't c
 3. The processor and arbiter as trust agents on the existing relay, plus the transparency log.
 4. A demo with three or four parties in browser profiles, on Solana devnet with devnet USDC: the repair job's happy path and its dispute path.
 5. Then the registry proposal, written up for the Trust Tasks maintainers.
+
+## 15. Implementation notes (2026-11-06)
+
+What changed while building it:
+- **One `resolve` instruction** replaces separate `release` and `refund`. It takes `payee_amount`: the full amount is a release, 0 is a refund, and anything in between is the split section 13 asked for. The message is `settle/v1|<program>|<escrow>|pay:<n>|evidence:<hex>`. The fee applies only to the payee's part.
+- **Escrow accounts are never closed,** only marked resolved or reclaimed. Their address is fixed by the terms hash, so closing one would let it be re-created and old signatures replayed against it. The vault is closed, and its rent goes back to whoever paid it.
+- **Pre-funded addresses.** Anyone can send lamports to an escrow's predictable address to make `create_account` fail. The program then allocates and assigns the account instead.
+- **Fee sponsorship works by co-signing.** A party builds the transaction with the processor as fee payer and rent payer, signs its own part, and sends it in `settle/processor/submit`. The processor refuses anything that calls a program other than Settle and the Ed25519 precompile, then co-signs and submits.
+- **Handlers must never wait on a request.** The relay delivers a device's messages in order. A handler that awaited a request/response would block the very reply it was waiting for, as the payer's escrow opening first did.
+- The chain is LiteSVM in-process (`src/chain/simnet.ts`). USDC is a test mint whose authority stands in for each party's wallet or on-ramp.

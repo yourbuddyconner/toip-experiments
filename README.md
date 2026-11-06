@@ -8,7 +8,7 @@ A monorepo of ideas and straw-man builds for the Trust over IP (ToIP) model and 
 |---|---|---|
 | `projects/zk-pdp-fit/` | Applying zero-knowledge proofs to ToIP, starting from zk-pdp (`~/code/zk-pdp`), which compiles Cedar policies to circuits. | Ideation, notes only. |
 | `projects/shared-todo/` | A shared to-do list with no trusted server, showing the basic ToIP ideas. Built first. | Working web app with a relay (v2, decision 0004). |
-| `projects/settle/` | An open payments layer: a Trust Task vocabulary for conditional payments, a 2-of-3 stablecoin escrow on Solana that nobody controls alone, a reference processor and arbiter. | Design written, not built. |
+| `projects/settle/` | An open payments layer: a Trust Task vocabulary for conditional payments, a 2-of-3 stablecoin escrow on Solana that nobody controls alone, a reference processor and arbiter. | Working on a local Solana chain: `npm run demo --workspace @zk-toip/settle`. |
 | `projects/commons/` | A suite of apps for an apartment building and its households: guest passes with a door kiosk, expenses, maintenance requests, votes, a board, lists. | Ideation: design only. |
 | `projects/community-rides/` | A straw-man ride-share app for a local community, built on the OpenVTC TypeScript libraries for TSP and Trust Tasks. For show and tell. | Design written, not built. |
 
