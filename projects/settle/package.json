@@ -1,0 +1,26 @@
+{
+  "name": "@zk-toip/settle",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "build:program": "cd program && mkdir -p target/deploy && cp keys/settle_escrow-keypair.json target/deploy/ && cargo build-sbf && cp target/deploy/settle_escrow.so dist/",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@noble/curves": "2.4.0",
+    "@noble/hashes": "2.4.0",
+    "@solana-program/system": "0.16.0",
+    "@solana-program/token": "0.18.0",
+    "@solana/kit": "8.6.0",
+    "@zk-toip/trust-core": "0.0.0",
+    "litesvm": "1.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  }
+}

@@ -1,0 +1,19 @@
+[package]
+name = "settle-escrow"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Settle escrow: holds a payment until a quorum of named keys signs how to pay it out"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+solana-program = "5"
+solana-system-interface = { version = "3", features = ["bincode"] }
+
+[features]
+no-entrypoint = []
+
+[lints.rust]
+unexpected_cfgs = { level = "allow" }

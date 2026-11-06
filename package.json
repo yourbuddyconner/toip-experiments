@@ -5,7 +5,8 @@
   "workspaces": [
     "packages/trust-core",
     "packages/relay",
-    "projects/shared-todo"
+    "projects/shared-todo",
+    "projects/settle"
   ],
   "scripts": {
     "test": "npm test --workspaces --if-present",
