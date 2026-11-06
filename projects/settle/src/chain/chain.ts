@@ -4,7 +4,9 @@
  */
 import {
   appendTransactionMessageInstructions,
+  createDefaultRpcTransport,
   createSolanaRpc,
+  createSolanaRpcFromTransport,
   createTransactionMessage,
   getBase64EncodedWireTransaction,
   pipe,
@@ -27,6 +29,46 @@ const COMMITMENT = "confirmed" as const;
 const CLOCK_SYSVAR = "SysvarC1ock11111111111111111111111111111111" as Address;
 /** How long to wait for a sent transaction to be confirmed before giving up on it. */
 const CONFIRM_TIMEOUT_MS = 90_000;
+/** How often an unconfirmed transaction is sent again: a busy cluster drops some, and nothing resends them for us. */
+const RESEND_MS = 2_000;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * An RPC transport that waits and tries again when the node is rate-limiting (HTTP 429) or briefly unreachable,
+ * as public endpoints such as api.devnet.solana.com often are. Every call is safe to repeat: reads, and sends of
+ * a signed transaction (the cluster drops duplicates).
+ */
+/** How many RPC requests this process made, and how many it had to repeat because the node was busy. */
+export const rpcStats = { requests: 0, retries: 0 };
+
+function patientTransport(url: string) {
+  const inner = createDefaultRpcTransport({ url });
+  const transport = (async (req: Parameters<typeof inner>[0]) => {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        rpcStats.requests++;
+        if (attempt) rpcStats.retries++;
+        return await inner(req);
+      } catch (e) {
+        const status = (e as { context?: { statusCode?: number } }).context?.statusCode;
+        const transient = status === 429 || (status !== undefined && status >= 500) || (status === undefined && e instanceof TypeError);
+        if (!transient || attempt >= 6) throw e;
+        await sleep(Math.min(8000, 400 * 2 ** attempt) + Math.random() * 250);
+      }
+    }
+  }) as typeof inner;
+  return transport;
+}
+
+export interface ChainOptions {
+  /**
+   * How long a reading of the chain's clock is reused, counting on from it by the wall clock. Saves an RPC call
+   * per question on a real cluster, where time only moves forward with the wall clock. Zero on a local cluster
+   * whose clock can be skipped ahead.
+   */
+  clockCacheMs?: number;
+}
 
 const fromB64 = (s: string): Uint8Array => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 export const tokenAmount = (data: Uint8Array): bigint => new DataView(data.buffer, data.byteOffset, data.byteLength).getBigUint64(64, true);
@@ -34,19 +76,22 @@ export const tokenAmount = (data: Uint8Array): bigint => new DataView(data.buffe
 export class Chain {
   readonly rpc: ReturnType<typeof createSolanaRpc>;
 
+  private clock?: { now: bigint; at: number };
+
   private constructor(
     readonly url: string,
     readonly programId: Address,
+    private readonly opts: ChainOptions = {},
   ) {
-    this.rpc = createSolanaRpc(url);
+    this.rpc = createSolanaRpcFromTransport(patientTransport(url)) as ReturnType<typeof createSolanaRpc>;
   }
 
   /** Connects to an RPC endpoint. On the local simnet the program id comes from the node; elsewhere pass it. */
-  static async connect(url: string, programId?: Address): Promise<Chain> {
-    if (programId) return new Chain(url, programId);
+  static async connect(url: string, programId?: Address, opts?: ChainOptions): Promise<Chain> {
+    if (programId) return new Chain(url, programId, opts);
     const res = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "settle_info" }) });
     const { result } = (await res.json()) as { result: { programId: Address } };
-    return new Chain(url, result.programId);
+    return new Chain(url, result.programId, opts);
   }
 
   async latestBlockhash() {
@@ -71,6 +116,26 @@ export class Chain {
     return decodeEscrow(d);
   }
 
+  /** Many accounts in one call per hundred (getMultipleAccounts): each one's owner and data, or null if it doesn't exist. */
+  async accounts(addrs: Address[]): Promise<({ owner: Address; data: Uint8Array } | null)[]> {
+    const out: ({ owner: Address; data: Uint8Array } | null)[] = [];
+    for (let i = 0; i < addrs.length; i += 100) {
+      const r = await this.rpc.getMultipleAccounts(addrs.slice(i, i + 100), { encoding: "base64", commitment: COMMITMENT }).send();
+      for (const v of r.value) out.push(v ? { owner: v.owner, data: fromB64(v.data[0]) } : null);
+    }
+    return out;
+  }
+
+  /** Decodes an account as a Settle escrow, only if it belongs to the Settle program and has the current layout. */
+  asEscrow(a: { owner: Address; data: Uint8Array } | null): EscrowState | null {
+    return a && a.owner === this.programId && a.data.length >= 320 && a.data[0] === VERSION ? decodeEscrow(a.data) : null;
+  }
+
+  /** Many escrows at once, for views that list them. Null where there's no Settle escrow. */
+  async escrows(addrs: Address[]): Promise<(EscrowState | null)[]> {
+    return (await this.accounts(addrs)).map((a) => this.asEscrow(a));
+  }
+
   async balance(tokenAccount: Address): Promise<bigint> {
     const d = await this.account(tokenAccount);
     return d ? tokenAmount(d) : 0n;
@@ -85,13 +150,24 @@ export class Chain {
    * Policies use it, so every party agrees what time it is.
    */
   async now(): Promise<bigint> {
+    const cache = this.opts.clockCacheMs ?? 0;
+    if (cache > 0 && this.clock && Date.now() - this.clock.at < cache) return this.clock.now + BigInt(Math.floor((Date.now() - this.clock.at) / 1000));
+    const now = await this.readClock();
+    this.clock = { now, at: Date.now() };
+    return now;
+  }
+
+  private async readClock(): Promise<bigint> {
     const d = await this.account(CLOCK_SYSVAR);
     if (d && d.length >= 40) return new DataView(d.buffer, d.byteOffset, d.byteLength).getBigInt64(32, true);
     const slot = await this.rpc.getSlot({ commitment: COMMITMENT }).send();
     return BigInt((await this.rpc.getBlockTime(slot).send()) ?? 0);
   }
 
-  /** Sends a signed transaction and waits until the cluster confirms it, so what follows reads its effects. */
+  /**
+   * Sends a signed transaction and waits until the cluster confirms it, so what follows reads its effects.
+   * Until then it sends the same transaction again every few seconds: a busy cluster drops some.
+   */
   async sendWire(wire: string): Promise<ChainResult> {
     let signature: string;
     try {
@@ -99,25 +175,33 @@ export class Chain {
     } catch (e) {
       return Chain.failure(e);
     }
-    return this.confirm(signature);
+    return this.confirm(signature, CONFIRM_TIMEOUT_MS, wire);
   }
 
   /** Waits for a signature to reach "confirmed". A transaction that never lands within the timeout counts as failed. */
-  async confirm(signature: string, timeoutMs = CONFIRM_TIMEOUT_MS): Promise<ChainResult> {
-    const end = Date.now() + timeoutMs;
+  async confirm(signature: string, timeoutMs = CONFIRM_TIMEOUT_MS, resend?: string): Promise<ChainResult> {
+    const start = Date.now();
+    let lastSent = start;
     for (let delay = 0; ; delay = Math.min(1000, delay + 250)) {
-      if (delay) await new Promise((r) => setTimeout(r, delay));
-      const status = await this.status(signature);
+      if (delay) await sleep(delay);
+      // Past the recent-status cache, only the transaction history knows about it.
+      const status = await this.status(signature, Date.now() - start > 20_000);
       if (status?.err) return Chain.failure({ message: `Transaction failed: ${JSON.stringify(status.err, (_, v) => (typeof v === "bigint" ? Number(v) : v))}` });
       if (status && (status.confirmationStatus === "confirmed" || status.confirmationStatus === "finalized")) return { ok: true, signature };
-      if (Date.now() > end) return { ok: false, error: `transaction ${signature} wasn't confirmed in time` };
+      if (Date.now() - start > timeoutMs) return { ok: false, error: `transaction ${signature} wasn't confirmed in time` };
+      if (resend && !status && Date.now() - lastSent > RESEND_MS) {
+        lastSent = Date.now();
+        await this.rpc
+          .sendTransaction(resend as Base64EncodedWireTransaction, { encoding: "base64", skipPreflight: true, maxRetries: 0n })
+          .send()
+          .catch(() => {}); // its status says what happened
+      }
     }
   }
 
-  /** A failed send, with the program's error code and name when there is one (from a simulation, a node, or a confirmed failure). */
-  private async status(signature: string): Promise<{ err: unknown; confirmationStatus?: string | null } | null> {
+  private async status(signature: string, searchTransactionHistory = false): Promise<{ err: unknown; confirmationStatus?: string | null } | null> {
     try {
-      const r = await this.rpc.getSignatureStatuses([signature as Parameters<typeof this.rpc.getSignatureStatuses>[0][number]]).send();
+      const r = await this.rpc.getSignatureStatuses([signature as Parameters<typeof this.rpc.getSignatureStatuses>[0][number]], { searchTransactionHistory }).send();
       return (r.value[0] ?? null) as { err: unknown; confirmationStatus?: string | null } | null;
     } catch {
       return null; // a flaky RPC node: the caller tries again until its timeout
@@ -206,6 +290,7 @@ export class Chain {
 
   /** Development only: moves the simnet's clock forward. */
   async advanceClock(seconds: number): Promise<void> {
+    this.clock = undefined;
     await this.raw("settle_advanceClock", [seconds]);
   }
 }

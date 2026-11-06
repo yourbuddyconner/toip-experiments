@@ -349,7 +349,14 @@ The network id stays the same while the data stays. Browsers keep payments per n
 - a dispute held and ruled;
 - a refund.
 
-It passes against `solana-test-validator`. Devnet is wired the same way. Its RPC faucet is closed, so the treasury must be funded by hand (faucet.solana.com) before deploying.
+It passes against `solana-test-validator` and against devnet, where the program is deployed at `2g4BZEbPaSuLwY7QM9vvkZUiLNWvzAtuRkcXfuK4MwFy`. Devnet's RPC faucet is closed, so the treasury was funded by hand.
+
+Devnet showed what a local cluster hides:
+- **Rate limits.** The public endpoint rate-limits each IP address, and when everything runs on one machine, every party shares one IP. The client retries 429s and 5xx responses with backoff. Each party reads all its open escrows and payment accounts in one `getMultipleAccounts` per tick, and the operator view reads its cases the same way. On a real cluster, a reading of the clock is reused for three seconds.
+- **Dropped transactions.** A busy cluster drops some transactions, and a confirmed one can fall out of the recent-status cache before a slow poll sees it. Unconfirmed transactions are re-sent every two seconds, and confirmation checks also search the transaction history.
+- **Slow confirmation.** The processor answers only after the cluster confirms, which can take several seconds. Agents now wait up to two minutes for a reply. If the processor doesn't answer at all, the payer checks the chain: if the escrow is there and matches the terms, the open succeeded.
+
+With these, a paid link settles on devnet in about 50 seconds from one machine, and a dispute plus a refund in about 100.
 
 **Operators sign in with their own key** (`src/platform/operators.ts`). An operator is a DID on the platform's list:
 1. To sign in, the browser fetches a one-time challenge, bound to this platform's network id and good for two minutes.

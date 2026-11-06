@@ -37,7 +37,8 @@ export class SettleApi {
   /** A party on this network, configured as a person's own device would be: it signs for itself, checks everything, and acts on its own. */
   async party(o: { identity: Identity; name: string; policy: SettlePolicy; clock?: Clock; outbox?: OutboxStore; onChange?: () => void; snapshot?: PartySnapshot }): Promise<Party> {
     const config = await this.config();
-    const chain = await Chain.connect(config.rpcUrl, config.programId);
+    // A real cluster's clock only moves with the wall clock, so a reading is reused for a few seconds; a local one can jump.
+    const chain = await Chain.connect(config.rpcUrl, config.programId, { clockCacheMs: config.devClock ? 0 : 3000 });
     const directory: Directory = {
       names: { ...config.names },
       processor: config.processor.did,

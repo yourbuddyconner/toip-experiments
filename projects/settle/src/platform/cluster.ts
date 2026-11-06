@@ -13,6 +13,8 @@ import { PROGRAM_KEYPAIR } from "../chain/simnet";
 import { startChainServer, type ChainServer } from "../chain/rpcServer";
 
 export const LAMPORTS_PER_SOL = 1_000_000_000n;
+/** On a real cluster, a reading of the chain's clock is reused for this long (it moves with the wall clock). */
+export const REAL_CLOCK_CACHE_MS = 3000;
 
 export const CLUSTERS: Record<string, string> = {
   devnet: "https://api.devnet.solana.com",
@@ -66,7 +68,7 @@ export async function openCluster(o: ClusterOptions): Promise<Cluster> {
   const rpcUrl = CLUSTERS[which] ?? which;
   if (!/^https?:\/\//.test(rpcUrl)) throw new Error(`unknown cluster "${which}": use local, devnet, localnet or an RPC URL`);
   const programId = o.programId ?? (await developmentProgramId());
-  const chain = await Chain.connect(rpcUrl, programId);
+  const chain = await Chain.connect(rpcUrl, programId, { clockCacheMs: REAL_CLOCK_CACHE_MS });
   const program = await chain.rpc.getAccountInfo(programId, { encoding: "base64", commitment: "confirmed" }).send();
   if (!program.value?.executable) {
     throw new Error(`the Settle program isn't deployed on ${which} at ${programId}. Deploy it with: npm run deploy --workspace @zk-toip/settle -- --cluster ${which}`);

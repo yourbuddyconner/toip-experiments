@@ -138,6 +138,8 @@ export abstract class Agent {
       identity: opts.identity,
       transport: this.transport,
       clock: opts.clock,
+      // The processor answers once the cluster confirms what it submitted: seconds on a busy real cluster, not milliseconds.
+      timeoutMs: 120_000,
       freshness: { skewMs: 5 * 60_000, maxAgeMs: 60 * 24 * 3600_000 },
       onTraffic: opts.onTraffic ? (t) => opts.onTraffic!(this.name, t) : undefined,
     });

@@ -429,7 +429,10 @@ export async function startPlatform(opts: PlatformOptions = {}): Promise<Platfor
     "GET /api/arbiter": async (_req, ctx) => {
       mustBeOperator(ctx);
       const list = cases();
-      const states = await Promise.all(list.map(async (c) => (c.escrow ? await chain.escrow(c.escrow) : null)));
+      const withEscrow = list.filter((c) => c.escrow);
+      const read = await chain.escrows(withEscrow.map((c) => c.escrow!));
+      const byEscrow = new Map(withEscrow.map((c, i) => [c.escrow, read[i]]));
+      const states = list.map((c) => (c.escrow ? (byEscrow.get(c.escrow) ?? null) : null));
       return {
         did: ids.arbiter.did,
         key: arbiterKey.address,

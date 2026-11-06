@@ -7,8 +7,8 @@
 import { canonicalJson, fromB64u, signDocument, toB64u, utf8, verifyDocument, type Clock, type Credential } from "@zk-toip/trust-core";
 import { createNoopSigner, generateKeyPairSigner, type Address } from "@solana/kit";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { claimInstruction, escrowAddress, openInstruction, reclaimInstruction, STATE } from "../chain/escrow";
-import type { Chain } from "../chain/chain";
+import { claimInstruction, escrowAddress, openInstruction, reclaimInstruction, STATE, type EscrowState } from "../chain/escrow";
+import { tokenAmount, type Chain } from "../chain/chain";
 import { paymentKeyFromSeed, type PaymentKey } from "../chain/keys";
 import { buildForSponsor } from "../chain/tx";
 import {
@@ -654,10 +654,13 @@ export class Party extends Agent {
         }),
       ]),
     );
-    const res = await this.submit({ transaction: wire, terms: t, acceptances: p.acceptances });
+    let res = await this.submit({ transaction: wire, terms: t, acceptances: p.acceptances });
+    const escrow = await escrowAddress(this.chain.programId, k.key.address, th);
+    // No answer isn't a refusal: the processor may have submitted it anyway. The chain says what happened.
+    if (!res.ok && (await escrowProblems(this.chain, escrow, t)).length === 0) res = { ok: true, signature: "" };
     await this.task(async () => {
       if (!res.ok) return this.failOpen(p, res.error ?? "the processor refused");
-      p.escrow = await escrowAddress(this.chain.programId, k.key.address, th);
+      p.escrow = escrow;
       this.note(p, `opened escrow ${p.escrow.slice(0, 8)}… with ${t.amount.display} plus a ${usdc(t.fee.units)} processor fee; the processor paid the network fees`);
       for (const c of this.checkouts.values()) if (c.paymentId === p.id) c.status = "opened";
       const opened: OpenedPayload = { terms: t, acceptances: p.acceptances, escrow: p.escrow, transaction: res.signature! };
@@ -800,9 +803,16 @@ export class Party extends Agent {
   tick(): Promise<void> {
     return this.task(async () => {
       const now = Number(await this.chain.now());
+      // Every escrow and payment account that may still change, read in one request: a public RPC endpoint rate-limits.
+      const stale = [...this.payments.values()].filter(
+        (p) => p.terms && p.escrow && (!p.chain || p.chain.state === STATE.funded || p.chain.payeeOwed !== "0" || p.chain.payerOwed !== "0" || p.balance !== "0"),
+      );
+      const tokens = stale.map((p) => (p.role !== "attester" ? this.keys.get(p.id)?.token : undefined));
+      const read = stale.length ? await this.chain.accounts([...stale.map((p) => p.escrow!), ...tokens.filter((t): t is Address => !!t)]) : [];
+      let ti = stale.length;
+      stale.forEach((p, i) => this.record(p, this.chain.asEscrow(read[i]), tokens[i] ? read[ti++] : undefined));
       for (const p of this.payments.values()) {
         if (!p.terms || !p.escrow) continue;
-        if (!p.chain || p.chain.state === STATE.funded || p.chain.payeeOwed !== "0" || p.chain.payerOwed !== "0" || p.balance !== "0") await this.refresh(p);
         if (p.settled || p.chain?.state !== STATE.funded) continue;
         if (p.role === "payer" && p.pending) {
           const refund = p.pending.payeeUnits === "0";
@@ -823,13 +833,18 @@ export class Party extends Agent {
   }
 
   private async refresh(p: PaymentState): Promise<void> {
-    const s = await this.chain.escrow(p.escrow!);
+    const k = p.role !== "attester" ? this.keys.get(p.id) : undefined;
+    const [escrow, token] = await this.chain.accounts(k ? [p.escrow!, k.token] : [p.escrow!]);
+    this.record(p, this.chain.asEscrow(escrow), k ? token : undefined);
+  }
+
+  /** Notes what the chain says about a payment's escrow and, unless `token` is undefined, its payment account. */
+  private record(p: PaymentState, s: EscrowState | null, token: { data: Uint8Array } | null | undefined): void {
     if (s) {
       p.chain = { state: s.state, payeePaid: s.payeePaid.toString(), refundAfter: Number(s.refundAfter), payeeOwed: s.payeeOwed.toString(), payerOwed: s.payerOwed.toString(), amount: s.amount.toString(), fee: s.fee.toString() };
       if (s.state === STATE.resolved && !p.settled) p.settled = { transaction: "", payeeUnits: s.payeePaid.toString() };
     }
-    const k = this.keys.get(p.id);
-    if (k && p.role !== "attester") p.balance = (await this.chain.balance(k.token)).toString();
+    if (token !== undefined) p.balance = (token ? tokenAmount(token.data) : 0n).toString();
   }
 
   // ================================================================ saving

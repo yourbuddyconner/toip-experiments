@@ -3,7 +3,7 @@
 An open payments layer for the Trust over IP world. Settle handles conditional payments between parties who don't trust each other. The money is stablecoins, held in an escrow that nobody controls alone, not even the processor.
 
 - Design: `docs/design.md`.
-- Status: a working app. It runs on its own local Solana cluster, which survives restarts, or on a real cluster such as devnet. Tested end to end against `solana-test-validator`.
+- Status: a working app. It runs on its own local Solana cluster, which survives restarts, or on a real cluster. The program is deployed on devnet at `2g4BZEbPaSuLwY7QM9vvkZUiLNWvzAtuRkcXfuK4MwFy`. Paid, disputed and refunded payments pass end to end on devnet and on `solana-test-validator`.
 
 ## Run the app
 
@@ -53,6 +53,12 @@ npm run app --workspace @zk-toip/settle -- --cluster devnet             # the pl
 On a real cluster, the platform's **treasury** key pays for the test-USDC mint, the processor's network fees and the gas station. The deploy also comes from it, so the treasury needs about 1.5 SOL to deploy and 0.3 SOL to run. Devnet's RPC faucet is closed, so the first run prints the treasury's address. Send it SOL from https://faucet.solana.com, then run the command again. The treasury's key is in `.data/devnet/platform.json`.
 
 On devnet, clocks keep real time, so **Skip ahead** is hidden. `--cluster localnet` uses a `solana-test-validator` on port 8899, and `--cluster <url>` uses any RPC endpoint.
+
+The public devnet endpoint rate-limits each IP address. The client waits and retries, re-sends transactions until they're confirmed, and reads each party's accounts in one request per tick. Even so, a payment takes about a minute when everything runs from one machine. For more speed, use your own RPC provider's devnet URL with `--cluster <url>`. To run the real-cluster tests on devnet:
+
+```bash
+SETTLE_CLUSTER=devnet SETTLE_DATA=.data/devnet npm run test:cluster --workspace @zk-toip/settle
+```
 
 ## For developers: the whole integration
 
@@ -115,7 +121,7 @@ Other calls:
 ```bash
 npm test --workspace @zk-toip/settle        # 53 tests (and 3 that need a real cluster, skipped)
 npm run e2e --workspace @zk-toip/settle     # the app in a real browser: 4 jobs, 5 people, passkeys, operators; screenshots in web/e2e-shots/
-SETTLE_CLUSTER=localnet npm run test:cluster --workspace @zk-toip/settle   # against solana-test-validator (deploy first)
+SETTLE_CLUSTER=localnet npm run test:cluster --workspace @zk-toip/settle   # against solana-test-validator, or devnet (deploy first)
 npm run build:program --workspace @zk-toip/settle   # rebuild the program (needs Rust and Agave's cargo-build-sbf)
 npm run policies --workspace @zk-toip/settle        # recompile the Rego (needs opa)
 ```
@@ -139,7 +145,6 @@ The tests cover:
 
 ## Not yet
 
-- A run on devnet itself. It's wired and tested against `solana-test-validator`, but needs the treasury funded by hand first (see above).
 - Signing with the passkey itself. A passkey seals the key, but can't sign Ed25519 for a `did:key` or a Solana address, so the key is unsealed in memory while the account is open.
 - TLS and a public deployment. The platform can listen beyond localhost, but it doesn't terminate TLS itself.
 - Base, the second rail (design §11).

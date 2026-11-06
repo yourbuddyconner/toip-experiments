@@ -3,7 +3,7 @@
  * client code talks to it, to devnet, or to mainnet by changing a URL. Node only.
  *
  * Standard methods: getLatestBlockhash, sendTransaction, simulateTransaction, getAccountInfo,
- * getSignatureStatuses, getBalance, getSlot, getBlockTime, getMinimumBalanceForRentExemption, requestAirdrop, getHealth, getVersion.
+ * getSignatureStatuses, getMultipleAccounts, getBalance, getSlot, getBlockTime, getMinimumBalanceForRentExemption, requestAirdrop, getHealth, getVersion.
  * Development methods: settle_info (program id), settle_advanceClock (move chain time forward).
  */
 import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
@@ -93,6 +93,10 @@ export async function startChainServer(opts: ChainServerOptions): Promise<ChainS
       const a = net.svm.getAccount(addr as Address);
       return { context: { slot: Number(net.svm.getClock().slot) }, value: a.exists ? Number(a.lamports) : 0 };
     },
+    getMultipleAccounts: ([addrs]) => ({
+      context: { slot: Number(net.svm.getClock().slot) },
+      value: (addrs as string[]).map((a) => (methods.getAccountInfo([a]) as { value: unknown }).value),
+    }),
     getAccountInfo: ([addr]) => {
       const a = net.svm.getAccount(addr as Address);
       const slot = Number(net.svm.getClock().slot);
