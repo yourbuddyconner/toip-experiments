@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- All of Community Rides' plan Global Constraints apply: pinned `@openvtc/*` versions, `did:key` identities, every document signed, no runtime network access, no copyleft dependencies, components take the demo clock and never read `Date.now()`, and a license check whenever `package.json` changes.
+- All of Community Rides' plan Global Constraints apply: pinned `@openvtc/*` versions, `did:key` identities, every document signed, no runtime network access, components take the demo clock and never read `Date.now()`, and a license check whenever `package.json` changes.
 - Our type URIs: `https://zk-toip.example/spec/todo/<name>/0.1`. Names: `join`, `op`, `sync`, `status`, `relay/deposit`, `relay/collect`.
 - List name: "Maple St House". People: Alice (admin), Bob (editor), Carol (viewer), Mallory (not a member), plus the relay. Seeds: `sha256("shared-todo/<name>")`, and `sha256("shared-todo/list")` for the list.
 - The demo clock starts at `2026-11-05T14:30:00Z`.

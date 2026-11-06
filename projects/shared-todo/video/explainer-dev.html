@@ -78,7 +78,7 @@
     <div>TSP Direct messages: HPKE-Auth to the recipient's X25519 key, signed with Ed25519, CESR framing, carried in the <code>trusttasks.org/binding/tsp/0.1</code> envelope. They travel over a WebSocket relay.</div></div>
   <div class="layer" style="background:var(--l1)" data-at="5.4"><div class="name">1 · Trust support<small>packages/trust-core</small></div>
     <div>A <code>did:key</code> (Ed25519) for every device and every list, made locally. X25519 encryption keys are derived from it, as the P2P Trust Stack does.</div></div>
-  <p class="note" data-at="7.2" style="margin-top:20px">All Apache-2.0 OpenVTC libraries. None of the P2P Trust Stack's own code, which is GPL.</p>
+  <p class="note" data-at="7.2" style="margin-top:20px">Built on the OpenVTC TypeScript libraries, which implement the same ToIP specs.</p>
 </section>
 
 <!-- 3. Mini VTC -->
@@ -231,7 +231,7 @@ reader_reasons := [<span class="s">"not a reader of this item"</span>] <span cla
   <h1 data-at="0.3" style="font-size:80px">Try it, break it, tell us</h1>
   <p class="note mono" data-at="1.0" style="font-size:36px;margin-top:40px;color:var(--ink)">github.com/yourbuddyconner/toip-experiments</p>
   <p class="note" data-at="1.6" style="font-size:30px;margin-top:20px"><code>npm install &amp;&amp; npm run dev</code>, then open <code>?profile=alice</code> and <code>?profile=bob</code></p>
-  <p class="note" data-at="2.4" style="font-size:26px;margin-top:50px">Built on the Apache-2.0 OpenVTC libraries. Questions and pull requests welcome.</p>
+  <p class="note" data-at="2.4" style="font-size:26px;margin-top:50px">Built on the OpenVTC libraries. Questions and pull requests welcome.</p>
 </section>
 
 <script>

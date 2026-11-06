@@ -16,7 +16,7 @@
 
 ## Global Constraints
 
-- **Inherited from v1's plan:** the Global Constraints there still apply. That covers pinned `@openvtc/*` versions, `did:key`, every document signed, no copyleft dependencies, and running `npm run licenses` whenever dependencies change.
+- **Inherited from v1's plan:** the Global Constraints there still apply. That covers pinned `@openvtc/*` versions, `did:key`, every document signed, and running `npm run licenses` whenever dependencies change.
 - **Time:** app code takes a `Clock` (`now()`, `iso()`, `date()`). Production code uses `SystemClock`, and tests may use `DemoClock`.
 - **Message types:** `https://zk-toip.example/spec/todo/<name>/0.1`, with names `join`, `welcome`, `join-refused`, `ack`, `op`, `roster`, `sync-request`, `sync` and `leave`.
 - **Relay auth string:** `toip-relay-auth/v1|<challenge>|<relay URL>`.

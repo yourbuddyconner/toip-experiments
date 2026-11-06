@@ -7,7 +7,7 @@ Read: 2026-11-05, after IIW day 3.
 - **The stack's Layer 3 and Layer 4 pages and the glossary** (`https://www.fpndtg.com/stack/layer3-tasks.html`, `.../layer4-applications.html`, `/developers/glossary.html`). Read through a fetch tool that summarizes pages. Trust: summary only, but a fuller summary than S01.
 - **The trusttasks.org registry.** The site is a single-page app. Its data files were downloaded and searched directly: `/assets/tasks.generated.js` (12 MB, every spec's metadata and schemas), `/assets/data.js`, `/assets/ceremonies.js`, `/assets/libraries.js` and `/assets/ecosystem.js`. Trust: primary for what the registry *publishes*. It does not say which tasks are implemented anywhere.
 - **npm packages**, installed in a scratch directory with `--ignore-scripts` and their READMEs and type declarations read: `@openvtc/trust-tasks` 0.28.17, `@openvtc/trust-tasks-tsp` 0.1.2, `@openvtc/trust-tasks-proof` 0.1.6, `@openvtc/vti-tsp-js` 0.2.0 (0.4.0 is the latest). Trust: primary for the packages' stated APIs. Not run.
-- **GitHub repository metadata** through `gh repo view`: `OpenVTC/openvtc`, `OpenVTC/verifiable-trust-infrastructure`, `OpenVTC/dtg-credentials`, `trustoverip/dtgwg-trust-tasks-tf`. All public, Apache-2.0 apart from the last ("Other"), mostly Rust, updated on 2026-11-05. The code itself was not read.
+- **GitHub repository metadata** through `gh repo view`: `OpenVTC/openvtc`, `OpenVTC/verifiable-trust-infrastructure`, `OpenVTC/dtg-credentials`, `trustoverip/dtgwg-trust-tasks-tf`. All public, mostly Rust, updated on 2026-11-05. The code itself was not read.
 
 ## What it says
 

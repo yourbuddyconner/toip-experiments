@@ -1,6 +1,6 @@
 # Shared To-Do: design (v2, a working app)
 
-A shared to-do list app that people use on their own devices, with no server they have to trust. Built on the ToIP specs through the Apache-2.0 OpenVTC libraries and this repository's `packages/trust-core`. Date: 2026-11-05.
+A shared to-do list app that people use on their own devices, with no server they have to trust. Built on the ToIP specs through the OpenVTC TypeScript libraries and this repository's `packages/trust-core`. Date: 2026-11-05.
 
 v1 was a scripted, single-page demo. The convener asked for "a practical application that would be as close to reality as possible", not "a demo on rails". v2 replaces it (decision 0004). v1 is in git history at `54c7386`.
 
@@ -41,7 +41,6 @@ Underneath, every person and every list has its own key and DID, made on the dev
 - **A trusted server.** The relay must not be able to read lists, change them, or decide who is in.
 - **Rails.** No scripted steps, and no global view of other people's devices. Each running app is one person's device and knows only what it was told.
 - **Mocked checks.** Everything the inspector shows was computed.
-- **Copyleft code.** No GPL or other strong copyleft dependency, and nothing from the TrustStackers repositories (S03). MPL-2.0 is tolerated only in build tooling.
 
 ## 3. Using it
 

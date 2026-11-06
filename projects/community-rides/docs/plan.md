@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** A one-page browser demo of a community ride-share on the Apache-2.0 OpenVTC libraries for the ToIP specs the P2P Trust Stack uses: real TSP messages, real Trust Task envelopes, real Data Integrity signatures, and Rego policies decided on each phone.
+**Goal:** A one-page browser demo of a community ride-share on the OpenVTC libraries for the ToIP specs the P2P Trust Stack uses: real TSP messages, real Trust Task envelopes, real Data Integrity signatures, and Rego policies decided on each phone.
 
 **Architecture:** One npm package in `projects/community-rides/`. Framework-free agent code in `src/core` (identity, clock, bus, Trust Task endpoint, credentials, status list, policy loader) and `src/rides` (community agent, member agent, world, scenario) runs unchanged in Node tests and in the browser. `src/web` is a React view over a `World`. Rego policies in `policies/` compile to one committed `policy.wasm`.
 
@@ -16,7 +16,7 @@
 - Pin exact versions (`npm install --save-exact`): `@openvtc/trust-tasks` 0.28.17, `@openvtc/trust-tasks-tsp` 0.1.2, `@openvtc/trust-tasks-proof` 0.1.6, `@open-policy-agent/opa-wasm` 1.10.0. `@openvtc/vti-tsp-js` is whatever `-tsp` 0.1.2 resolves (0.2.x). Don't add 0.4.0.
 - Use the prebuilt spec modules by deep import (`@openvtc/trust-tasks/vtc/endorsements/issue/0.1/payload`), not `trust-tasks-gen`. They are deprecated. Record this in the README (§5.3 allows it).
 - No network access at runtime. Everything is in the page.
-- No GPL or other copyleft dependencies, direct or transitive. Don't read or copy code from the `TrustStackers` repositories. Before each commit that changes `package.json`, list the licenses in `node_modules` and confirm none is copyleft.
+- Before each commit that changes `package.json`, run `npm run licenses`.
 - `did:key` (Ed25519) for every VID. X25519 keys are derived from the Ed25519 key (`ed25519.utils.toMontgomerySecret` and `ed25519.utils.toMontgomery` in `@noble/curves` 2.x).
 - Every Trust Task document we send carries a Data Integrity proof (`signTrustTask`), responses included. Our own specs set `isProofRequired: true`, `isRecipientRequired: true`, `isIssuedAtRequired: true` and `isBearer: false`.
 - Our namespace: type URIs `https://zk-toip.example/spec/rides/<name>/0.1`. The driver predicate is `https://zk-toip.example/rides/driver/1`. The extension key in `ext` is `example.zk-toip.rides`.

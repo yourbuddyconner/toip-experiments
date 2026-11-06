@@ -7,7 +7,7 @@ Under the hood:
 - Membership is a credential the list's key signs, and who is in a list is a roster the list's key signs.
 - Every change is a signed operation, sent to each member as an encrypted TSP message, and checked by every device before it is applied.
 
-Built on the Apache-2.0 OpenVTC libraries for TSP and Trust Tasks, through `packages/trust-core`, with the relay in `packages/relay`. It uses none of the P2P Trust Stack's own code, which is GPL (`docs/sources/S03`).
+Built on the OpenVTC TypeScript libraries for TSP and Trust Tasks, through `packages/trust-core`, with the relay in `packages/relay`.
 
 Design: `docs/design.md`. Plan: `docs/plan-v2.md`.
 

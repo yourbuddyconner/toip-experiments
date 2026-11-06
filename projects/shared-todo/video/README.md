@@ -18,4 +18,4 @@ npx tsx video/render-explainer.ts                        # about 2.5 minutes; wr
 
 The side-by-side recording, `app-recording.mp4`, was put together from `alice.webm` and `bob.webm` with ffmpeg. Bob's recording starts when his browser first opens the app, about 18.5 s into Alice's. If you re-record, check `markers.json`, where `bob-opens-link` gives that offset, and update `BOB_OFFSET` in `explainer.html` to match.
 
-Tools: Playwright (Apache-2.0) and ffmpeg. No Remotion, because its license needs a paid company license for organizations with more than 3 employees.
+Tools: Playwright and ffmpeg.

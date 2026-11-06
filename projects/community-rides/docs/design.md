@@ -1,6 +1,6 @@
 # Community Rides: design
 
-A straw-man ride-share for a local community, built on the OpenVTC TypeScript libraries (Apache-2.0), an implementation of the ToIP specs the P2P Trust Stack uses (TSP, Trust Tasks). For show and tell. Date: 2026-11-05.
+A straw-man ride-share for a local community, built on the OpenVTC TypeScript libraries, an implementation of the ToIP specs the P2P Trust Stack uses (TSP, Trust Tasks). For show and tell. Date: 2026-11-05.
 
 Facts about the stack cite `docs/sources/S02-trust-tasks-registry-and-openvtc.md` (S02). Choices marked **(our call)** were made by the assistant while the convener was away, and are open to change.
 
@@ -43,7 +43,6 @@ The audience is IIW-style identity people, the P2P Trust Stack builders, and com
 - **It hides the mechanics.** If an audience member can't tell what was revealed to whom, the demo has missed its purpose.
 - **Fake crypto.** No mocked "✓ verified" badges. If a check shows a tick, real code computed it.
 - **Overclaiming.** It must not imply the stack works this way when we guessed. Section 9 lists the guesses.
-- **Copyleft code.** No GPL or other copyleft dependency, and nothing copied from the P2P Trust Stack's own repositories (S03). The convener doesn't want GPL code in this repository.
 
 ## 3. The story
 
