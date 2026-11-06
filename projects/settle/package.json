@@ -7,7 +7,8 @@
   "scripts": {
     "build:program": "cd program && mkdir -p target/deploy && cp keys/settle_escrow-keypair.json target/deploy/ && cargo build-sbf && cp target/deploy/settle_escrow.so dist/",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "policies": "opa build -t wasm -e settle/attested_completion/decision -o policies/bundle.tar.gz policies/attested-completion.rego && tar -xzf policies/bundle.tar.gz -C policies /policy.wasm && rm policies/bundle.tar.gz"
   },
   "dependencies": {
     "@noble/curves": "2.4.0",
