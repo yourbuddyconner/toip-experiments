@@ -7,24 +7,36 @@
   "scripts": {
     "build:program": "cd program && mkdir -p target/deploy && cp keys/settle_escrow-keypair.json target/deploy/ && cargo build-sbf && cp target/deploy/settle_escrow.so dist/",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p web",
     "policies": "opa build -t wasm -e settle/attested_completion/decision -o policies/bundle.tar.gz policies/attested-completion.rego && tar -xzf policies/bundle.tar.gz -C policies /policy.wasm && rm policies/bundle.tar.gz",
-    "demo": "tsx src/demo.ts"
+    "demo": "tsx src/demo.ts",
+    "app": "tsx src/platform/main.ts",
+    "build:web": "vite build --config web/vite.config.ts",
+    "e2e": "tsx web/e2e.ts"
   },
   "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "5.3.0",
+    "@fontsource-variable/public-sans": "5.3.0",
     "@noble/curves": "2.4.0",
     "@noble/hashes": "2.4.0",
     "@solana-program/system": "0.16.0",
     "@solana-program/token": "0.18.0",
     "@solana/kit": "8.6.0",
     "@zk-toip/trust-core": "0.0.0",
-    "litesvm": "1.6.2"
+    "litesvm": "1.6.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.2.1",
     "@zk-toip/relay": "0.0.0",
+    "playwright": "1.65.0",
     "tsx": "4.23.15",
     "typescript": "7.0.2",
+    "vite": "8.3.6",
     "vitest": "5.1.0"
   }
 }

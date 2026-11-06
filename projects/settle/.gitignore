@@ -1,3 +1,5 @@
 program/target
 !program/dist/
 !program/dist/settle_escrow.so
+web/dist
+web/e2e-shots

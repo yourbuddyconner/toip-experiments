@@ -11,6 +11,7 @@
   "scripts": {
     "test": "npm test --workspaces --if-present",
     "licenses": "node scripts/check-licenses.mjs",
-    "dev": "node scripts/dev.mjs"
+    "dev": "node scripts/dev.mjs",
+    "settle": "npm run app --workspace @zk-toip/settle"
   }
 }

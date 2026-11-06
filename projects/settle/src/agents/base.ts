@@ -2,7 +2,7 @@
  * What every Settle party has: a ToIP identity, a TSP endpoint on the relay, a view of the chain,
  * the payment policy, and what it has learned about each payment.
  */
-import { Endpoint, RelayTransport, fromB64u, toB64u, type Clock, type Identity, type Traffic } from "@zk-toip/trust-core";
+import { Endpoint, RelayTransport, fromB64u, toB64u, type Clock, type Identity, type OutboxStore, type Traffic } from "@zk-toip/trust-core";
 import { ed25519 } from "@noble/curves/ed25519.js";
 import type { Address } from "@solana/kit";
 import { addressBytes, escrowAddress, outcomeMessage, STATE } from "../chain/escrow";
@@ -33,6 +33,8 @@ export interface Directory {
   arbiter: { did: string; key: Address };
   licensingBoard: string;
   mint: Address;
+  /** The processor's published fee schedule. */
+  fee?: { bps: number; minUnits: string };
 }
 
 export interface PaymentState {
@@ -47,6 +49,25 @@ export interface PaymentState {
   signed: { payeeUnits: string; evidenceHash: string }[];
   /** When this party received each attestation (chain time), keyed by the attestation's hash. */
   received: Record<string, number>;
+  /** This party's part in the payment. */
+  role?: "payer" | "payee" | "attester";
+  /** The other party (for a payer, the payee; for a payee, the payer). */
+  counterparty?: string;
+  purpose?: string;
+  units?: string;
+  createdAt?: string;
+  link?: string;
+  checkout?: string;
+  /** A release request this payer refused for now, re-checked as time passes. */
+  pending?: OutcomeSignature;
+  /** The payer gave up on a payment before its escrow opened, so its funds can go back to the wallet. */
+  cancelled?: boolean;
+  /** What happened, for people: this party's own account of the payment. */
+  timeline?: { at: string; text: string }[];
+  /** The escrow as last read from the chain. */
+  chain?: { state: number; payeePaid: string; refundAfter: number; payeeOwed: string; payerOwed: string; amount: string; fee: string };
+  /** This party's payment account balance, as last read. */
+  balance?: string;
 }
 
 export interface AgentEvent {
@@ -75,6 +96,8 @@ export interface AgentOptions {
   directory: Directory;
   onEvent?: (e: AgentEvent) => void;
   onTraffic?: (who: string, t: Traffic) => void;
+  /** Where unsent messages wait across restarts (a browser's storage, say). Defaults to memory. */
+  outbox?: OutboxStore;
 }
 
 export const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
@@ -103,7 +126,7 @@ export abstract class Agent {
     this.policy = opts.policy;
     this.directory = opts.directory;
     this.onEvent = opts.onEvent;
-    this.transport = new RelayTransport({ url: opts.relayUrl, identity: opts.identity });
+    this.transport = new RelayTransport({ url: opts.relayUrl, identity: opts.identity, outbox: opts.outbox });
     this.endpoint = new Endpoint({
       identity: opts.identity,
       transport: this.transport,
@@ -169,6 +192,19 @@ export abstract class Agent {
     p.attestations.push(a);
   }
 
+  /** The attester's latest verified word, from what this party holds plus `extra`, timed from when this party first saw it. */
+  protected async latestCompletion(p: PaymentState, extra: Attestation[] = [], now?: number): Promise<{ a: Attestation; at: number } | undefined> {
+    const t = p.terms!;
+    const at = now ?? Number(await this.chain.now());
+    const seen = new Map<string, { a: Attestation; at: number }>();
+    for (const a of [...p.attestations, ...extra]) {
+      const h = hexHash(a);
+      if (seen.has(h) || a?.issuer !== t.conditions.attester || !(await verifySigned(a, t, a.issuer, this.clock))) continue;
+      seen.set(h, { a, at: p.received[h] ?? at });
+    }
+    return [...seen.values()].sort((x, y) => x.at - y.at || Date.parse(x.a.at) - Date.parse(y.a.at)).at(-1);
+  }
+
   /**
    * Builds the policy input from an evidence bundle plus everything this agent knows itself (design §8).
    * The attester's latest verified word counts, whoever sent it, timed from when this party first saw it.
@@ -176,13 +212,7 @@ export abstract class Agent {
   protected async evaluate(role: "payer" | "payee" | "arbiter", p: PaymentState, evidence: Evidence, payeeCancels = false): Promise<PolicyDecision> {
     const t = p.terms!;
     const now = Number(await this.chain.now());
-    const seen = new Map<string, { a: Attestation; at: number }>();
-    for (const a of [...p.attestations, ...(evidence.attestations ?? [])]) {
-      const h = hexHash(a);
-      if (seen.has(h) || a?.issuer !== t.conditions.attester || !(await verifySigned(a, t, a.issuer, this.clock))) continue;
-      seen.set(h, { a, at: p.received[h] ?? now });
-    }
-    const latest = [...seen.values()].sort((x, y) => x.at - y.at || Date.parse(x.a.at) - Date.parse(y.a.at)).at(-1);
+    const latest = await this.latestCompletion(p, evidence.attestations ?? [], now);
     const disputes = [...evidence.disputes, ...p.disputes.filter((d) => !evidence.disputes.some((e) => e.at === d.at && e.issuer === d.issuer))];
     const ruling = evidence.ruling && (await verifySigned(evidence.ruling, t, t.arbiter.did, this.clock)) ? { payeeUnits: evidence.ruling.payeeUnits } : null;
     return this.policy.decide({
@@ -216,6 +246,13 @@ export abstract class Agent {
   }
 }
 
+
+/** Whether an announced escrow is real and matches terms both parties signed, sent by the payer (review C6). */
+export async function genuineOpening(agent: { chain: Chain; clock: Clock }, m: { terms: Terms; acceptances: unknown; escrow: Address }, sender: string): Promise<boolean> {
+  if (!m?.terms || sender !== m.terms.payer?.did) return false;
+  if (!(await termsAgreed(m.terms, m.acceptances, agent.clock))) return false;
+  return (await escrowProblems(agent.chain, m.escrow, m.terms)).length === 0;
+}
 
 /** Both parties' acceptances of the terms, checked. */
 export async function termsAgreed(t: Terms, acceptances: unknown, clock: AgentOptions["clock"]): Promise<boolean> {

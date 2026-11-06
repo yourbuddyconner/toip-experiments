@@ -180,6 +180,7 @@ describe("review fixes: parties can't be cheated (C3–C6, I1, I4, I6)", () => {
 
   it("a stranger can't re-point the arbiter or the attester at another escrow (C6)", async () => {
     const { w, id } = await setup();
+    await until(() => !!w.arbiter.payments.get(id)?.escrow, "the arbiter to learn of the escrow");
     const real = w.arbiter.payments.get(id)!;
     const { ESCROW_OPENED } = await import("../src/protocol/specs");
     const fakeEscrow = w.processor.feeAccount;

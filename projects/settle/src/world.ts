@@ -7,7 +7,7 @@ import type { Address, KeyPairSigner } from "@solana/kit";
 import { Chain } from "./chain/chain";
 import { startChainServer, type ChainServer } from "./chain/rpcServer";
 import type { Simnet } from "./chain/simnet";
-import { SettlePolicy } from "./protocol/policy";
+import { loadPolicy } from "./protocol/policyFile";
 import { Arbiter, Attester, Payee, Payer, Processor } from "./agents/roles";
 import type { AgentEvent, Directory } from "./agents/base";
 
@@ -38,7 +38,7 @@ export async function createWorld(opts: { relayUrl: string; start?: string; onEv
   const chainServer = await startChainServer({ port: 0, startTime: clock.now() });
   const net = chainServer.net;
   const chain = await Chain.connect(chainServer.url);
-  const policy = await SettlePolicy.load();
+  const policy = await loadPolicy();
   const tag = opts.seed ?? crypto.randomUUID();
   const id = (n: string) => identityFromSeed(seedFrom(`settle-world/${tag}/${n}`));
   const ids = { landlord: id("landlord"), joe: id("joe"), alice: id("alice"), arbiter: id("arbiter"), processor: id("processor"), board: id("board") };

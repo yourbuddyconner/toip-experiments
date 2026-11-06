@@ -1,9 +1,10 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { SettlePolicy, type PolicyInput } from "../src/protocol/policy";
+import type { PolicyInput, SettlePolicy } from "../src/protocol/policy";
+import { loadPolicy } from "../src/protocol/policyFile";
 
 let policy: SettlePolicy;
 beforeAll(async () => {
-  policy = await SettlePolicy.load();
+  policy = await loadPolicy();
 });
 
 const base = (over: Partial<PolicyInput> = {}): PolicyInput => ({
@@ -41,5 +42,10 @@ describe("settle/policies/attested-completion/1 (design §8)", () => {
     expect(policy.decide(base({ role: "payee", completion: null })).sign).toBe(true);
     expect(policy.decide(base({ role: "payee", proposal: { payeeUnits: "0" } })).sign).toBe(false);
     expect(policy.decide(base({ role: "payee", proposal: { payeeUnits: "0" }, payeeCancels: true })).sign).toBe(true);
+  });
+  it("payer signs a full refund the payee offered, and never a refund the payee didn't offer", () => {
+    expect(policy.decide(base({ role: "payer", completion: null, proposal: { payeeUnits: "0" }, payeeCancels: true })).sign).toBe(true);
+    expect(policy.decide(base({ role: "payer", completion: null, proposal: { payeeUnits: "0" } })).sign).toBe(false);
+    expect(policy.decide(base({ role: "arbiter", proposal: { payeeUnits: "0" }, payeeCancels: true })).sign).toBe(false);
   });
 });

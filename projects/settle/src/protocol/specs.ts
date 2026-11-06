@@ -20,3 +20,5 @@ export const PAYMENT_RECEIPT = ourSpec("settle/payment/receipt");
 export const PROCESSOR_SUBMIT = ourSpec("settle/processor/submit");
 /** Request/response: the processor's transparency log. */
 export const PROCESSOR_LOG = ourSpec("settle/processor/log");
+/** A payer opening a payment link asks the payee for an invoice under the link's conditions. */
+export const CHECKOUT_START = ourSpec("settle/checkout/start");

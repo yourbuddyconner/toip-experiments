@@ -38,13 +38,16 @@ payee_ok if full
 
 payee_ok if ruling_matches
 
+# A full refund the payee offered: the payee signs it, and the payer signs it once the payee has.
+# The agent sets payeeCancels only for its own refund offer (payee) or a refund it verified the payee signed (payer).
 payee_cancels if {
-	input.role == "payee"
 	input.proposal.payeeUnits == "0"
 	input.payeeCancels
 }
 
 payee_ok if payee_cancels
+
+payer_ok if payee_cancels
 
 # The arbiter signs only its own ruling.
 arbiter_ok if ruling_matches

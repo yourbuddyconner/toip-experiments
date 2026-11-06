@@ -1,8 +1,6 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+/** The Settle payment policy, evaluated on each signer's own device. Browser-safe: pass the wasm bytes. */
 import { Policies } from "@zk-toip/trust-core";
 
-export const POLICY_WASM = join(import.meta.dirname, "..", "..", "policies", "policy.wasm");
 export const ENTRYPOINT = "settle/attested_completion/decision";
 
 export interface PolicyInput {
@@ -25,7 +23,7 @@ export interface PolicyDecision {
 export class SettlePolicy {
   private constructor(private readonly p: Policies) {}
 
-  static async load(wasm: BufferSource = readFileSync(POLICY_WASM)): Promise<SettlePolicy> {
+  static async load(wasm: BufferSource): Promise<SettlePolicy> {
     return new SettlePolicy(await Policies.load(wasm));
   }
 

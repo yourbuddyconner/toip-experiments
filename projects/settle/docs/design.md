@@ -276,3 +276,44 @@ A review of the first build found ways for one party to lock, steer or drain fun
 - **On a dispute, the arbiter signs a hold**, and the processor submits it.
 - **The log** records only verified documents, as roles and hashes.
 
+
+## 17. The app: platform, parties, payment links (2026-11-06)
+
+The goal was to make Settle as easy to use as a mainstream payments product: one command to run, a payment link to get paid, one button to pay. None of the trust model gives way for that.
+
+**The platform.** `src/platform/platform.ts` runs a whole network in one process: the local Solana cluster, the relay, the processor and the arbiter. It adds three development conveniences:
+- a faucet for test USDC;
+- Settle Verify, which issues a `VerifiedBusiness` credential to anyone who signs a request (it checks nothing; a real one would);
+- a phone book of display names, each a signed `settle/profile`.
+
+It also serves a REST API and the web app. **None of these conveniences can move money or sign for anyone.** Names and verification are shown to people; parties never decide on them, except that a payer checks the verifier's credential like any other.
+
+**The party.** `src/agents/party.ts` merges payer, payee and attester into one `Party`, because a person or business plays all three. It runs on the person's device: in the app, a browser tab. Its identity key lives in that browser's storage, and its state is saved after every change (`snapshot()` / `restore()`). Each payment's key is re-derived from the identity, so a snapshot holds no keys. A Web Lock keeps an account to one tab at a time, so two tabs never answer the same messages.
+
+**Payment links.** A link is a signed `settle/payment-link` document carried in the URL. It holds:
+- the payee's DID and name, the title and the price;
+- who confirms the work (the payer, or a named attester);
+- the dispute window;
+- the payee's credentials.
+
+The checkout page verifies the signature and the credentials itself, without asking a server.
+
+**Checkout** is one new Trust Task, `settle/checkout/start`, and then the existing flow, run without clicks:
+1. The payer sends the link back to its issuer.
+2. The payee checks that the link is its own, unchanged and not archived. It then invoices under the link's conditions.
+3. The payer checks that the invoice matches the link. It funds the payment account from its wallet and proposes terms with the link's conditions and the processor's published fee.
+4. The payee accepts only terms with exactly those conditions.
+5. The payer opens the escrow through the processor.
+
+If the payee is offline, the request waits on the relay, and checkout finishes when the payee comes back.
+
+**Acting on time.** `tick()` runs every few seconds and re-reads each open escrow from the chain.
+- **Payer:** a release request it refused (for example, inside the dispute window) is kept. The payer signs it once its policy allows, judged on chain time.
+- **Payee, with `autoRelease`:** it asks for release as soon as the attester's latest word is "complete".
+- Nothing here bypasses a policy. It only re-asks the same question as time passes.
+
+**Refunds.** A payee can offer a full refund by signing `pay:0`. The policy now lets the payer sign a refund that the payee has signed and that the payer verified came from the payee's key (`payee_cancels`).
+
+**Payment accounts and the wallet.** Each party has a wallet: a Solana key and a USDC account derived from its identity. Each payment still gets its own key and account. When a payment finishes, its money stays in that payment's account until the party moves it to the wallet. Moving it links the two on the chain, so it is the party's choice when to do it.
+
+**Requests outside the queue.** The relay delivers a party's messages in order, and a party handles them one at a time. A task that waited for the processor's reply inside that queue could block the reply behind other messages. Opening, reclaiming and claiming therefore build their transactions inside the queue, wait for the processor outside it, and record the result inside it again.
