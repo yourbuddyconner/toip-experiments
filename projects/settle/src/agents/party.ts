@@ -753,7 +753,8 @@ export class Party extends Agent {
 
   private async onSettled(m: SettledPayload): Promise<void> {
     const p = this.byTermsHash(m?.termsHash);
-    if (!p?.terms || !p.escrow || p.settled || m.escrow !== p.escrow) return;
+    // A tick may have seen the escrow resolve first, without the transaction: that still needs the receipt and the notes.
+    if (!p?.terms || !p.escrow || p.settled?.transaction || m.escrow !== p.escrow || typeof m.transaction !== "string" || !m.transaction) return;
     const s = await this.chain.escrow(p.escrow);
     if (!s || s.state !== STATE.resolved) return;
     p.settled = { transaction: m.transaction, payeeUnits: s.payeePaid.toString() };

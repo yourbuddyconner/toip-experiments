@@ -94,7 +94,8 @@ export class Session {
     await party.start();
     await party.openWallet();
     await api.register(party).catch(() => {});
-    session.timers.push(setInterval(() => void session.refresh(), 1500));
+    // A real cluster's public RPC rate-limits, and its blocks come no faster: check it less often than a local one.
+    session.timers.push(setInterval(() => void session.refresh(), config.devClock ? 1500 : 4000));
     session.timers.push(setInterval(() => void session.loadPeople(), 8000));
     await Promise.all([session.refresh(), session.loadPeople()]);
     return session;

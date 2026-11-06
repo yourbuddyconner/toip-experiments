@@ -53,7 +53,8 @@ function patientTransport(url: string) {
       } catch (e) {
         const status = (e as { context?: { statusCode?: number } }).context?.statusCode;
         const transient = status === 429 || (status !== undefined && status >= 500) || (status === undefined && e instanceof TypeError);
-        if (!transient || attempt >= 6) throw e;
+        // About a minute in all: public endpoints sometimes refuse a burst for that long.
+        if (!transient || attempt >= 10) throw e;
         await sleep(Math.min(8000, 400 * 2 ** attempt) + Math.random() * 250);
       }
     }

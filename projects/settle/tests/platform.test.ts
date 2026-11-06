@@ -367,4 +367,29 @@ describe("Settle platform, end to end", () => {
     expect(platform!.config.processor.did).toBe(first.processor.did); // same keys, new chain
     expect(platform!.processor.escrows).toBe(0);
   });
+
+  it("a party that sees the escrow resolve on the chain before the processor's word still records the transaction and sends its receipt", async () => {
+    const { api, join, operator } = await setup();
+    await operator();
+    const shop = await join("Joe's Plumbing");
+    const customer = await join("Dana");
+    await api.addFunds(customer, USDC(200));
+    const c = await customer.checkout(await shop.createLink({ title: "Fix the boiler", units: USDC(100), release: "payer-confirms" }));
+    await until(() => customer.checkouts.get(c.id)?.status === "opened", "the escrow to open");
+    const id = paymentOf(customer, c.id)!;
+    await until(() => !!shop.payments.get(id)?.escrow, "the shop to check the escrow");
+    await customer.dispute(id, "Still cold");
+    await until(async () => (await api.get<{ cases: { id: string; disputes: unknown[] }[] }>("/api/arbiter")).cases.some((k) => k.id === id && k.disputes.length), "the case");
+
+    // The shop drops off the relay; the arbiter and the customer settle it without the shop.
+    shop.transport.stop();
+    await api.post("/api/arbiter/rule", { paymentId: id, payeeUnits: USDC(60).toString(), reasons: "Half done." });
+    await until(() => !!customer.payments.get(id)?.settled, "settlement");
+    await shop.tick(); // the shop reads the chain first
+    expect(shop.payments.get(id)!.settled!.transaction).toBe("");
+
+    shop.transport.start();
+    await until(() => !!shop.payments.get(id)!.settled!.transaction, "the processor's word to reach the shop");
+    await until(() => customer.receipts.length === 1, "the shop's receipt");
+  });
 });

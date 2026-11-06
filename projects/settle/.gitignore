@@ -3,3 +3,4 @@ program/target
 !program/dist/settle_escrow.so
 web/dist
 web/e2e-shots
+web/demo-footage

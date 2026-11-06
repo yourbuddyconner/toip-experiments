@@ -77,3 +77,14 @@ export function usePath(): string {
   }, []);
   return path;
 }
+
+/** A link to Solana Explorer for this network's chain, or null on the platform's own local cluster (no explorer can see it). */
+export function explorer(config: { cluster: string; rpcUrl: string }, kind: "tx" | "address", id: string): string | null {
+  if (config.cluster === "local") return null;
+  const q = ["devnet", "testnet"].includes(config.cluster)
+    ? `?cluster=${config.cluster}`
+    : config.cluster === "mainnet" || config.cluster === "mainnet-beta"
+      ? ""
+      : `?cluster=custom&customUrl=${encodeURIComponent(config.rpcUrl)}`;
+  return `https://explorer.solana.com/${kind}/${id}${q}`;
+}

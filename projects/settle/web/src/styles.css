@@ -265,3 +265,4 @@ a.row:hover { background: #ffffff8c; }
 .operators { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; margin: 1rem 0 1.5rem; }
 .operators li { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: baseline; }
 .welcome-form .actions { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }
+.onchain { font-size: 0.92rem; margin: -0.4rem 0 1.2rem; }

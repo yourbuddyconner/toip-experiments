@@ -2,7 +2,7 @@ import { useState } from "react";
 import { STATE } from "../../../src/chain/escrow";
 import type { PaymentState } from "../../../src/agents/base";
 import { A, Action, Empty, Field, PaymentChip, Seals } from "../ui";
-import { day, money, short, when } from "../model";
+import { day, explorer, money, short, when } from "../model";
 import type { Session } from "../session";
 import { PaymentRows } from "./Home";
 
@@ -93,6 +93,14 @@ export function PaymentDetail({ s, id }: { s: Session; id: string }) {
 
       <Seals p={p} names={names} />
       <p className="next">{nextStep(s, p)}</p>
+      {p.settled && (p.settled.transaction ? explorer(s.config, "tx", p.settled.transaction) : p.escrow && explorer(s.config, "address", p.escrow)) && (
+        <p className="onchain">
+          Settled on Solana.{" "}
+          <a href={(p.settled.transaction ? explorer(s.config, "tx", p.settled.transaction) : explorer(s.config, "address", p.escrow!))!} target="_blank" rel="noreferrer">
+            See the settlement on Solana Explorer
+          </a>
+        </p>
+      )}
 
       <div className="actions">
         {iAttest && open && (
@@ -183,7 +191,13 @@ export function PaymentDetail({ s, id }: { s: Session; id: string }) {
                 <>
                   <dt>Escrow</dt>
                   <dd className="mono" title={p.escrow}>
-                    {short(p.escrow)}
+                    {explorer(s.config, "address", p.escrow) ? (
+                      <a href={explorer(s.config, "address", p.escrow)!} target="_blank" rel="noreferrer">
+                        {short(p.escrow)}
+                      </a>
+                    ) : (
+                      short(p.escrow)
+                    )}
                   </dd>
                 </>
               )}
