@@ -19,6 +19,6 @@ Replace v1 with a working app (design v2):
 - devices reach each other through a WebSocket relay (`packages/relay`) that authenticates DIDs and queues sealed TSP messages for offline devices
 - an inspector shows this device's messages and checks
 
-`packages/trust-core`, the operation format, the checks and the Rego rules carry over. The scripted world, scenario and single-page UI are removed. They stay in git history at commit `b3e9fd7`.
+`packages/trust-core`, the operation format, the checks and the Rego rules carry over. The scripted world, scenario and single-page UI are removed. They stay in git history at commit `54c7386`.
 
 Choices by the convener as above. Design by the assistant.

@@ -2,7 +2,7 @@
 
 A shared to-do list app that people use on their own devices, with no server they have to trust. Built on the ToIP specs through the Apache-2.0 OpenVTC libraries and this repository's `packages/trust-core`. Date: 2026-11-05.
 
-v1 was a scripted, single-page demo. The convener asked for "a practical application that would be as close to reality as possible", not "a demo on rails". v2 replaces it (decision 0004). v1 is in git history at `b3e9fd7`.
+v1 was a scripted, single-page demo. The convener asked for "a practical application that would be as close to reality as possible", not "a demo on rails". v2 replaces it (decision 0004). v1 is in git history at `54c7386`.
 
 The convener chose: an installable web app, a relay server we write, and an optional inspector for the trust mechanics. Choices marked **(our call)** were made by the assistant. Section 4.8 lists what v1's code review taught.
 
