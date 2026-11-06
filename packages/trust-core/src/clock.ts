@@ -1,5 +1,24 @@
-/** A shared, manually advanced clock, so demo steps are deterministic. No component reads Date.now(). */
-export class DemoClock {
+/** Where every component gets the time. Production uses SystemClock; tests use DemoClock. */
+export interface Clock {
+  now(): number;
+  iso(): string;
+  date(): Date;
+}
+
+export class SystemClock implements Clock {
+  now(): number {
+    return Date.now();
+  }
+  iso(): string {
+    return new Date().toISOString();
+  }
+  date(): Date {
+    return new Date();
+  }
+}
+
+/** A manually advanced clock, so tests are deterministic. */
+export class DemoClock implements Clock {
   private ms: number;
   private readonly listeners = new Set<() => void>();
 

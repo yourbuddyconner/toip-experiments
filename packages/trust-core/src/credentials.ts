@@ -6,7 +6,7 @@
 import type { Proof, TrustTaskDocument } from "@openvtc/trust-tasks/runtime";
 import { newUrnUuid } from "@openvtc/trust-tasks-tsp";
 import { DataIntegrityProofVerifier, signTrustTask } from "@openvtc/trust-tasks-proof";
-import type { DemoClock } from "./clock";
+import type { Clock } from "./clock";
 import type { Identity } from "./identity";
 
 export interface Credential {
@@ -33,17 +33,17 @@ export interface CredentialBody {
 }
 
 /** Signs any JSON object whose `issuer` is the signer's DID. */
-export function signDocument<T extends { issuer: string }>(doc: T, issuer: Identity, clock: DemoClock): T {
+export function signDocument<T extends { issuer: string }>(doc: T, issuer: Identity, clock: Clock): T {
   return signTrustTask(doc as unknown as TrustTaskDocument<unknown>, issuer.signer, { created: clock.date() }) as unknown as T;
 }
 
 /** Verifies the proof of any JSON object signed by `signDocument`. */
-export async function verifyDocument(doc: object, clock: DemoClock) {
+export async function verifyDocument(doc: object, clock: Clock) {
   const verifier = new DataIntegrityProofVerifier({ now: () => clock.now() });
   return verifier.verifyDetailed(doc as unknown as TrustTaskDocument<unknown>);
 }
 
-export function issueCredential(issuer: Identity, clock: DemoClock, body: CredentialBody): Credential {
+export function issueCredential(issuer: Identity, clock: Clock, body: CredentialBody): Credential {
   const vc: Credential = {
     "@context": ["https://www.w3.org/ns/credentials/v2"],
     id: newUrnUuid(),
@@ -57,7 +57,7 @@ export function issueCredential(issuer: Identity, clock: DemoClock, body: Creden
   return signDocument(vc, issuer, clock);
 }
 
-export async function verifyCredential(vc: Credential, clock: DemoClock): Promise<CredentialCheck> {
+export async function verifyCredential(vc: Credential, clock: Clock): Promise<CredentialCheck> {
   const r = await verifyDocument(vc, clock);
   if (!r.valid) {
     const failure = r.failure === "issuerMismatch" ? "issuerMismatch" : r.failure === "signatureInvalid" ? "signatureInvalid" : "malformedProof";

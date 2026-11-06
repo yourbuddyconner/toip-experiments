@@ -16,8 +16,8 @@ function contains(hay: Uint8Array, needle: Uint8Array): boolean {
 function setup(timeoutMs = 3000) {
   const clock = new DemoClock("2026-11-05T14:30:00Z");
   const bus = new Bus(clock);
-  const alice = new Endpoint({ identity: identityFromSeed(seedFrom("t/alice")), bus, clock, timeoutMs });
-  const bob = new Endpoint({ identity: identityFromSeed(seedFrom("t/bob")), bus, clock, timeoutMs });
+  const alice = new Endpoint({ identity: identityFromSeed(seedFrom("t/alice")), transport: bus, clock, timeoutMs });
+  const bob = new Endpoint({ identity: identityFromSeed(seedFrom("t/bob")), transport: bus, clock, timeoutMs });
   return { clock, bus, alice, bob };
 }
 
@@ -75,7 +75,7 @@ describe("Endpoint over TSP", () => {
     bob.handle<{ text: string }, void>(note, (doc, ctx) => {
       got.push(`${ctx.sender}:${doc.payload.text}`);
     });
-    expect(await alice.notify(bob.vid, note, { text: "a" })).toBe("delivered");
+    expect(await alice.notify(bob.vid, note, { text: "a" })).toBe("live");
     await bus.settle();
     expect(got).toEqual([`${alice.vid}:a`]);
     expect(bus.records()).toHaveLength(1);

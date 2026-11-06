@@ -1,6 +1,7 @@
 export * from "./clock";
 export * from "./identity";
 export * from "./bus";
+export * from "./transport";
 export * from "./tasks";
 export * from "./credentials";
 export * from "./statusList";

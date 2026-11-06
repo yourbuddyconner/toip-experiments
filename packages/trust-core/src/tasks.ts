@@ -10,8 +10,9 @@ import {
 } from "@openvtc/trust-tasks/runtime";
 import { TspConsumer, advertisedSender, newUrnUuid, packTrustTask, unpackTrustTask } from "@openvtc/trust-tasks-tsp";
 import { DataIntegrityProofVerifier, signTrustTask } from "@openvtc/trust-tasks-proof";
-import type { Bus, WireRecord } from "./bus";
-import type { DemoClock } from "./clock";
+import type { WireRecord } from "./bus";
+import type { Clock } from "./clock";
+import type { Delivery, Transport } from "./transport";
 import { resolveDidKey, type Identity } from "./identity";
 
 /** A handler returns this to refuse a request. It becomes a signed trust-task-error. */
@@ -50,6 +51,16 @@ export function ourSpec(name: string): SpecPolicy {
   };
 }
 
+/** One message this endpoint sent or received, for an inspector. */
+export interface Traffic {
+  direction: "in" | "out";
+  peer: string;
+  document: TrustTaskDocument<unknown>;
+  bytes: number;
+  at: string;
+  delivery?: Delivery;
+}
+
 interface Pending {
   to: string;
   resolve: (doc: TrustTaskDocument<unknown>) => void;
@@ -66,18 +77,27 @@ const isResponseType = (t: string) => t.endsWith("#response") || t.split("#")[0]
 export class Endpoint {
   readonly vid: string;
   private readonly identity: Identity;
-  private readonly bus: Bus;
-  private readonly clock: DemoClock;
+  private readonly transport: Transport;
+  private readonly clock: Clock;
+  private readonly onTraffic?: (t: Traffic) => void;
   private readonly timeoutMs: number;
   private readonly consumer: TspConsumer;
   private readonly verifier: DataIntegrityProofVerifier;
   private readonly handlers = new Map<string, { spec: SpecPolicy; handler: Handler<any, any> }>();
   private readonly pending = new Map<string, Pending>();
 
-  constructor(opts: { identity: Identity; bus: Bus; clock: DemoClock; timeoutMs?: number; freshness?: FreshnessPolicy }) {
+  constructor(opts: {
+    identity: Identity;
+    transport: Transport;
+    clock: Clock;
+    timeoutMs?: number;
+    freshness?: FreshnessPolicy;
+    onTraffic?: (t: Traffic) => void;
+  }) {
     this.identity = opts.identity;
     this.vid = opts.identity.did;
-    this.bus = opts.bus;
+    this.transport = opts.transport;
+    this.onTraffic = opts.onTraffic;
     this.clock = opts.clock;
     this.timeoutMs = opts.timeoutMs ?? 3000;
     this.verifier = new DataIntegrityProofVerifier({ now: () => this.clock.now() });
@@ -91,7 +111,8 @@ export class Endpoint {
       now: () => this.clock.now(),
       ...(opts.freshness ? { freshness: opts.freshness } : {}),
     });
-    this.bus.attach(this.vid, (wire, rec) => this.receive(wire, rec));
+    // The in-memory Bus passes its record as a second argument; other transports pass only the wire.
+    this.transport.attach(this.vid, (wire: Uint8Array, rec?: WireRecord) => this.receive(wire, rec));
   }
 
   handle<P, R>(spec: SpecPolicy, handler: Handler<P, R>): void {
@@ -104,15 +125,18 @@ export class Endpoint {
   }
 
   /** Sends a one-way message. No reply is expected. */
-  async notify(to: string, spec: SpecPolicy, payload: unknown): Promise<"delivered" | "undelivered"> {
-    if (!this.bus.isOnline(to)) return "undelivered";
-    const { wire } = await this.build(to, spec, payload);
-    const rec = this.bus.send(this.vid, to, wire);
-    return rec.undelivered ? "undelivered" : "delivered";
+  async notify(to: string, spec: SpecPolicy, payload: unknown): Promise<Delivery> {
+    const { doc, wire } = await this.build(to, spec, payload);
+    return this.post(to, wire, doc);
+  }
+
+  private async post(to: string, wire: Uint8Array, doc: TrustTaskDocument<unknown>): Promise<Delivery> {
+    const delivery = await this.transport.post(this.vid, to, wire);
+    this.onTraffic?.({ direction: "out", peer: to, document: doc, bytes: wire.length, at: this.clock.iso(), delivery });
+    return delivery;
   }
 
   async request<P, R>(to: string, spec: SpecPolicy, payload: P): Promise<TrustTaskDocument<R>> {
-    if (!this.bus.isOnline(to)) throw new TaskError("undelivered", `${to} is not reachable`);
     const { doc, wire } = await this.build(to, spec, payload);
     const answer = new Promise<TrustTaskDocument<unknown>>((resolve, reject) => {
       const timer = setTimeout(() => {
@@ -121,8 +145,7 @@ export class Endpoint {
       }, this.timeoutMs);
       this.pending.set(doc.id, { to, resolve, reject, timer });
     });
-    const rec = this.bus.send(this.vid, to, wire);
-    if (rec.undelivered) {
+    if ((await this.post(to, wire, doc)) === "undelivered") {
       this.settle(doc.id, (p) => p.reject(new TaskError("undelivered", `${to} is not reachable`)));
     }
     return answer as Promise<TrustTaskDocument<R>>;
@@ -134,7 +157,7 @@ export class Endpoint {
   }
 
   close(): void {
-    this.bus.detach(this.vid);
+    this.transport.detach(this.vid);
     for (const id of [...this.pending.keys()]) this.settle(id, (p) => p.reject(new TaskError("closed", "endpoint closed")));
   }
 
@@ -159,9 +182,17 @@ export class Endpoint {
       keys: {
         senderSigningKey: this.identity.signingSecret,
         senderEncryptionKey: this.identity.encryptionSecret,
-        receiverEncryptionKey: resolveDidKey(to).encryptionKey,
+        receiverEncryptionKey: this.recipientKey(to),
       },
     });
+  }
+
+  private recipientKey(to: string): Uint8Array {
+    try {
+      return resolveDidKey(to).encryptionKey;
+    } catch {
+      throw new TaskError("undelivered", `can't resolve ${to}`);
+    }
   }
 
   private settle(id: string, fn: (p: Pending) => void): void {
@@ -189,15 +220,16 @@ export class Endpoint {
     } catch (e) {
       if (rec) {
         rec.refused = e instanceof Error ? e.message : String(e);
-        this.bus.changed();
+        this.touched();
       }
       return;
     }
     const doc = unpacked.document as unknown as TrustTaskDocument<unknown>;
     if (rec) {
       rec.opened = { by: this.vid, document: doc };
-      this.bus.changed();
+      this.touched();
     }
+    this.onTraffic?.({ direction: "in", peer: sender, document: doc, bytes: wire.length, at: this.clock.iso() });
     if (isResponseType(doc.type)) return this.onResponse(doc, sender);
 
     const entry = this.handlers.get(doc.type);
@@ -205,7 +237,8 @@ export class Endpoint {
       const err = rejectWith(doc, newUrnUuid(), { code: "unsupportedType", message: `no handler for ${doc.type}`, retryable: false }, () =>
         this.clock.iso(),
       );
-      this.bus.send(this.vid, sender, await this.pack(this.sign(err), sender));
+      const signed = this.sign(err);
+      await this.post(sender, await this.pack(signed, sender), signed);
       return;
     }
     const received = await this.consumer.consume(unpacked, entry.spec, async (d, parties) => {
@@ -218,8 +251,14 @@ export class Endpoint {
       return this.sign(respondWith(d, newUrnUuid(), result, () => this.clock.iso()));
     });
     if (received.reply !== undefined) {
-      this.bus.send(this.vid, sender, await this.consumer.packReply(received));
+      const reply = JSON.parse(new TextDecoder().decode(received.reply)) as TrustTaskDocument<unknown>;
+      await this.post(sender, await this.consumer.packReply(received), reply);
     }
+  }
+
+  /** Lets the in-memory Bus tell its listeners that a record it holds was opened or refused. */
+  private touched(): void {
+    (this.transport as { changed?: () => void }).changed?.();
   }
 
   private sign<P>(doc: TrustTaskDocument<P>): TrustTaskDocument<P> {

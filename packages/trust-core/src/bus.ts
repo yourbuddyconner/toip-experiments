@@ -1,5 +1,6 @@
 import type { TrustTaskDocument } from "@openvtc/trust-tasks/runtime";
-import type { DemoClock } from "./clock";
+import type { Clock } from "./clock";
+import type { Delivery, Transport } from "./transport";
 
 /** One message on the simulated network, as an observer sees it, plus what its recipient opened. */
 export interface WireRecord {
@@ -22,7 +23,7 @@ type Deliver = (wire: Uint8Array, rec: WireRecord) => Promise<void>;
 const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
 
 /** An in-memory network that delivers bytes by receiver VID, and lets the UI tap every message. */
-export class Bus {
+export class Bus implements Transport {
   private readonly peers = new Map<string, Deliver>();
   private readonly offline = new Set<string>();
   private readonly log: WireRecord[] = [];
@@ -30,7 +31,7 @@ export class Bus {
   private readonly inFlight = new Set<Promise<void>>();
   private seq = 0;
 
-  constructor(private readonly clock: DemoClock) {}
+  constructor(private readonly clock: Clock) {}
 
   attach(vid: string, deliver: Deliver): void {
     this.peers.set(vid, deliver);
@@ -76,6 +77,10 @@ export class Bus {
       this.inFlight.add(p);
     }
     return rec;
+  }
+
+  async post(from: string, to: string, wire: Uint8Array): Promise<Delivery> {
+    return this.send(from, to, wire).undelivered ? "undelivered" : "live";
   }
 
   records(): readonly WireRecord[] {

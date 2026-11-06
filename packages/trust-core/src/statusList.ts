@@ -1,5 +1,5 @@
 import type { Proof } from "@openvtc/trust-tasks/runtime";
-import type { DemoClock } from "./clock";
+import type { Clock } from "./clock";
 import { signDocument, verifyDocument } from "./credentials";
 import { fromB64u, toB64u } from "./encoding";
 import type { Identity } from "./identity";
@@ -36,7 +36,7 @@ export class StatusList {
     return (this.bits[index >> 3] & (1 << (index & 7))) !== 0;
   }
 
-  sign(issuer: Identity, clock: DemoClock): StatusListDoc {
+  sign(issuer: Identity, clock: Clock): StatusListDoc {
     const doc: StatusListDoc = {
       id: `${issuer.did}#status`,
       type: "status-list",
@@ -58,7 +58,7 @@ export async function checkStatus(
   doc: StatusListDoc,
   index: number,
   expectedIssuer: string,
-  clock: DemoClock,
+  clock: Clock,
 ): Promise<{ signatureValid: boolean; revoked: boolean; ageSeconds: number }> {
   const sig = await verifyDocument(doc, clock);
   return {
