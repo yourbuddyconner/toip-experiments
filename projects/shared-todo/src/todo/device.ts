@@ -27,13 +27,28 @@ import {
 import { authorize, checkOp, type CheckResult, type Role } from "./checks";
 import { ListModel, type Item } from "./model";
 import { opKey, signOp, tamperOp, type Op, type OpKind } from "./ops";
-import { acceptRoster, currentMembers, rosterMember, signRoster, type RosterDoc, type RosterMember } from "./roster";
+import { acceptRoster, currentMembers, rosterEntry, rosterMember, signRoster, type RosterDoc, type RosterMember } from "./roster";
 import { ACK, JOIN, JOIN_REFUSED, LEAVE, OP, ROSTER, SPEC_NAMES, SYNC, SYNC_REQUEST, WELCOME } from "./specs";
 import type { Store } from "./store";
 
 export const INVITATION_TTL_MS = 7 * 24 * 3600_000;
 const FRESHNESS = { skewMs: 5 * 60_000, maxAgeMs: 31 * 24 * 3600_000 };
 const INSPECTOR_LIMIT = 500;
+/** Ops per history page in welcome and sync, so no message nears the relay's size limit (review C2). */
+export const HISTORY_PAGE = 100;
+/** Refusals that never got as far as verifying their author are only reasons to doubt the sender (review I3). */
+const UNVERIFIED_REASONS = new Set([
+  "malformed operation",
+  "for a different list",
+  "from the future",
+  "operation: signature does not verify",
+  "not from its author",
+  "membership: signature does not verify",
+  "not a member",
+  "credential is for someone else",
+  "not from a current member",
+]);
+const MAX_UNVERIFIED_PER_SENDER = 20;
 
 export interface Invitation {
   v: 1;
@@ -51,11 +66,27 @@ export interface OpMessage {
   membership?: Credential;
 }
 
+/** One page of a list's history, in a welcome follow-up or a sync reply. */
+interface HistoryPage {
+  list: string;
+  roster: RosterDoc;
+  memberships: Record<string, Credential>;
+  ops: Op[];
+  page: number;
+  last: boolean;
+}
+
 export interface Refusal {
   at: string;
   opId: string;
+  /** Who the op says wrote it. Only trustworthy when `verified`. */
   author: string;
   authorName: string;
+  /** Whether the author's signature and membership checked out before it was refused. */
+  verified: boolean;
+  /** Who actually sent it to this device, as TSP authenticated. */
+  from?: string;
+  fromName?: string;
   via?: string;
   viaName?: string;
   reason: string;
@@ -81,6 +112,7 @@ interface ListRecord {
   acknowledgement?: Credential;
   roster?: RosterDoc;
   ops: Op[];
+  /** Membership credentials, keyed by credential id. */
   memberships: Record<string, Credential>;
   held: { msg: OpMessage; directSender?: string; via?: string }[];
   refused: Refusal[];
@@ -174,13 +206,13 @@ export class Device {
     const on = <P>(spec: Parameters<Endpoint["handle"]>[0], fn: (p: P, sender: string) => Promise<void>) =>
       this.endpoint.handle<P, void>(spec, (doc: TrustTaskDocument<P>, ctx) => this.serial(() => fn(doc.payload, ctx.sender)));
     on(JOIN, (p: { code: string; list: string; name: string }, s) => this.onJoin(p, s));
-    on(WELCOME, (p: { listName: string; membership: Credential; roster: RosterDoc; ops: OpMessage[] }, s) => this.onWelcome(p, s));
+    on(WELCOME, (p: { listName: string; membership: Credential; roster: RosterDoc }, s) => this.onWelcome(p, s));
     on(JOIN_REFUSED, (p: { list: string; reason: string }, s) => this.onJoinRefused(p, s));
     on(ACK, (p: { acknowledgement: Credential }, s) => this.onAck(p, s));
     on(OP, (p: OpMessage, s) => this.onOp(p, s));
     on(ROSTER, (p: { roster: RosterDoc }, s) => this.onRoster(p, s));
     on(SYNC_REQUEST, (p: { list: string }, s) => this.onSyncRequest(p, s));
-    on(SYNC, (p: { list: string; roster: RosterDoc; ops: OpMessage[] }, s) => this.onSync(p, s));
+    on(SYNC, (p: HistoryPage, s) => this.onSync(p, s));
     on(LEAVE, (p: { list: string }, s) => this.onLeave(p, s));
     this.transport.onStatus((status) => {
       this.changed();
@@ -305,7 +337,7 @@ export class Device {
       const r: ListRecord = { did: list.did, name, ops: [], memberships: {}, held: [], refused: [], acks: {}, admin: { seed: toB64u(seed), invites: [] } };
       r.membership = this.issueMembership(list, this.did, "admin");
       r.role = "admin";
-      r.memberships[this.did] = r.membership;
+      r.memberships[r.membership.id] = r.membership;
       r.roster = signRoster(list, this.opts.clock, {
         name,
         version: 1,
@@ -453,6 +485,14 @@ export class Device {
     });
   }
 
+  /** Sends an op that claims to be by someone else, signed by this device, as an impersonator would. */
+  forgeAs(listDid: string, claimedAuthor: string, to: string, text: string): Promise<void> {
+    return this.serial(async () => {
+      const real = signOp(this.identity, this.opts.clock, { list: listDid, kind: "add", itemId: shortCode(), text, membershipId: shortCode() });
+      await this.endpoint.notify(to, OP, { op: { ...real, issuer: claimedAuthor } } satisfies OpMessage);
+    });
+  }
+
   /** Re-sends an old roster to someone, as an attacker trying to undo a removal would. */
   replayRoster(listDid: string, roster: RosterDoc, to: string): Promise<void> {
     void listDid;
@@ -467,7 +507,8 @@ export class Device {
       const r = this.requireList(listDid);
       const op = this.model(listDid).get(`${author}|${opId}`);
       if (!op) throw new Error("No such change.");
-      await this.endpoint.notify(to, SYNC, { list: listDid, roster: r.roster, ops: [{ op: tamperOp(op, text), membership: r.memberships[author] }] });
+      const page: HistoryPage = { list: listDid, roster: r.roster!, memberships: { [op.membershipId]: r.memberships[op.membershipId] }, ops: [tamperOp(op, text)], page: 0, last: true };
+      await this.endpoint.notify(to, SYNC, page);
     });
   }
 
@@ -483,12 +524,12 @@ export class Device {
     if (invite.usedBy && invite.usedBy !== sender) return void (await refuse("This invitation has already been used."));
     if (!invite.usedBy && Date.parse(invite.expiresAt) <= this.opts.clock.now()) return void (await refuse("This invitation has expired."));
     const existing = rosterMember(r.roster, sender);
-    if (existing?.removedAt) return void (await refuse("You were removed from this list."));
+    if (!invite.usedBy && existing && !existing.removedAt) return void (await refuse("You're already in this list."));
     if (!invite.usedBy) {
       invite.usedBy = sender;
       const name = String(p.name ?? "").trim().slice(0, 60) || "Someone";
       const membership = this.issueMembership(list, sender, invite.role);
-      r.memberships[sender] = membership;
+      r.memberships[membership.id] = membership;
       r.roster = signRoster(list, this.opts.clock, {
         name: r.roster!.name,
         version: r.roster!.version + 1,
@@ -499,10 +540,12 @@ export class Device {
         if (m.did !== this.did && m.did !== sender) await this.endpoint.notify(m.did, ROSTER, { roster: r.roster });
       }
     }
-    await this.endpoint.notify(sender, WELCOME, { listName: r.roster!.name, membership: r.memberships[sender], roster: r.roster, ops: this.opMessages(r) });
+    const current = currentMembers(r.roster).find((m) => m.did === sender)!;
+    await this.endpoint.notify(sender, WELCOME, { listName: r.roster!.name, membership: r.memberships[current.membershipId], roster: r.roster });
+    await this.sendHistory(r, sender);
   }
 
-  private async onWelcome(p: { listName: string; membership: Credential; roster: RosterDoc; ops: OpMessage[] }, sender: string): Promise<void> {
+  private async onWelcome(p: { listName: string; membership: Credential; roster: RosterDoc }, sender: string): Promise<void> {
     const r = [...this.lists_.values()].find((x) => x.pending && x.pending.inviter === sender && x.did === p.roster?.list);
     if (!r) return;
     const m = p.membership;
@@ -514,11 +557,10 @@ export class Device {
     r.roster = verdict.roster;
     r.membership = m;
     r.role = m.credentialSubject.role as Role;
-    r.memberships[this.did] = m;
+    r.memberships[m.id] = m;
     r.name = p.listName;
     r.pending = undefined;
-    for (const msg of p.ops ?? []) await this.receiveOp(r, msg, undefined, sender);
-    this.refuseUnresolved(r);
+    // The list's history follows as sync pages from the same admin.
     r.acknowledgement = issueCredential(this.identity, this.opts.clock, {
       type: ["VerifiableCredential", "TodoListMembershipAcknowledgement"],
       credentialSubject: { id: r.did, member: this.did, role: r.role },
@@ -561,19 +603,21 @@ export class Device {
     if (!r || r.left || r.pending) return;
     const m = rosterMember(r.roster, sender);
     if (!m || m.removedAt) return;
-    await this.endpoint.notify(sender, SYNC, { list: r.did, roster: r.roster, ops: this.opMessages(r) });
+    await this.sendHistory(r, sender);
   }
 
-  private async onSync(p: { list: string; roster: RosterDoc; ops: OpMessage[] }, sender: string): Promise<void> {
-    const r = this.lists_.get(p.list);
+  private async onSync(p: HistoryPage, sender: string): Promise<void> {
+    const r = this.lists_.get(String(p?.list));
     if (!r || r.left || r.pending) return;
     await this.adoptRoster(r, p.roster);
     const from = rosterMember(r.roster, sender);
+    const ops = Array.isArray(p.ops) ? p.ops : [];
+    const memberships = p.memberships && typeof p.memberships === "object" ? p.memberships : {};
     if (!from || from.removedAt) {
-      for (const msg of p.ops ?? []) this.refuse(r, msg.op, "not from a current member", undefined, sender);
+      for (const op of ops) this.refuse(r, op, "not from a current member", undefined, sender);
     } else {
-      for (const msg of p.ops ?? []) await this.receiveOp(r, msg, undefined, sender);
-      this.refuseUnresolved(r);
+      for (const op of ops) await this.receiveOp(r, { op, membership: memberships[String(op?.membershipId)] }, undefined, sender);
+      if (p.last) this.refuseUnresolved(r);
     }
     await this.save(r);
   }
@@ -594,7 +638,7 @@ export class Device {
     const model = this.model(r.did);
     const verdict = await checkOp({
       op: msg?.op,
-      membership: msg?.membership ?? r.memberships[String(msg?.op?.issuer)],
+      membership: msg?.membership ?? r.memberships[String(msg?.op?.membershipId)],
       roster: r.roster,
       directSender,
       forwarded: via !== undefined,
@@ -608,7 +652,7 @@ export class Device {
         if (!retry && !r.held.some((h) => opKey(h.msg.op) === opKey(msg.op))) r.held.push({ msg, directSender, via });
         return verdict;
       }
-      this.refuse(r, msg?.op, verdict.reason, msg?.op?.issuer, via);
+      this.refuse(r, msg?.op, verdict.reason, msg?.op?.issuer, via, directSender);
       return verdict;
     }
     if (verdict.duplicate) return verdict;
@@ -624,7 +668,7 @@ export class Device {
     }
     model.insert(op, readable);
     r.ops.push(op);
-    if (msg.membership && !r.memberships[op.issuer]) r.memberships[op.issuer] = msg.membership;
+    if (msg.membership && !r.memberships[msg.membership.id]) r.memberships[msg.membership.id] = msg.membership;
     if (!retry) await this.retryHeld(r);
     this.changed();
     return verdict;
@@ -649,16 +693,23 @@ export class Device {
     for (const h of r.held.splice(0)) this.refuse(r, h.msg.op, "no such item", h.msg.op?.issuer, h.via);
   }
 
-  private refuse(r: ListRecord, op: Partial<Op> | undefined, reason: string, author?: string, via?: string): void {
+  private refuse(r: ListRecord, op: Partial<Op> | undefined, reason: string, author?: string, via?: string, direct?: string): void {
     const a = typeof author === "string" ? author : String(op?.issuer ?? "");
+    const verified = !UNVERIFIED_REASONS.has(reason);
+    const from = direct ?? via;
+    // Unverified junk is about the sender, and one sender can't flood this list (review I3).
+    if (!verified && from && r.refused.filter((x) => !x.verified && x.from === from).length >= MAX_UNVERIFIED_PER_SENDER) return;
     r.refused.push({
       at: this.opts.clock.iso(),
       opId: String(op?.id ?? ""),
       author: a,
       authorName: this.nameIn(r, a),
+      verified,
+      ...(from ? { from, fromName: this.nameIn(r, from) } : {}),
       ...(via ? { via, viaName: this.nameIn(r, via) } : {}),
       reason,
-      summary: summarize(op),
+      // Text from a change whose author didn't check out is never shown.
+      summary: verified ? summarize(op) : String(op?.kind ?? "change"),
     });
     if (r.refused.length > 200) r.refused.splice(0, r.refused.length - 200);
     this.logCheck(r, op, via, `refused: ${reason}`);
@@ -671,7 +722,16 @@ export class Device {
       this.inspect({ kind: "check", at: this.opts.clock.iso(), list: r.did, author: r.did, authorName: "the list", summary: "roster", result: `ignored: ${v.reason}` });
       return false;
     }
+    const before = r.roster;
     r.roster = v.roster;
+    // A newly removed membership keeps only the ops its removal listed; anything else it wrote is dropped (review I1).
+    for (const m of v.roster.members) {
+      if (!m.removedAt || rosterEntry(before, m.membershipId)?.removedAt) continue;
+      const kept = new Set(m.keptOps ?? []);
+      const drop = (op: Op) => op.membershipId === m.membershipId && !kept.has(op.id);
+      r.ops = r.ops.filter((op) => !drop(op));
+      this.model(r.did).drop(drop);
+    }
     const me = rosterMember(r.roster, this.did);
     if (me) r.role = me.role;
     this.inspect({ kind: "check", at: this.opts.clock.iso(), list: r.did, author: r.did, authorName: "the list", summary: `roster version ${v.roster.version}`, result: "accepted" });
@@ -683,10 +743,11 @@ export class Device {
     const target = rosterMember(r.roster, memberDid);
     if (!target || target.removedAt) throw new Error("They're not a current member.");
     const removedAt = this.opts.clock.iso();
+    const keptOps = r.ops.filter((op) => op.membershipId === target.membershipId).map((op) => op.id);
     r.roster = signRoster(list, this.opts.clock, {
       name: r.roster!.name,
       version: r.roster!.version + 1,
-      members: r.roster!.members.map((m): RosterMember => (m.did === memberDid ? { ...m, removedAt } : m)),
+      members: r.roster!.members.map((m): RosterMember => (m.membershipId === target.membershipId ? { ...m, removedAt, keptOps } : m)),
     });
     await this.save(r);
     // The removed member gets this one roster, so their app knows; later ones go to current members only.
@@ -737,8 +798,16 @@ export class Device {
     });
   }
 
-  private opMessages(r: ListRecord): OpMessage[] {
-    return r.ops.map((op) => ({ op, membership: r.memberships[op.issuer] }));
+  /** Sends a list's whole history as pages, each with only the credentials its ops need (review C2). */
+  private async sendHistory(r: ListRecord, to: string): Promise<void> {
+    const pages = Math.max(1, Math.ceil(r.ops.length / HISTORY_PAGE));
+    for (let i = 0; i < pages; i++) {
+      const ops = r.ops.slice(i * HISTORY_PAGE, (i + 1) * HISTORY_PAGE);
+      const memberships: Record<string, Credential> = {};
+      for (const op of ops) if (r.memberships[op.membershipId]) memberships[op.membershipId] = r.memberships[op.membershipId];
+      const page: HistoryPage = { list: r.did, roster: r.roster!, memberships, ops, page: i, last: i === pages - 1 };
+      await this.endpoint.notify(to, SYNC, page);
+    }
   }
 
   private amRemoved(r: ListRecord): boolean {

@@ -133,8 +133,17 @@ export function Inspector({ device, listDid }: { device: Device; listDid: string
             .reverse()
             .map((r, n) => (
               <li key={n}>
-                <strong>{r.list}</strong>: {r.summary} from {r.authorName}
-                {r.viaName ? ` (passed on by ${r.viaName})` : ""}: {r.reason}
+                <strong>{r.list}</strong>:{" "}
+                {r.verified ? (
+                  <>
+                    {r.summary} from {r.authorName}
+                    {r.viaName ? ` (passed on by ${r.viaName})` : ""}: {r.reason}
+                  </>
+                ) : (
+                  <>
+                    a {r.summary} claiming to be from {r.authorName}, sent by {r.fromName ?? "an unknown key"}: {r.reason}
+                  </>
+                )}
               </li>
             ))}
         </ul>

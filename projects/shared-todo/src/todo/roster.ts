@@ -9,6 +9,11 @@ export interface RosterMember {
   membershipId: string;
   joinedAt: string;
   removedAt?: string;
+  /**
+   * For a removed membership: the ids of its ops that stay valid, as the admin's device knew them at
+   * removal. Every device keeps exactly these, so lists converge whatever order ops arrive in (review I1).
+   */
+  keptOps?: string[];
 }
 
 /**
@@ -42,7 +47,8 @@ function isMember(m: unknown): m is RosterMember {
     ROLES.has(x.role) &&
     typeof x.membershipId === "string" &&
     typeof x.joinedAt === "string" &&
-    (x.removedAt === undefined || typeof x.removedAt === "string")
+    (x.removedAt === undefined || typeof x.removedAt === "string") &&
+    (x.keptOps === undefined || (Array.isArray(x.keptOps) && x.keptOps.every((k) => typeof k === "string")))
   );
 }
 
@@ -58,16 +64,23 @@ export async function acceptRoster(held: RosterDoc | undefined, incoming: unknow
     return { ok: false, reason: "roster: signature does not verify" };
   }
   if (held && r.version <= held.version) return { ok: false, reason: "roster is not newer" };
+  const sameKept = (a?: string[], b?: string[]) => JSON.stringify([...(a ?? [])].sort()) === JSON.stringify([...(b ?? [])].sort());
   for (const h of held?.members ?? []) {
-    if (h.removedAt && !r.members.some((m) => m.did === h.did && m.removedAt === h.removedAt)) {
+    if (h.removedAt && !r.members.some((m) => m.membershipId === h.membershipId && m.did === h.did && m.removedAt === h.removedAt && sameKept(m.keptOps, h.keptOps))) {
       return { ok: false, reason: "roster drops a removal" };
     }
   }
   return { ok: true, roster: r };
 }
 
+/** A DID's current entry, or its latest removed one. Someone who left and came back has two entries (review I5). */
 export function rosterMember(roster: RosterDoc | undefined, did: string): RosterMember | undefined {
-  return roster?.members.find((m) => m.did === did);
+  const entries = roster?.members.filter((m) => m.did === did) ?? [];
+  return entries.find((m) => !m.removedAt) ?? entries.at(-1);
+}
+
+export function rosterEntry(roster: RosterDoc | undefined, membershipId: string): RosterMember | undefined {
+  return roster?.members.find((m) => m.membershipId === membershipId);
 }
 
 export function currentMembers(roster: RosterDoc | undefined): RosterMember[] {

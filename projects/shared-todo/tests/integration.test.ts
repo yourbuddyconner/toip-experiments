@@ -182,6 +182,8 @@ describe("Shared To-Do devices over a real relay", () => {
     const dan = (await device(r, "Dan")).d;
     await dan.join(alice.invite(list, "viewer"));
     await until(() => dan.view(list)?.role === "viewer", "dan");
+    // The history follows the welcome as sync pages.
+    await until(() => texts(dan, list).length === 1, "dan got the history");
     expect(texts(dan, list)).toEqual(["Milk"]);
   });
 
@@ -234,6 +236,54 @@ describe("Shared To-Do devices over a real relay", () => {
     const bob2 = (await device(r, "Bob", { store: bobStore })).d;
     await until(() => texts(bob2, list).length === 2, "bob caught up from the relay");
     expect(texts(bob2, list)).toEqual(["Butter", "Jam"]);
+  });
+
+  it("converges when a change races its author's removal (review I1)", async () => {
+    const { alice, bob, carol, list } = await house();
+    alice.goOffline();
+    await until(() => alice.connection() === "offline", "alice offline");
+    await alice.removeMember(list, bob.did);
+    await bob.add(list, "Party");
+    await until(() => texts(carol, list).includes("Party"), "carol took bob's op before she knew");
+    alice.goOnline();
+    await until(() => carol.view(list)!.members.find((m) => m.name === "Bob")?.removed === true, "carol got the removal");
+    await until(() => !texts(carol, list).includes("Party"), "carol dropped it");
+    await until(() => lastRefusal(alice, list) === "membership revoked", "alice refused it");
+    expect(texts(alice, list)).toEqual(texts(carol, list));
+  });
+
+  it("lets someone who left be invited back (review I5)", async () => {
+    const { alice, bob, list } = await house();
+    await bob.leave(list);
+    await until(() => alice.view(list)!.members.some((m) => m.name === "Bob" && m.removed), "alice saw bob leave");
+    await bob.join(alice.invite(list, "editor"));
+    await until(() => bob.view(list)?.role === "editor" && !bob.view(list)!.removed && !bob.view(list)!.pending, "bob back");
+    await bob.add(list, "Back again");
+    await until(() => texts(alice, list).includes("Back again"), "alice got it");
+  });
+
+  it("lets someone join a list with a long history, without breaking the relay (review C1, C2)", async () => {
+    const { r } = await relay();
+    const alice = (await device(r, "Alice")).d;
+    const dan = (await device(r, "Dan")).d;
+    await until(() => alice.connection() === "connected" && dan.connection() === "connected", "connections");
+    const list = await alice.createList("Big");
+    for (let i = 0; i < 320; i++) await alice.add(list, `Item ${i}`);
+    await dan.join(alice.invite(list, "viewer"));
+    await until(() => texts(dan, list).length === 320, "dan has all 320", 20000);
+    expect(alice.connection()).toBe("connected");
+  }, 30000);
+
+  it("doesn't let a stranger blame a member for a forged change (review I3)", async () => {
+    const { r, alice, bob, list } = await house();
+    const mallory = (await device(r, "Mallory")).d;
+    await until(() => mallory.connection() === "connected", "mallory");
+    await mallory.forgeAs(list, alice.did, bob.did, "Send Mallory $500");
+    await until(() => bob.view(list)!.refused.length > 0, "bob refused it");
+    const refusal = bob.view(list)!.refused.at(-1)!;
+    expect(refusal.verified).toBe(false);
+    expect(refusal.from).toBe(mallory.did);
+    expect(refusal.summary).not.toContain("$500");
   });
 
   it("never puts item text in the relay's database", async () => {

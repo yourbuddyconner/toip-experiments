@@ -102,13 +102,13 @@ Every message is a Trust Task document (`trust-task/0.6.0` envelope), signed wit
 | Message | From → to | Carries |
 |---|---|---|
 | `join` | joiner → inviter | invitation code, list DID, display name |
-| `welcome` | admin → joiner | membership credential, the current signed roster, every accepted op with its author's membership |
+| `welcome` | admin → joiner | membership credential and the current signed roster; the history follows as `sync` pages |
 | `join-refused` | admin → joiner | reason |
 | `ack` | member → admin | the member's signed acknowledgement credential |
 | `op` | author → each member | the signed op, and the author's membership |
 | `roster` | admin → each current member | the current signed roster |
 | `sync-request` | member → member | list DID |
-| `sync` | member → member | the current signed roster, and every accepted op with its author's membership |
+| `sync` | member → member | the current signed roster, and one page of up to 100 ops with the membership credentials they need |
 | `leave` | member → admin | list DID |
 
 Operations are signed separately from the message that carries them, as in v1, so a forwarded op still proves who wrote it.
@@ -120,7 +120,8 @@ The list's key signs a **roster** document **(our call, prompted by v1's review)
 - the list DID and name
 - a `version` that increases by one with each change
 - an `issuedAt` time
-- one entry per member: their DID, display name, role, membership credential id, the date they joined, and `removedAt` if they've been removed
+- one entry per membership: the DID, display name, role, membership credential id, the date they joined, and, once removed, `removedAt` plus `keptOps`, the ids of that membership's ops the admin's device had accepted
+- someone who left or was removed can be invited back; they get a new entry and a new credential
 
 The roster is what a device trusts about membership:
 
@@ -139,9 +140,10 @@ The checks from v1, in `src/todo/checks.ts`, with the Rego rules in `policies/to
 4. A direct op came from its author. A forwarded op is labeled with who forwarded it.
 5. Its `at` time is no more than 5 minutes in the future by this device's clock.
 6. Its author is a member in the roster, and the op names that member's membership credential, which verifies, was issued by the list, and is for the author.
-7. The author hadn't been removed when they made it:
-   - An op from a member whose `removedAt` is set is accepted only if its `at` is earlier than `removedAt`, **and** it arrived forwarded (in `welcome` or `sync`), not directly from the removed member.
-   - This keeps history from before a removal, which fixes v1's I5. It stops a removed member from sending anything new. A removed member could still backdate an op if a current member colluded with them by forwarding it. That member could add things themselves anyway.
+7. The author's membership hadn't been removed, or the op is one its removal kept:
+   - An op under a removed membership is accepted only if its id is in that entry's `keptOps`.
+   - The rule depends only on the op and the newest roster, so every device reaches the same answer whatever order things arrive in (fix for v2 review I1). Adopting a roster with a new removal drops that membership's ops that weren't kept.
+   - It keeps history from before a removal (v1's I5), stops a removed member from sending anything new, and rules out backdating.
 8. The role rules, including private-item readers.
 
 **Duplicates.** Ops are identified by `(author, id)`. A copy of a known op is ignored if it is identical in JCS canonical form. A different op under the same `(author, id)` is refused.

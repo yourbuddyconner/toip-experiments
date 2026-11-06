@@ -24,6 +24,25 @@ describe("acceptRoster (design 4.4)", () => {
     expect(await acceptRoster(held, f.roster(3), f.list.did, f.clock)).toEqual({ ok: false, reason: "roster drops a removal" });
   });
 
+  it("refuses a newer roster that changes which ops a removal kept", async () => {
+    const f = await fixture();
+    const held = f.roster(2, { bob: { removedAt: "2026-11-05T14:30:00.000Z", keptOps: ["a"] } });
+    const next = f.roster(3, { bob: { removedAt: "2026-11-05T14:30:00.000Z", keptOps: ["a", "b"] } });
+    expect(await acceptRoster(held, next, f.list.did, f.clock)).toEqual({ ok: false, reason: "roster drops a removal" });
+  });
+
+  it("lets someone who was removed come back with a new membership (review I5)", async () => {
+    const f = await fixture();
+    const { signRoster } = await import("../src/todo/roster");
+    const held = f.roster(2, { bob: { removedAt: "2026-11-05T14:30:00.000Z", keptOps: [] } });
+    const back = signRoster(f.list, f.clock, {
+      name: "Maple St House",
+      version: 3,
+      members: [...held.members, { did: f.people.bob.did, name: "Bob", role: "editor", membershipId: "urn:uuid:new", joinedAt: f.clock.iso() }],
+    });
+    expect((await acceptRoster(held, back, f.list.did, f.clock)).ok).toBe(true);
+  });
+
   it("refuses a roster signed by anyone but the list", async () => {
     const f = await fixture();
     const forged = signDocument({ ...f.roster(5), issuer: f.people.bob.did, proof: undefined }, f.people.bob, f.clock);

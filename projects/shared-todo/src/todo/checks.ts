@@ -1,7 +1,7 @@
 import { verifyCredential, type Clock, type Credential, type Policies } from "@zk-toip/trust-core";
 import type { ListModel } from "./model";
 import { opKey, validateOpShape, verifyOp, type Op } from "./ops";
-import { rosterMember, type RosterDoc } from "./roster";
+import { rosterEntry, type RosterDoc } from "./roster";
 
 export type Role = "admin" | "editor" | "viewer";
 export type AuthzKind = "add" | "check" | "uncheck" | "edit" | "delete" | "invite" | "revoke";
@@ -65,11 +65,11 @@ export async function checkOp(input: CheckInput): Promise<CheckResult> {
   if (!(await verifyCredential(membership, clock)).ok) return fail("membership: signature does not verify");
   if (membership.issuer !== listDid || membership.credentialSubject.list !== listDid) return fail("not a member");
   if (membership.credentialSubject.id !== op.issuer || membership.id !== op.membershipId) return fail("credential is for someone else");
-  const member = rosterMember(roster, op.issuer);
-  if (!member || member.membershipId !== membership.id) return fail("not a member");
+  const member = rosterEntry(roster, membership.id);
+  if (!member || member.did !== op.issuer) return fail("not a member");
 
-  // A removed member's earlier ops survive only when someone else forwards them (design v2 §4.5 rule 7).
-  if (member.removedAt && (!forwarded || op.at >= member.removedAt)) return fail("membership revoked");
+  // For a removed membership, exactly the ops its removal kept stay valid, however they arrive (review I1).
+  if (member.removedAt && !(member.keptOps ?? []).includes(op.id)) return fail("membership revoked");
 
   const item = model.item(op.itemId);
   if (op.kind === "add") {

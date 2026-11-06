@@ -98,8 +98,8 @@
   </div>
   <div class="box abs" data-at="5.0" style="left:110px;top:560px;width:1700px">
     <h3>A roster, signed by the list's key</h3>
-    <span class="mono" style="font-size:24px">{ type: "todo/roster", issuer: &lt;list DID&gt;, version: 7, members: [{ did, name, role, membershipId, joinedAt, removedAt? }], proof }</span><br/><br/>
-    A device accepts a roster only if the list signed it, its version is higher than the one held, and it keeps every earlier removal. So a replayed old roster can't undo a removal. Display names and roles come only from here.
+    <span class="mono" style="font-size:24px">{ type: "todo/roster", issuer: &lt;list DID&gt;, version: 7, members: [{ did, name, role, membershipId, joinedAt, removedAt?, keptOps? }], proof }</span><br/><br/>
+    A device accepts a roster only if the list signed it, its version is higher than the one held, and it keeps every earlier removal. So a replayed old roster can't undo a removal. A removal lists the ops it keeps, so every device converges however things arrive. Names and roles come only from here.
   </div>
 </section>
 
@@ -110,12 +110,12 @@
     <thead><tr data-at="0.4"><th>Our type</th><th>From → to</th><th>Carries</th><th>Closest registry spec</th></tr></thead>
     <tbody>
       <tr data-at="0.9"><td><code>todo/join</code></td><td>joiner → inviter</td><td>one-time code, display name</td><td><code>vtc/join-requests/submit</code></td></tr>
-      <tr data-at="1.6"><td><code>todo/welcome</code></td><td>admin → joiner</td><td>membership VC, signed roster, every op so far</td><td>the join verdict, plus issuing the credential</td></tr>
+      <tr data-at="1.6"><td><code>todo/welcome</code></td><td>admin → joiner</td><td>membership VC and the signed roster; the history follows as sync pages</td><td>the join verdict, plus issuing the credential</td></tr>
       <tr data-at="2.3"><td><code>todo/join-refused</code></td><td>admin → joiner</td><td>reason</td><td><code>trust-task-error</code></td></tr>
       <tr data-at="3.0"><td><code>todo/ack</code></td><td>member → admin</td><td>the member's acknowledgement VC</td><td><code>vtc/members/vmc</code></td></tr>
       <tr data-at="3.7"><td><code>todo/op</code></td><td>author → each member</td><td>a signed op, and the author's membership VC</td><td>app level: a signed statement</td></tr>
       <tr data-at="4.4"><td><code>todo/roster</code></td><td>admin → current members</td><td>the signed roster</td><td>membership registry plus status list</td></tr>
-      <tr data-at="5.1"><td><code>todo/sync-request</code>, <code>todo/sync</code></td><td>member ↔ member</td><td>roster and ops, checked one by one</td><td>none: replica catch-up</td></tr>
+      <tr data-at="5.1"><td><code>todo/sync-request</code>, <code>todo/sync</code></td><td>member ↔ member</td><td>roster, plus pages of ops, checked one by one</td><td>none: replica catch-up</td></tr>
       <tr data-at="5.8"><td><code>todo/leave</code></td><td>member → admin</td><td>list DID</td><td><code>vtc/members/self-remove</code></td></tr>
     </tbody>
   </table>
@@ -147,7 +147,7 @@
       <li data-at="1.7"><span>The op's Data Integrity proof verifies, and its issuer is its author</span></li>
       <li data-at="2.1"><span>A direct op came from its author, as TSP authenticated; a forwarded op is labeled with who forwarded it</span></li>
       <li data-at="2.5"><span>The membership VC verifies, was issued by the list, is for the author, and is the one the op names</span></li>
-      <li data-at="2.9"><span>The roster lists the author with that credential, and they weren't removed: a removed member's ops survive only if made before <code>removedAt</code> and forwarded</span></li>
+      <li data-at="2.9"><span>The roster lists that credential for the author, and it hasn't been removed; after a removal, only the ops the removal listed in <code>keptOps</code> stay valid</span></li>
       <li data-at="3.3"><span>The item exists; if it isn't known yet, the op is held, not refused</span></li>
       <li data-at="3.7"><span>The list's Rego rules allow it</span></li>
     </ol>
@@ -247,7 +247,7 @@ const CAPTIONS = [
   [12.5, "Each item is an op signed with eddsa-jcs-2022, applied locally first, then sealed to each member"],
   [15.3, "The invitation link carries the inviter DID, list DID, relay URL and a one-time code"],
   [18.5, "Bob's device makes its own did:key and sends todo/join to Alice's DID over TSP"],
-  [23.4, "Alice's device sends todo/welcome (membership VC, roster v2, ops); Bob signs a todo/ack back"],
+  [23.4, "Alice's device sends todo/welcome (membership VC, roster v2) and the history as todo/sync pages; Bob signs a todo/ack back"],
   [26.5, "Bob's check and add go out as todo/op; Alice's device runs every check before applying them"],
   [33, "Private item: text under a fresh item key, wrapped to Alice and Bob with HPKE base mode"],
   [35.3, "Bob goes offline: his sealed TSP messages wait in his outbox in IndexedDB"],

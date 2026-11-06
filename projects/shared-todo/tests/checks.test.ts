@@ -99,17 +99,16 @@ describe("checkOp v2 (design 4.5)", () => {
     expect(await check(op("bob", { itemId: "milk" }))).toEqual({ ok: false, reason: "not a member" });
   });
 
-  it("7. a removed member: new ops refused; earlier ops kept only when forwarded", async () => {
+  it("7. a removed member: only the ops the removal roster kept are valid, however they arrive (review I1)", async () => {
     const { f, op, check, setRoster } = await setup();
-    const before = op("bob", { itemId: "milk" });
-    f.clock.advance(60_000);
-    setRoster(f.roster(2, { bob: { removedAt: f.clock.iso() } }));
-    f.clock.advance(60_000);
-    const after = op("bob", { itemId: "eggs" });
-    expect(await check(after)).toEqual({ ok: false, reason: "membership revoked" });
-    expect(await check(after, { forwarded: true })).toEqual({ ok: false, reason: "membership revoked" });
-    expect(await check(before)).toEqual({ ok: false, reason: "membership revoked" });
-    expect(await check(before, { forwarded: true })).toEqual({ ok: true });
+    const kept = op("bob", { itemId: "milk" });
+    const dropped = op("bob", { itemId: "beer" });
+    setRoster(f.roster(2, { bob: { removedAt: f.clock.iso(), keptOps: [kept.id] } }));
+    const later = op("bob", { itemId: "eggs" });
+    expect(await check(kept)).toEqual({ ok: true });
+    expect(await check(kept, { forwarded: true })).toEqual({ ok: true });
+    expect(await check(dropped, { forwarded: true })).toEqual({ ok: false, reason: "membership revoked" });
+    expect(await check(later)).toEqual({ ok: false, reason: "membership revoked" });
   });
 
   it("8. applies the role rules from the signed roster", async () => {

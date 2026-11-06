@@ -144,8 +144,16 @@ export function ListView({ device, listDid, inviteBase }: { device: Device; list
             <ul>
               {[...v.refused].reverse().map((r, n) => (
                 <li key={n}>
-                  A change from {r.authorName}
-                  {r.viaName ? `, passed on by ${r.viaName},` : ""} ({r.summary}) was refused: {friendly(r.reason)}.
+                  {r.verified ? (
+                    <>
+                      A change from {r.authorName}
+                      {r.viaName ? `, passed on by ${r.viaName},` : ""} ({r.summary}) was refused: {friendly(r.reason)}.
+                    </>
+                  ) : (
+                    <>
+                      {r.fromName ?? "Someone"} sent a change claiming to be from {r.authorName}. It was refused: {friendly(r.reason)}.
+                    </>
+                  )}
                 </li>
               ))}
             </ul>
@@ -181,7 +189,13 @@ function MembersSheet({ device, v, inviteBase, onClose }: { device: Device; v: V
             </span>
             <span className="muted">{m.removed ? "removed" : m.role}</span>
             {v.isAdmin && !m.isMe && !m.removed && (
-              <button className="ghost" onClick={() => device.removeMember(v.did, m.did).catch((e) => setError(String(e?.message ?? e)))}>
+              <button
+                className="ghost"
+                onClick={() =>
+                  confirm(`Remove ${m.name} from ${v.name}? Their changes from now on will be refused. You can invite them again later.`) &&
+                  device.removeMember(v.did, m.did).catch((e) => setError(String(e?.message ?? e)))
+                }
+              >
                 Remove
               </button>
             )}
@@ -222,7 +236,12 @@ function MembersSheet({ device, v, inviteBase, onClose }: { device: Device; v: V
         </div>
       ) : (
         !v.removed && (
-          <button className="ghost danger" onClick={() => device.leave(v.did).then(onClose, (e) => setError(String(e?.message ?? e)))}>
+          <button
+            className="ghost danger"
+            onClick={() =>
+              confirm(`Leave ${v.name}? You'll need a new invitation to come back.`) && device.leave(v.did).then(onClose, (e) => setError(String(e?.message ?? e)))
+            }
+          >
             Leave this list
           </button>
         )

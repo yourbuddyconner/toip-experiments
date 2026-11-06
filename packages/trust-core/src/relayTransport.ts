@@ -46,6 +46,7 @@ export class RelayTransport implements Transport {
   private readonly waiting = new Map<string, (d: Delivery) => void>();
   private readonly statusListeners = new Set<(s: RelayStatus) => void>();
   private seq = 0;
+  private inbound: Promise<void> = Promise.resolve();
 
   constructor(
     private readonly opts: {
@@ -135,7 +136,13 @@ export class RelayTransport implements Transport {
       return;
     }
     this.ws = ws;
-    ws.onmessage = (e) => void this.onFrame(ws, String(e.data));
+    // Delivered messages are handled strictly one at a time, in relay order (review I1). Control frames
+    // ("sent" in particular) go straight through: handling a message may send, and each send waits for "sent".
+    ws.onmessage = (e) => {
+      const data = String(e.data);
+      if (data.includes('"t":"msg"')) this.inbound = this.inbound.then(() => this.onFrame(ws, data)).catch(() => {});
+      else void this.onFrame(ws, data);
+    };
     ws.onclose = () => {
       if (this.ws !== ws) return;
       this.ready = false;

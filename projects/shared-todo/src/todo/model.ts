@@ -45,6 +45,20 @@ export class ListModel {
     return !!known && canonicalJson(known) === canonicalJson(op);
   }
 
+  /** Removes every op matching `drop`, e.g. a removed member's ops that their removal didn't keep. */
+  drop(drop: (op: Op) => boolean): number {
+    let n = 0;
+    for (const [key, op] of this.byKey) {
+      if (drop(op)) {
+        this.byKey.delete(key);
+        this.readable.delete(key);
+        n++;
+      }
+    }
+    if (n) this.cache = undefined;
+    return n;
+  }
+
   get(key: string): Op | undefined {
     return this.byKey.get(key);
   }
