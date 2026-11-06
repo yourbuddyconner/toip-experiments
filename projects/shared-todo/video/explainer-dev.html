@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Shared To-Do on the ToIP stack — for developers</title>
+<style>
+  @font-face { font-family: "Atkinson"; font-weight: 400; src: url("../../../node_modules/@fontsource/atkinson-hyperlegible/files/atkinson-hyperlegible-latin-400-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Atkinson"; font-weight: 700; src: url("../../../node_modules/@fontsource/atkinson-hyperlegible/files/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2"); }
+  :root { --bg: #e7f0ea; --ink: #1c2420; --muted: #56625c; --go: #2e6a4f; --slate: #4f5f79; --rust: #b04a2f; --gold: #c98a12; --paper: #ffffff; --line: #d3ddd6; --l1: #dfe8f3; --l2: #e3efe8; --l3: #f6ecd9; --l4: #efe3ee; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); font-family: "Atkinson", system-ui, sans-serif; color: var(--ink); }
+  .scene { position: absolute; inset: 0; opacity: 0; padding: 70px 110px; }
+  .abs { position: absolute; }
+  h1 { margin: 0; font-size: 92px; line-height: 1.04; letter-spacing: -1px; }
+  h2 { margin: 0 0 34px; font-size: 60px; letter-spacing: -0.5px; }
+  .kicker { font-size: 30px; color: var(--go); font-weight: 700; margin-bottom: 14px; }
+  code, .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  code { font-size: 0.88em; background: rgba(28,36,32,.06); padding: 2px 8px; border-radius: 6px; }
+  .note { color: var(--muted); font-size: 28px; line-height: 1.45; }
+  [data-at] { opacity: 0; }
+  /* Layers */
+  .layer { display: grid; grid-template-columns: 360px 1fr; gap: 30px; align-items: center; border-radius: 20px; padding: 22px 30px; margin-bottom: 16px; font-size: 27px; line-height: 1.4; }
+  .layer .name { font-weight: 700; font-size: 30px; }
+  .layer .name small { display: block; font-weight: 400; color: var(--muted); font-size: 22px; }
+  /* Boxes */
+  .box { background: var(--paper); border-radius: 18px; padding: 22px 26px; box-shadow: 0 8px 0 rgba(28,36,32,.06); font-size: 26px; line-height: 1.4; }
+  .box h3 { margin: 0 0 8px; font-size: 30px; }
+  .arrow { position: absolute; height: 4px; background: var(--ink); border-radius: 2px; transform-origin: left center; }
+  .arrow::after { content: ""; position: absolute; right: -4px; top: -8px; border-left: 16px solid var(--ink); border-top: 10px solid transparent; border-bottom: 10px solid transparent; }
+  .lbl { position: absolute; font-size: 22px; color: var(--muted); }
+  /* Table */
+  table { border-collapse: collapse; width: 100%; font-size: 26px; }
+  th { text-align: left; color: var(--muted); font-weight: 400; font-size: 22px; padding: 6px 14px; border-bottom: 2px solid var(--line); }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td:first-child { white-space: nowrap; }
+  /* Pipeline */
+  .stage { position: absolute; width: 320px; min-height: 300px; background: var(--paper); border-radius: 18px; padding: 22px 24px; font-size: 24px; line-height: 1.4; box-shadow: 0 8px 0 rgba(28,36,32,.06); }
+  .stage h3 { margin: 0 0 10px; font-size: 27px; }
+  .stage.relay { background: #f3f5f4; border: 3px dashed #9aa8a0; box-shadow: none; }
+  .dot { position: absolute; width: 34px; height: 34px; border-radius: 50%; background: var(--rust); box-shadow: 0 0 0 8px rgba(176,74,47,.18); }
+  /* Checks */
+  ol.checks { margin: 0; padding-left: 0; list-style: none; counter-reset: c; font-size: 26px; line-height: 1.35; }
+  ol.checks li { counter-increment: c; display: grid; grid-template-columns: 52px 1fr; padding: 7px 0; }
+  ol.checks li::before { content: counter(c); font-weight: 700; color: var(--go); }
+  pre.rego { margin: 0; background: #1f2925; color: #e3ece6; border-radius: 16px; padding: 24px 28px; font-size: 21px; line-height: 1.45; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  pre.rego .k { color: #f0b429; } pre.rego .s { color: #9fd3b3; } pre.rego .c { color: #8a9a92; }
+  /* Footage */
+  .footage { position: absolute; top: 175px; width: 820px; height: 820px; border-radius: 20px; overflow: hidden; background: #f7f8f6; box-shadow: 0 24px 40px -18px rgba(28,36,32,.45); }
+  .footage video { width: 100%; height: 100%; display: block; }
+  .footage .wait { position: absolute; inset: 0; display: grid; place-items: center; font-size: 32px; color: var(--muted); background: #f7f8f6; }
+  .flabel { position: absolute; top: 118px; width: 820px; text-align: center; font-size: 34px; font-weight: 700; }
+  .fcap { position: absolute; left: 60px; right: 60px; top: 1010px; text-align: center; }
+  .fcap span { display: inline-block; background: var(--ink); color: #fff; padding: 10px 26px; border-radius: 12px; font-size: 27px; }
+  ul.plain { margin: 0; padding-left: 30px; font-size: 27px; line-height: 1.5; }
+  ul.plain li { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<!-- 1. Title -->
+<section class="scene" id="s-title" style="padding-top:250px">
+  <div class="kicker" data-at="0.3">Following up from IIW · November 2026</div>
+  <h1 data-at="0.6">A shared to-do app on the<br/>Trust over IP stack</h1>
+  <p class="note" data-at="1.4" style="font-size:36px;margin-top:34px;max-width:1400px">
+    A working straw man: TSP, Trust Task documents and verifiable credentials, running in the browser. Every device checks every change itself, so there is no server you have to trust.
+  </p>
+  <p class="note mono" data-at="2.2" style="font-size:26px;margin-top:30px">github.com/yourbuddyconner/toip-experiments · projects/shared-todo</p>
+</section>
+
+<!-- 2. Layers -->
+<section class="scene" id="s-layers">
+  <h2 data-at="0">How it maps onto the ToIP stack</h2>
+  <div class="layer" style="background:var(--l4)" data-at="0.6"><div class="name">4 · Trust application<small>projects/shared-todo</small></div>
+    <div>An installable web app (React, IndexedDB). Each browser profile is one person's device, with its own identity. The app works offline, and its inspector shows exactly what this device sent, received and decided.</div></div>
+  <div class="layer" style="background:var(--l3)" data-at="2.2"><div class="name">3 · Trust tasks<small>@openvtc/trust-tasks, -proof</small></div>
+    <div><code>trust-task/0.6.0</code> documents, each with an <code>eddsa-jcs-2022</code> Data Integrity proof. VC-shaped membership credentials, a roster signed by the list, and Rego rules (OPA compiled to wasm) evaluated on every device.</div></div>
+  <div class="layer" style="background:var(--l2)" data-at="3.8"><div class="name">2 · Trust spanning<small>@openvtc/vti-tsp-js</small></div>
+    <div>TSP Direct messages: HPKE-Auth to the recipient's X25519 key, signed with Ed25519, CESR framing, carried in the <code>trusttasks.org/binding/tsp/0.1</code> envelope. They travel over a WebSocket relay.</div></div>
+  <div class="layer" style="background:var(--l1)" data-at="5.4"><div class="name">1 · Trust support<small>packages/trust-core</small></div>
+    <div>A <code>did:key</code> (Ed25519) for every device and every list, made locally. X25519 encryption keys are derived from it, as the P2P Trust Stack does.</div></div>
+  <p class="note" data-at="7.2" style="margin-top:20px">All Apache-2.0 OpenVTC libraries. None of the P2P Trust Stack's own code, which is GPL.</p>
+</section>
+
+<!-- 3. Mini VTC -->
+<section class="scene" id="s-vtc">
+  <h2 data-at="0">A list is a small VTC</h2>
+  <div class="box abs" data-at="0.6" style="left:110px;top:200px;width:520px">
+    <h3>The list has its own DID</h3>
+    It is made on the creator's device, and that key signs everything about membership. One key holds it today; M-of-N governance would replace that.
+  </div>
+  <div class="box abs" data-at="2.0" style="left:700px;top:200px;width:520px">
+    <h3>A membership VC</h3>
+    Issued by the list's DID to the member's DID, with a role: <code>admin</code>, <code>editor</code> or <code>viewer</code>.
+  </div>
+  <div class="box abs" data-at="3.4" style="left:1290px;top:200px;width:520px">
+    <h3>An acknowledgement VC back</h3>
+    Issued by the member to the list's DID. The two one-way credentials make the bidirectional edge, much like <code>vtc/members/vmc</code>.
+  </div>
+  <div class="box abs" data-at="5.0" style="left:110px;top:560px;width:1700px">
+    <h3>A roster, signed by the list's key</h3>
+    <span class="mono" style="font-size:24px">{ type: "todo/roster", issuer: &lt;list DID&gt;, version: 7, members: [{ did, name, role, membershipId, joinedAt, removedAt? }], proof }</span><br/><br/>
+    A device accepts a roster only if the list signed it, its version is higher than the one held, and it keeps every earlier removal. So a replayed old roster can't undo a removal. Display names and roles come only from here.
+  </div>
+</section>
+
+<!-- 4. Trust tasks -->
+<section class="scene" id="s-tasks">
+  <h2 data-at="0">The trust tasks</h2>
+  <table>
+    <thead><tr data-at="0.4"><th>Our type</th><th>From → to</th><th>Carries</th><th>Closest registry spec</th></tr></thead>
+    <tbody>
+      <tr data-at="0.9"><td><code>todo/join</code></td><td>joiner → inviter</td><td>one-time code, display name</td><td><code>vtc/join-requests/submit</code></td></tr>
+      <tr data-at="1.6"><td><code>todo/welcome</code></td><td>admin → joiner</td><td>membership VC, signed roster, every op so far</td><td>the join verdict, plus issuing the credential</td></tr>
+      <tr data-at="2.3"><td><code>todo/join-refused</code></td><td>admin → joiner</td><td>reason</td><td><code>trust-task-error</code></td></tr>
+      <tr data-at="3.0"><td><code>todo/ack</code></td><td>member → admin</td><td>the member's acknowledgement VC</td><td><code>vtc/members/vmc</code></td></tr>
+      <tr data-at="3.7"><td><code>todo/op</code></td><td>author → each member</td><td>a signed op, and the author's membership VC</td><td>app level: a signed statement</td></tr>
+      <tr data-at="4.4"><td><code>todo/roster</code></td><td>admin → current members</td><td>the signed roster</td><td>membership registry plus status list</td></tr>
+      <tr data-at="5.1"><td><code>todo/sync-request</code>, <code>todo/sync</code></td><td>member ↔ member</td><td>roster and ops, checked one by one</td><td>none: replica catch-up</td></tr>
+      <tr data-at="5.8"><td><code>todo/leave</code></td><td>member → admin</td><td>list DID</td><td><code>vtc/members/self-remove</code></td></tr>
+    </tbody>
+  </table>
+  <p class="note" data-at="7.0" style="margin-top:24px">All of them are one-way, because either side may be offline. They live in our own namespace, <code>https://zk-toip.example/spec/todo/…/0.1</code>. They are shaped after the registry specs but don't conform to them. Moving them onto the registry is the obvious next step.</p>
+</section>
+
+<!-- 5. Message path -->
+<section class="scene" id="s-path">
+  <h2 data-at="0">The path of one change</h2>
+  <div class="stage" data-at="0.5" style="left:110px;top:260px"><h3>1 · Sign the op</h3>The op is signed with <code>eddsa-jcs-2022</code>, by itself, so anyone can forward it and it still proves its author.</div>
+  <div class="stage" data-at="1.6" style="left:450px;top:260px"><h3>2 · Wrap it</h3>A <code>todo/op</code> Trust Task document, with its own proof, issuer, recipient and <code>issuedAt</code>.</div>
+  <div class="stage" data-at="2.7" style="left:790px;top:260px"><h3>3 · Seal it</h3>A TSP Direct message, sealed separately for each member: HPKE-Auth, then signed with Ed25519.</div>
+  <div class="stage relay" data-at="3.8" style="left:1130px;top:260px"><h3>4 · The relay</h3>DID challenge auth: sign <code>nonce|relayURL</code>. It stores the message until the recipient acknowledges it. It sees only who, when and how big.</div>
+  <div class="stage" data-at="4.9" style="left:1470px;top:260px"><h3>5 · Receive</h3><code>TspConsumer</code> opens it, then checks freshness, the replay guard and the proof (SPEC §7.2). Then come the app's own checks.</div>
+  <div class="dot" id="p-dot" style="top:590px"></div>
+  <p class="note abs" data-at="6.2" style="left:110px;top:670px;width:1700px">
+    Offline is normal. If the relay can't be reached, the sealed messages wait in the device's outbox in IndexedDB. If the recipient is offline, the relay holds them, in SQLite, until they're acknowledged. Delivery is at least once, and devices drop duplicates by <code>(author, op id)</code>.
+  </p>
+</section>
+
+<!-- 6. Checks -->
+<section class="scene" id="s-checks">
+  <h2 data-at="0">Every device decides for itself</h2>
+  <div class="abs" style="left:110px;top:200px;width:880px">
+    <ol class="checks">
+      <li data-at="0.5"><span>Well formed, including a private item's sealed part</span></li>
+      <li data-at="0.9"><span>For this list</span></li>
+      <li data-at="1.3"><span>Dated no more than 5 minutes in the future</span></li>
+      <li data-at="1.7"><span>The op's Data Integrity proof verifies, and its issuer is its author</span></li>
+      <li data-at="2.1"><span>A direct op came from its author, as TSP authenticated; a forwarded op is labeled with who forwarded it</span></li>
+      <li data-at="2.5"><span>The membership VC verifies, was issued by the list, is for the author, and is the one the op names</span></li>
+      <li data-at="2.9"><span>The roster lists the author with that credential, and they weren't removed: a removed member's ops survive only if made before <code>removedAt</code> and forwarded</span></li>
+      <li data-at="3.3"><span>The item exists; if it isn't known yet, the op is held, not refused</span></li>
+      <li data-at="3.7"><span>The list's Rego rules allow it</span></li>
+    </ol>
+  </div>
+  <pre class="rego abs" data-at="4.4" style="left:1050px;top:200px;width:760px"><span class="k">package</span> todo.authz
+
+allowed := {
+  <span class="s">"admin"</span>:  {<span class="s">"add"</span>, <span class="s">"check"</span>, <span class="s">"edit"</span>, <span class="s">"delete"</span>, …},
+  <span class="s">"editor"</span>: {<span class="s">"add"</span>, <span class="s">"check"</span>, <span class="s">"uncheck"</span>, <span class="s">"edit"</span>},
+  <span class="s">"viewer"</span>: set(),
+}
+
+role_ok <span class="k">if</span> input.kind <span class="k">in</span> allowed[input.role]
+
+<span class="c"># private items: only their readers may change them</span>
+reader_reasons := [<span class="s">"not a reader of this item"</span>] <span class="k">if</span> {
+  input.itemPrivate
+  <span class="k">not</span> input.isReader
+  input.kind <span class="k">in</span> item_kinds
+}</pre>
+  <p class="note abs" data-at="6.0" style="left:1050px;top:770px;width:760px">The Rego is compiled with <code>opa build -t wasm</code> and evaluated with <code>@open-policy-agent/opa-wasm</code> on each device. The trust-tasks registry uses Rego too.</p>
+</section>
+
+<!-- 7. Convergence + private -->
+<section class="scene" id="s-converge">
+  <h2 data-at="0">No server, but the same list everywhere</h2>
+  <div class="box abs" data-at="0.6" style="left:110px;top:200px;width:820px">
+    <h3>Convergence</h3>
+    Each device rebuilds every item from its accepted ops, in <code>(at, author DID, op id)</code> order. The first add creates the item, the last check or edit wins, and a delete is final.<br/><br/>
+    A test applies 6 ops in all 720 arrival orders and asserts one result.
+  </div>
+  <div class="box abs" data-at="2.4" style="left:990px;top:200px;width:820px">
+    <h3>Private items</h3>
+    The text is encrypted under a fresh item key (ChaCha20-Poly1305). The key is wrapped to each reader's X25519 key with HPKE base mode, the same RFC 9180 suite TSP uses.<br/><br/>
+    Non-readers still verify the op and its permission, without reading it. They see that it exists, who wrote it, and who can read it.
+  </div>
+  <div class="box abs" data-at="4.4" style="left:110px;top:640px;width:1700px">
+    <h3>Tested against a real relay</h3>
+    The integration tests run several devices over real WebSockets. They cover joining while the inviter is offline, reused and expired invitations, someone else's credential, a replayed old roster, revocation with history kept, offline outboxes, restarts, and a check that the relay's database never contains item text.
+  </div>
+</section>
+
+<!-- 8. Footage -->
+<section class="scene" id="s-footage" style="padding:0">
+  <div class="abs" style="left:120px;top:36px;font-size:46px;font-weight:700">Running it: two browser profiles, one local relay</div>
+  <div class="flabel" style="left:120px">Alice's device</div>
+  <div class="flabel" style="left:980px">Bob's device</div>
+  <div class="footage" style="left:120px"><video id="v-alice" src="out/alice.webm" muted preload="auto"></video></div>
+  <div class="footage" style="left:980px"><video id="v-bob" src="out/bob.webm" muted preload="auto"></video><div class="wait" id="v-bob-wait">Bob hasn't opened the app yet</div></div>
+  <div class="fcap"><span id="f-cap-text"></span></div>
+</section>
+
+<!-- 9. Guesses and asks -->
+<section class="scene" id="s-asks">
+  <h2 data-at="0">Where we guessed, and where we'd like your input</h2>
+  <div class="abs" style="left:110px;top:200px;width:820px">
+    <div class="kicker" data-at="0.4" style="color:var(--rust)">Where we deviated</div>
+    <ul class="plain">
+      <li data-at="0.8"><code>did:key</code>, not <code>did:peer:4</code> or <code>did:scid:vh</code></li>
+      <li data-at="1.3">No TSP RFI/RFA handshake: relationships start at the first Direct message, because the TS binding carries only Direct messages</li>
+      <li data-at="1.8">Our own task types, not registry specs</li>
+      <li data-at="2.3">A VTC held by a single key, with no governance document</li>
+      <li data-at="2.8">Our own WebSocket mailbox, not Routed or Nested Mode</li>
+      <li data-at="3.3">Interop with the P2P Trust Stack's own implementation hasn't been tested</li>
+    </ul>
+  </div>
+  <div class="abs" style="left:1000px;top:200px;width:810px">
+    <div class="kicker" data-at="4.0">Questions for you</div>
+    <ul class="plain">
+      <li data-at="4.4">Which registry specs should these messages become, and what's missing from the registry?</li>
+      <li data-at="4.9">Is a signed, versioned roster the right shape for VTC membership state, or should it be a status list plus credentials?</li>
+      <li data-at="5.4">What are the plans for Routed and Nested Mode in the TypeScript libraries?</li>
+      <li data-at="5.9">Would you test interop against your TSP and Trust Task implementations?</li>
+      <li data-at="6.4">What would multi-device per person look like: delegation from a person's DID to device keys?</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 10. Outro -->
+<section class="scene" id="s-outro" style="padding-top:300px;text-align:center">
+  <h1 data-at="0.3" style="font-size:80px">Try it, break it, tell us</h1>
+  <p class="note mono" data-at="1.0" style="font-size:36px;margin-top:40px;color:var(--ink)">github.com/yourbuddyconner/toip-experiments</p>
+  <p class="note" data-at="1.6" style="font-size:30px;margin-top:20px"><code>npm install &amp;&amp; npm run dev</code>, then open <code>?profile=alice</code> and <code>?profile=bob</code></p>
+  <p class="note" data-at="2.4" style="font-size:26px;margin-top:50px">Built on the Apache-2.0 OpenVTC libraries. Questions and pull requests welcome.</p>
+</section>
+
+<script>
+const SCENES = {
+  title: [0, 8], layers: [8, 24], vtc: [24, 40], tasks: [40, 57], path: [57, 72], checks: [72, 88], converge: [88, 101], footage: [101, 133], asks: [133, 148], outro: [148, 155],
+};
+window.TOTAL = 155;
+const FOOTAGE_SPEED = 1.5;
+const BOB_OFFSET = 18.5;
+const CAPTIONS = [
+  [0, "Alice's device makes its own Ed25519 key and did:key. Nothing is registered anywhere"],
+  [6.9, "New list: a fresh list DID, roster v1 signed by it, and Alice's membership VC issued by it"],
+  [12.5, "Each item is an op signed with eddsa-jcs-2022, applied locally first, then sealed to each member"],
+  [15.3, "The invitation link carries the inviter DID, list DID, relay URL and a one-time code"],
+  [18.5, "Bob's device makes its own did:key and sends todo/join to Alice's DID over TSP"],
+  [23.4, "Alice's device sends todo/welcome (membership VC, roster v2, ops); Bob signs a todo/ack back"],
+  [26.5, "Bob's check and add go out as todo/op; Alice's device runs every check before applying them"],
+  [33, "Private item: text under a fresh item key, wrapped to Alice and Bob with HPKE base mode"],
+  [35.3, "Bob goes offline: his sealed TSP messages wait in his outbox in IndexedDB"],
+  [39.5, "Back online: DID challenge to the relay, then the outbox is sent and delivered"],
+  [43.5, "Inspector: the decrypted Trust Task document, with its DataIntegrityProof"],
+];
+
+const $ = (id) => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+const easeInOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+
+function sceneOpacity(name, t) {
+  const [a, b] = SCENES[name];
+  if (t < a - 0.01 || t > b + 0.01) return 0;
+  return Math.min(prog(t, a, a + 0.45), 1 - prog(t, b - 0.45, b));
+}
+
+async function seek(video, time) {
+  const target = clamp(time, 0, (video.duration || 1000) - 0.05);
+  if (Math.abs(video.currentTime - target) < 0.001) return;
+  await new Promise((res) => { video.addEventListener("seeked", res, { once: true }); video.currentTime = target; });
+}
+
+window.render = async function render(t) {
+  for (const [name, [a]] of Object.entries(SCENES)) {
+    const el = $("s-" + name);
+    el.style.opacity = sceneOpacity(name, t);
+    const l = t - a;
+    // Anything with data-at fades and rises in, that many seconds into its scene.
+    el.querySelectorAll("[data-at]").forEach((x) => {
+      const at = Number(x.dataset.at);
+      const p = easeOut(prog(l, at, at + 0.45));
+      x.style.opacity = p;
+      x.style.transform = `translateY(${(1 - p) * 18}px)`;
+    });
+  }
+
+  // The dot travels along the five stages of the message path.
+  {
+    const l = t - SCENES.path[0];
+    const x = 110 + 133 + easeInOut(prog(l, 5.0, 9.0)) * (1470 - 110);
+    $("p-dot").style.left = `${x}px`;
+    $("p-dot").style.opacity = prog(l, 4.9, 5.2) * (1 - prog(l, 13.6, 14.0));
+  }
+
+  // Footage.
+  {
+    const [a, b] = SCENES.footage;
+    const l = clamp(t - a, 0, b - a);
+    const ft = l * FOOTAGE_SPEED;
+    if (t >= a - 0.5 && t <= b + 0.5) {
+      await seek($("v-alice"), ft);
+      await seek($("v-bob"), ft - BOB_OFFSET);
+    }
+    $("v-bob-wait").style.opacity = ft < BOB_OFFSET ? 1 : 0;
+    let text = "";
+    for (const [at, c] of CAPTIONS) if (ft >= at) text = c;
+    $("f-cap-text").textContent = text;
+  }
+};
+
+window.ready = Promise.all([document.fonts.ready, ...["v-alice", "v-bob"].map((id) => new Promise((r) => {
+  const v = $(id); if (v.readyState >= 1) r(); else v.addEventListener("loadedmetadata", r, { once: true });
+}))]);
+</script>
+</body>
+</html>
