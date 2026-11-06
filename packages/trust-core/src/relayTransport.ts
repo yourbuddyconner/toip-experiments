@@ -68,8 +68,13 @@ export class RelayTransport implements Transport {
   stop(): void {
     this.stopped = true;
     clearTimeout(this.retry);
+    this.ready = false;
     this.ws?.close();
     this.ws = undefined;
+    for (const [cid, resolve] of this.waiting) {
+      this.waiting.delete(cid);
+      resolve("queued");
+    }
     this.setStatus("offline");
   }
 

@@ -174,6 +174,17 @@ describe("relay delivery", () => {
 });
 
 describe("RelayTransport", () => {
+  it("queues at once after stop(), without waiting for the relay", async () => {
+    const r = await relay();
+    const alice = client(r.url, id("alice"));
+    await until(() => alice.t.status === "connected");
+    alice.t.stop();
+    const started = Date.now();
+    expect(await alice.t.post(id("alice").did, id("bob").did, new Uint8Array([1]))).toBe("queued");
+    expect(Date.now() - started).toBeLessThan(500);
+    expect(alice.t.pending()).toBe(1);
+  });
+
   it("queues sends while offline and flushes them once the relay is back", async () => {
     const dbPath = tmpDb();
     const port = 39000 + Math.floor(Math.random() * 1000);
