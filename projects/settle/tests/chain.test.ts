@@ -40,7 +40,7 @@ describe("the local cluster over Solana JSON-RPC", () => {
       await openInstruction({ programId: chain.programId, payer: payer.signer, rentPayer: sponsor, payerToken, mint, feeAccount: feeToken, termsHash, amount: USDC(340), fee: USDC(3.4), payee: payee.address, arbiter: arbiter.address, threshold: 2, feeBps: 100, refundAfter: (await chain.now()) + 86400n }),
     ]);
     expect(opened.ok).toBe(true);
-    const escrow = await escrowAddress(chain.programId, termsHash);
+    const escrow = await escrowAddress(chain.programId, payer.address, termsHash);
     expect((await chain.escrow(escrow))!.amount).toBe(USDC(340));
 
     const evidence = new Uint8Array(32).fill(1);

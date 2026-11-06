@@ -26,7 +26,7 @@ Everything is real except the network and the money:
 
 | Path | What |
 |---|---|
-| `program/src/lib.rs` | The escrow program. `open` funds an escrow for a terms hash with the price plus the facilitator fee. `resolve` pays the fee to the processor, `n` of the price to the payee, and the rest back to the payer, given a quorum of Ed25519 signatures over `settle/v1\|program\|escrow\|pay:n\|evidence:hash`. `reclaim` lets the payer alone take the price back after the deadline; the fee is still paid. |
+| `program/src/lib.rs` | The escrow program (v2). `open` funds an escrow for the payer's key and a terms hash with the price plus the facilitator fee. `resolve` pays the fee to the processor, `n` of the price to the payee, and the rest back to the payer, given a quorum of Ed25519 signatures over `settle/v2\|program\|escrow\|pay:n\|evidence:hash`. `reclaim` lets the payer alone take the price back after the deadline; the fee is still paid. `claim` collects a share that couldn't be paid. `hold` lets the arbiter delay a reclaim during a dispute. |
 | `program/dist/`, `program/keys/` | The compiled program and its development keypair, so the TypeScript side runs without the Solana toolchain. |
 | `src/chain/` | The client: addresses, instruction encoding, Ed25519 instructions, LiteSVM wrapper (`Simnet`), and fee sponsorship (a party signs its part; the processor checks, co-signs as fee payer, submits). |
 | `src/protocol/` | Terms, each party's acceptance, payment-key bindings, attestations, disputes, rulings, evidence, receipts. The Trust Task types, the `attested-completion/1` Rego policy, and the transparency log. |
@@ -44,7 +44,7 @@ Everything is real except the network and the money:
 ## Tests
 
 ```bash
-npm test --workspace @zk-toip/settle    # 28 tests
+npm test --workspace @zk-toip/settle    # 41 tests
 npm run build:program --workspace @zk-toip/settle   # rebuild the program (needs Rust and Agave's cargo-build-sbf)
 npm run policies --workspace @zk-toip/settle        # recompile the Rego (needs opa)
 ```
@@ -53,6 +53,14 @@ The tests cover:
 - **The program**, against the compiled binary: opening, releasing, splitting and refunding; refusing one signature, a duplicated key, an outsider's key, a signature over a different outcome or escrow, a second resolution, a token account the payee doesn't hold, and a reclaim before the deadline; and opening even when someone pre-funded the escrow's address to block it.
 - **The documents and the policy.**
 - **The end-to-end flows** over a real relay: the paid job, the arbiter's split, the reclaim, the transparency log, refused terms with a swapped arbiter, and a stranger's signature ignored.
+- **The security review's fixes** (design §16):
+  - No one else can lock an escrow: a surplus deposit, a closed fee account or a closed payer account doesn't block it, and owed shares are claimable.
+  - The processor won't sponsor a transaction that misuses its key.
+  - The payee refuses terms that differ from its invoice.
+  - Strangers can't re-point the arbiter or the attester.
+  - The payer counts the attester's latest word.
+  - A dispute holds the escrow against reclaim.
+  - The public log carries roles and hashes only.
 
 ## Not yet
 

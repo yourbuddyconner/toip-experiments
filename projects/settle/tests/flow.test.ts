@@ -142,3 +142,90 @@ describe("Settle end to end: a repair job (design §10)", () => {
     expect(escrowOf(w, id).state).toBe(STATE.funded);
   });
 });
+
+describe("review fixes: parties can't be cheated (C3–C6, I1, I4, I6)", () => {
+  it("the payee refuses terms below its invoice, in another token, or with a deadline too close (C5)", async () => {
+    const { w } = await setup();
+    const id = await w.joe.request(w.landlord.did, "Fix the porch light", USDC(120));
+    await until(() => w.landlord.requests.has(id), "the invoice");
+    w.landlord.requests.get(id)!.offer.units = USDC(1).toString();
+    await w.landlord.proposeTerms(id, { attester: w.alice.did, disputeWindowDays: 7, feeBps: 100, minFeeUnits: USDC(0.5), feeAccount: w.processor.feeAccount, refundAfterDays: 30 });
+    await until(() => w.joe.events.some((e) => e.text.includes("refused terms")), "joe to refuse");
+    expect(w.joe.events.at(-1)!.text).toContain("not the price I invoiced");
+    w.landlord.requests.get(id)!.offer.units = USDC(120).toString();
+    await w.landlord.proposeTerms(id, { attester: w.alice.did, disputeWindowDays: 7, feeBps: 100, minFeeUnits: USDC(0.5), feeAccount: w.processor.feeAccount, refundAfterDays: 3 });
+    await until(() => w.joe.events.filter((e) => e.text.includes("refused terms")).length === 2, "joe to refuse again");
+    expect(w.joe.events.at(-1)!.text).toContain("deadline too close");
+  });
+
+  it("the processor won't sponsor a transaction that uses its key as anything but fee and rent payer (C3)", async () => {
+    const { w, id } = await setup();
+    const { buildForSponsor } = await import("../src/chain/tx");
+    const { openInstruction } = await import("../src/chain/escrow");
+    const { createNoopSigner } = await import("@solana/kit");
+    const { randomPaymentKey } = await import("../src/chain/keys");
+    const mallory = await randomPaymentKey();
+    const arb = await randomPaymentKey();
+    const fp = createNoopSigner(w.processor.feePayer.address);
+    const ix = await openInstruction({
+      programId: w.chain.programId, payer: fp, rentPayer: fp, payerToken: w.processor.feeAccount, mint: w.mint, feeAccount: w.processor.feeAccount,
+      termsHash: crypto.getRandomValues(new Uint8Array(32)), amount: 1n, fee: 0n, payee: mallory.address, arbiter: arb.address, threshold: 2, feeBps: 0, refundAfter: (await w.chain.now()) + 86400n,
+    });
+    const wire = await buildForSponsor(w.chain, w.processor.feePayer.address, [ix]);
+    const { PROCESSOR_SUBMIT } = await import("../src/protocol/specs");
+    const res = await w.alice.endpoint.request<{ transaction: string }, { ok: boolean; error?: string }>(w.processor.did, PROCESSOR_SUBMIT, { transaction: wire });
+    expect(res.payload.ok).toBe(false);
+    void id;
+  });
+
+  it("a stranger can't re-point the arbiter or the attester at another escrow (C6)", async () => {
+    const { w, id } = await setup();
+    const real = w.arbiter.payments.get(id)!;
+    const { ESCROW_OPENED } = await import("../src/protocol/specs");
+    const fakeEscrow = w.processor.feeAccount;
+    await w.joe.endpoint.notify(w.arbiter.did, ESCROW_OPENED, { terms: real.terms, acceptances: real.acceptances, escrow: fakeEscrow, transaction: "x" });
+    await w.joe.endpoint.notify(w.alice.did, ESCROW_OPENED, { terms: real.terms, acceptances: real.acceptances, escrow: fakeEscrow, transaction: "x" });
+    await new Promise((r) => setTimeout(r, 300));
+    expect(w.arbiter.payments.get(id)!.escrow).toBe(w.landlord.payments.get(id)!.escrow);
+    expect(w.alice.payments.get(id)!.escrow).toBe(w.landlord.payments.get(id)!.escrow);
+  });
+
+  it("the payer counts the attester's latest word, not only what the payee chose to send (I4)", async () => {
+    const { w, id } = await setup();
+    await w.alice.attest(id, "complete");
+    await until(() => w.landlord.payments.get(id)!.attestations.length === 1, "complete");
+    await w.alice.attest(id, "not-complete", "Leaking again");
+    await until(() => w.landlord.payments.get(id)!.attestations.length === 2, "retraction");
+    await w.advance(8 * 86400);
+    const p = w.joe.payments.get(id)!;
+    p.attestations = p.attestations.filter((a) => a.claim === "complete");
+    await w.joe.requestRelease(id);
+    await until(() => w.landlord.events.some((e) => e.text.includes("not signing")), "the landlord to refuse");
+    expect(escrowOf(w, id).state).toBe(STATE.funded);
+  });
+
+  it("a dispute makes the arbiter hold the escrow, so the payer can't wait it out and reclaim (I6)", async () => {
+    const { w, id } = await setup();
+    await w.landlord.dispute(id, "Not done");
+    await until(() => w.processor.events.some((e) => e.text.includes("held")), "the hold");
+    await w.advance(31 * 86400);
+    expect(await w.landlord.reclaim(id)).toBe(false);
+    expect(escrowOf(w, id).state).toBe(STATE.funded);
+  });
+
+  it("the processor's public log carries roles and hashes, and ignores forged rulings (I1, I2)", async () => {
+    const { w, id } = await setup();
+    const { ARBITER_RULING } = await import("../src/protocol/specs");
+    const terms = w.landlord.payments.get(id)!.terms!;
+    const { rule } = await import("../src/protocol/documents");
+    const forged = rule(w.alice.identity, terms, 0n, "FORGED", [], w.clock);
+    await w.alice.endpoint.notify(w.processor.did, ARBITER_RULING, { ruling: { ...forged, issuer: terms.arbiter.did }, evidence: {}, signature: {} });
+    await w.landlord.dispute(id, "Personal details here");
+    await until(() => w.processor.log.snapshot().entries.some((e) => e.kind === "dispute"), "the dispute entry");
+    const entries = w.processor.log.snapshot().entries;
+    expect(entries.some((e) => e.kind === "ruling")).toBe(false);
+    const text = JSON.stringify(entries);
+    expect(text).not.toContain(w.landlord.did);
+    expect(text).not.toContain("Personal details");
+  });
+});

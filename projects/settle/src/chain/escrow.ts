@@ -19,6 +19,7 @@ export const SYSTEM_PROGRAM = address("11111111111111111111111111111111");
 export const ED25519_PROGRAM = address("Ed25519SigVerify111111111111111111111111111");
 export const INSTRUCTIONS_SYSVAR = address("Sysvar1nstructions1111111111111111111111111");
 
+export const VERSION = 2;
 export const STATE = { funded: 1, resolved: 2, reclaimed: 3 } as const;
 export const ERRORS: Record<number, string> = {
   1: "BadInstruction",
@@ -28,6 +29,7 @@ export const ERRORS: Record<number, string> = {
   5: "TooEarly",
   6: "BadAmount",
   7: "WrongTokenAccount",
+  8: "NothingOwed",
 };
 
 const enc = getAddressEncoder();
@@ -57,8 +59,9 @@ const concat = (...parts: Uint8Array[]) => {
 };
 const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
 
-export async function escrowAddress(programId: Address, termsHash: Uint8Array): Promise<Address> {
-  const [a] = await getProgramDerivedAddress({ programAddress: programId, seeds: [utf8("escrow"), termsHash] });
+/** An escrow's address: from the payer's key and the terms hash, so nobody else can squat on it. */
+export async function escrowAddress(programId: Address, payer: Address, termsHash: Uint8Array): Promise<Address> {
+  const [a] = await getProgramDerivedAddress({ programAddress: programId, seeds: [utf8("escrow"), addressBytes(payer), termsHash] });
   return a;
 }
 
@@ -69,7 +72,12 @@ export async function vaultAddress(programId: Address, escrow: Address): Promise
 
 /** The exact text a signer signs to approve paying `payeeAmount` to the payee and the rest back to the payer. */
 export function outcomeMessage(programId: Address, escrow: Address, payeeAmount: bigint, evidenceHash: Uint8Array): Uint8Array {
-  return utf8(`settle/v1|${programId}|${escrow}|pay:${payeeAmount}|evidence:${hex(evidenceHash)}`);
+  return utf8(`settle/v2|${programId}|${escrow}|pay:${payeeAmount}|evidence:${hex(evidenceHash)}`);
+}
+
+/** The text the arbiter signs to hold off a reclaim while it decides a dispute. */
+export function holdMessage(programId: Address, escrow: Address, until: bigint): Uint8Array {
+  return utf8(`settle/v2|${programId}|${escrow}|hold-until:${until}`);
 }
 
 export interface OpenParams {
@@ -92,7 +100,7 @@ export interface OpenParams {
 }
 
 export async function openInstruction(p: OpenParams): Promise<Instruction> {
-  const escrow = await escrowAddress(p.programId, p.termsHash);
+  const escrow = await escrowAddress(p.programId, p.payer.address, p.termsHash);
   const vault = await vaultAddress(p.programId, escrow);
   return {
     programAddress: p.programId,
@@ -167,6 +175,33 @@ export async function reclaimInstruction(p: { programId: Address; payer: Transac
   } as Instruction;
 }
 
+export async function claimInstruction(p: { programId: Address; claimant: TransactionSigner; escrow: Address; to: Address; rentPayer: Address }): Promise<Instruction> {
+  const vault = await vaultAddress(p.programId, p.escrow);
+  return {
+    programAddress: p.programId,
+    accounts: [
+      { address: p.claimant.address, role: AccountRole.READONLY_SIGNER, signer: p.claimant },
+      { address: p.escrow, role: AccountRole.WRITABLE },
+      { address: vault, role: AccountRole.WRITABLE },
+      { address: p.to, role: AccountRole.WRITABLE },
+      { address: p.rentPayer, role: AccountRole.WRITABLE },
+      { address: TOKEN_PROGRAM, role: AccountRole.READONLY },
+    ],
+    data: new Uint8Array([3]),
+  } as Instruction;
+}
+
+export async function holdInstruction(p: { programId: Address; escrow: Address; until: bigint }): Promise<Instruction> {
+  return {
+    programAddress: p.programId,
+    accounts: [
+      { address: p.escrow, role: AccountRole.WRITABLE },
+      { address: INSTRUCTIONS_SYSVAR, role: AccountRole.READONLY },
+    ],
+    data: concat(new Uint8Array([4]), i64(p.until)),
+  } as Instruction;
+}
+
 /**
  * An Ed25519 precompile instruction carrying one signature over `message`. The precompile fails the
  * whole transaction if the signature is bad; the escrow program then reads which keys signed what.
@@ -194,12 +229,14 @@ export function ed25519Instruction(publicKey: Uint8Array, signature: Uint8Array,
 }
 
 export interface EscrowState {
+  version: number;
   state: number;
   threshold: number;
   feeBps: number;
   termsHash: Uint8Array;
   mint: Address;
   amount: bigint;
+  fee: bigint;
   payer: Address;
   payee: Address;
   arbiter: Address;
@@ -208,27 +245,32 @@ export interface EscrowState {
   refundAfter: bigint;
   payeePaid: bigint;
   evidenceHash: Uint8Array;
-  fee: bigint;
+  payeeOwed: bigint;
+  payerOwed: bigint;
 }
 
+/** Decodes a v2 escrow account (program/src/lib.rs `Escrow`). */
 export function decodeEscrow(d: Uint8Array): EscrowState {
   const v = new DataView(d.buffer, d.byteOffset, d.byteLength);
   const a = (o: number) => bytesAddress(d.slice(o, o + 32));
   return {
-    state: d[0],
-    threshold: d[3],
-    feeBps: v.getUint16(4, true),
-    termsHash: d.slice(6, 38),
-    mint: a(38),
-    amount: v.getBigUint64(70, true),
-    payer: a(78),
-    payee: a(110),
-    arbiter: a(142),
-    feeAccount: a(174),
-    rentPayer: a(206),
-    refundAfter: v.getBigInt64(238, true),
-    payeePaid: v.getBigUint64(246, true),
-    evidenceHash: d.slice(254, 286),
-    fee: v.getBigUint64(286, true),
+    version: d[0],
+    state: d[1],
+    threshold: d[4],
+    feeBps: v.getUint16(5, true),
+    termsHash: d.slice(8, 40),
+    mint: a(40),
+    amount: v.getBigUint64(72, true),
+    fee: v.getBigUint64(80, true),
+    payer: a(88),
+    payee: a(120),
+    arbiter: a(152),
+    feeAccount: a(184),
+    rentPayer: a(216),
+    refundAfter: v.getBigInt64(248, true),
+    payeePaid: v.getBigUint64(256, true),
+    evidenceHash: d.slice(264, 296),
+    payeeOwed: v.getBigUint64(296, true),
+    payerOwed: v.getBigUint64(304, true),
   };
 }

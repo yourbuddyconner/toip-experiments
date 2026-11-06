@@ -5,12 +5,14 @@
 import { Endpoint, RelayTransport, fromB64u, toB64u, type Clock, type Identity, type Traffic } from "@zk-toip/trust-core";
 import { ed25519 } from "@noble/curves/ed25519.js";
 import type { Address } from "@solana/kit";
-import { addressBytes, outcomeMessage } from "../chain/escrow";
+import { addressBytes, escrowAddress, outcomeMessage, STATE } from "../chain/escrow";
 import type { PaymentKey } from "../chain/keys";
 import type { Chain } from "../chain/chain";
 import {
   evidenceHash,
+  hexHash,
   termsHash,
+  verifyAcceptance,
   verifySigned,
   type Acceptance,
   type Attestation,
@@ -26,6 +28,8 @@ import { ESCROW_SIGN } from "../protocol/specs";
 export interface Directory {
   names: Record<string, string>;
   processor: string;
+  /** The processor's published fee account; terms must pay the fee there. */
+  processorFeeAccount?: Address;
   arbiter: { did: string; key: Address };
   licensingBoard: string;
   mint: Address;
@@ -41,6 +45,8 @@ export interface PaymentState {
   ruling?: Ruling;
   settled?: { transaction: string; payeeUnits: string };
   signed: { payeeUnits: string; evidenceHash: string }[];
+  /** When this party received each attestation (chain time), keyed by the attestation's hash. */
+  received: Record<string, number>;
 }
 
 export interface AgentEvent {
@@ -81,10 +87,10 @@ export abstract class Agent {
   readonly transport: RelayTransport;
   readonly payments = new Map<string, PaymentState>();
   readonly events: AgentEvent[] = [];
-  protected readonly clock: Clock;
-  protected readonly chain: Chain;
+  readonly clock: Clock;
+  readonly chain: Chain;
   protected readonly policy: SettlePolicy;
-  protected readonly directory: Directory;
+  readonly directory: Directory;
   private readonly onEvent?: (e: AgentEvent) => void;
   private queue: Promise<unknown> = Promise.resolve();
 
@@ -109,7 +115,7 @@ export abstract class Agent {
 
   async start(): Promise<void> {
     this.transport.start();
-    const end = Date.now() + 5000;
+    const end = Date.now() + 15000;
     while (this.transport.status !== "connected") {
       if (Date.now() > end) throw new Error(`${this.name} couldn't reach the relay`);
       await new Promise((r) => setTimeout(r, 10));
@@ -134,7 +140,7 @@ export abstract class Agent {
   protected payment(id: string): PaymentState {
     let p = this.payments.get(id);
     if (!p) {
-      p = { id, acceptances: [], attestations: [], disputes: [], signed: [] };
+      p = { id, acceptances: [], attestations: [], disputes: [], signed: [], received: {} };
       this.payments.set(id, p);
     }
     return p;
@@ -155,26 +161,37 @@ export abstract class Agent {
     return run;
   }
 
-  /** Builds the policy input from an evidence bundle plus what this agent knows itself (design §8). */
+  /** Records an attestation this party received, and when (chain time), so the dispute window runs from receipt. */
+  protected async noteAttestation(p: PaymentState, a: Attestation): Promise<void> {
+    const h = hexHash(a);
+    if (p.received[h] !== undefined) return;
+    p.received[h] = Number(await this.chain.now());
+    p.attestations.push(a);
+  }
+
+  /**
+   * Builds the policy input from an evidence bundle plus everything this agent knows itself (design §8).
+   * The attester's latest verified word counts, whoever sent it, timed from when this party first saw it.
+   */
   protected async evaluate(role: "payer" | "payee" | "arbiter", p: PaymentState, evidence: Evidence, payeeCancels = false): Promise<PolicyDecision> {
     const t = p.terms!;
-    const attestations = await Promise.all(
-      evidence.attestations.map(async (a) => ({
-        issuer: a.issuer,
-        claim: a.claim,
-        atSeconds: Math.floor(Date.parse(a.at) / 1000),
-        verified: await verifySigned(a, t, a.issuer, this.clock),
-      })),
-    );
+    const now = Number(await this.chain.now());
+    const seen = new Map<string, { a: Attestation; at: number }>();
+    for (const a of [...p.attestations, ...(evidence.attestations ?? [])]) {
+      const h = hexHash(a);
+      if (seen.has(h) || a?.issuer !== t.conditions.attester || !(await verifySigned(a, t, a.issuer, this.clock))) continue;
+      seen.set(h, { a, at: p.received[h] ?? now });
+    }
+    const latest = [...seen.values()].sort((x, y) => x.at - y.at || Date.parse(x.a.at) - Date.parse(y.a.at)).at(-1);
     const disputes = [...evidence.disputes, ...p.disputes.filter((d) => !evidence.disputes.some((e) => e.at === d.at && e.issuer === d.issuer))];
     const ruling = evidence.ruling && (await verifySigned(evidence.ruling, t, t.arbiter.did, this.clock)) ? { payeeUnits: evidence.ruling.payeeUnits } : null;
     return this.policy.decide({
       role,
       // Chain time, so every party agrees on when a window has passed.
-      now: Number(await this.chain.now()),
+      now,
       proposal: { payeeUnits: evidence.payeeUnits },
       terms: { amountUnits: t.amount.units, attester: t.conditions.attester, disputeWindowSeconds: t.conditions.disputeWindowSeconds },
-      attestations,
+      completion: latest ? { claim: latest.a.claim, atSeconds: latest.at } : null,
       disputes: disputes.map((d) => ({ issuer: d.issuer })),
       ruling,
       payeeCancels,
@@ -199,6 +216,42 @@ export abstract class Agent {
   }
 }
 
+
+/** Both parties' acceptances of the terms, checked. */
+export async function termsAgreed(t: Terms, acceptances: unknown, clock: AgentOptions["clock"]): Promise<boolean> {
+  if (!Array.isArray(acceptances)) return false;
+  const ok = async (did: string) => {
+    for (const a of acceptances) if (await verifyAcceptance(a as Acceptance, t, did, clock)) return true;
+    return false;
+  };
+  return (await ok(t.payer.did)) && (await ok(t.payee.did));
+}
+
+/**
+ * Everything about an on-chain escrow that must match the terms (review C4): the account belongs to the Settle
+ * program at the address the payer's key and the terms hash give, and every field is what was agreed.
+ */
+export async function escrowProblems(chain: Chain, escrow: Address, t: Terms): Promise<string[]> {
+  if (escrow !== (await escrowAddress(chain.programId, t.payer.paymentKey, termsHash(t)))) return ["not the escrow address for these terms"];
+  const s = await chain.escrow(escrow);
+  if (!s) return ["no Settle escrow at that address"];
+  const problems: string[] = [];
+  const want: [string, unknown, unknown][] = [
+    ["state", s.state, STATE.funded],
+    ["terms hash", hex(s.termsHash), hex(termsHash(t))],
+    ["amount", s.amount, BigInt(t.amount.units)],
+    ["fee", s.fee, BigInt(t.fee.units)],
+    ["token", s.mint, t.amount.mint],
+    ["payer key", s.payer, t.payer.paymentKey],
+    ["payee key", s.payee, t.payee.paymentKey],
+    ["arbiter key", s.arbiter, t.arbiter.key],
+    ["threshold", s.threshold, t.threshold],
+    ["fee account", s.feeAccount, t.fee.account],
+    ["deadline", s.refundAfter, BigInt(t.refundAfter)],
+  ];
+  for (const [name, got, expected] of want) if (got !== expected) problems.push(`${name} doesn't match`);
+  return problems;
+}
 
 /** Checks an outcome signature against the message it claims to sign. */
 export function verifyOutcomeSignature(programId: Address, s: OutcomeSignature): boolean {

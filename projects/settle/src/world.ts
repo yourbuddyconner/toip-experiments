@@ -69,6 +69,8 @@ export async function createWorld(opts: { relayUrl: string; start?: string; onEv
 
   await processor.setup(mint);
   landlord.setProcessorFeePayer(processor.feePayer.address);
+  // The processor publishes its fee account; payees check terms pay the fee there.
+  for (const a of [landlord, joe, alice, arbiter]) a.directory.processorFeeAccount = processor.feeAccount;
   landlord.trustedLicensers = [ids.board.did];
   joe.credentials.push(
     issueCredential(ids.board, clock, {

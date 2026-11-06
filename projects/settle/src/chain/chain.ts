@@ -18,7 +18,7 @@ import {
 } from "@solana/kit";
 import { getCreateAccountInstruction } from "@solana-program/system";
 import { getInitializeAccount3Instruction, getTransferInstruction } from "@solana-program/token";
-import { decodeEscrow, ERRORS, TOKEN_PROGRAM, type EscrowState } from "./escrow";
+import { decodeEscrow, ERRORS, TOKEN_PROGRAM, VERSION, type EscrowState } from "./escrow";
 
 export type ChainResult = { ok: true; signature: string } | { ok: false; error: string; code?: number; name?: string; logs?: string[] };
 
@@ -56,9 +56,13 @@ export class Chain {
     return (await this.account(addr)) !== null;
   }
 
+  /** A Settle escrow, only if the account really belongs to the Settle program and has the current layout. */
   async escrow(addr: Address): Promise<EscrowState | null> {
-    const d = await this.account(addr);
-    return d ? decodeEscrow(d) : null;
+    const r = await this.rpc.getAccountInfo(addr, { encoding: "base64" }).send();
+    if (!r.value || r.value.owner !== this.programId) return null;
+    const d = fromB64(r.value.data[0]);
+    if (d.length < 320 || d[0] !== VERSION) return null;
+    return decodeEscrow(d);
   }
 
   async balance(tokenAccount: Address): Promise<bigint> {

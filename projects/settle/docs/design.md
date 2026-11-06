@@ -69,7 +69,7 @@ The arbiter and processor can be the same organization (Settle's defaults), but 
 
 ### State
 
-One escrow account per payment, a PDA with seeds `["escrow", terms_hash]`, plus a USDC token account the PDA owns.
+One escrow account per payment, a PDA with seeds `["escrow", payer_key, terms_hash]` (section 16), plus a USDC token account the PDA owns.
 
 | Field | Meaning |
 |---|---|
@@ -175,9 +175,16 @@ So the two normal outcomes need no arbiter at all: the payer and payee both sign
 **Transparency log**
 - The processor keeps an append-only, signed Merkle log of terms hashes, openings, signatures received, settlements and rulings. Its signed roots are anchored on-chain periodically.
 - Anyone holding a payment's documents can check them against the log and the chain.
+- The log holds only what the processor verified, as roles (payer, payee, arbiter), amounts and document hashes. It holds no DIDs, names or dispute reasons. (As built, the log is hash-chained with a signed head; Merkle roots and on-chain anchoring are not built yet.)
 
 **What the public chain shows**
-- Escrow addresses, payment keys, amounts, times, the arbiter's key, and the processor's fee account. The fee account links all payments that pay the same processor.
+- Escrow addresses, payment keys, amounts, times, the arbiter's key, and the processor's fee account.
+- These link payments, so "unlinked keys" is weaker than it sounds:
+  - The fee account links every payment that uses the same processor.
+  - The arbiter's key is the same in every payment it serves.
+  - The processor's fee-payer key signs every sponsored transaction.
+  - Funding a payment key from a known wallet links that wallet to the payment.
+- Fresh payment keys stop a payer's or payee's payments from linking to each other through their own keys. They don't hide that a payment happened, or whose processor and arbiter it used.
 - **Not** DIDs, names, purposes or evidence. Those travel only over TSP, sealed to the parties.
 - Amounts are visible. USDC doesn't support Solana's confidential transfers.
 - Zero-knowledge comes later, via `projects/zk-pdp-fit`. For example, prove "this escrow was funded by a current household of this building" without saying which.
@@ -239,3 +246,33 @@ What changed while building it:
 - **Handlers must never wait on a request.** The relay delivers a device's messages in order. A handler that awaited a request/response would block the very reply it was waiting for, as the payer's escrow opening first did.
 - The chain is LiteSVM in-process (`src/chain/simnet.ts`). USDC is a test mint whose authority stands in for each party's wallet or on-ramp.
 - **The facilitator fee is paid on every outcome** (convener's decision, 2026-11-06). The terms fix `fee.units` = max(price × `bps`, `minUnits`). The payer funds price plus fee. `resolve` and `reclaim` always pay the fee to the processor's fee account; the outcome message still names how much of the *price* goes to the payee, so a normal release pays the payee the full price. Earlier the fee came out of the payee's share, so refunds and reclaims earned the processor nothing despite its paying the network fees.
+
+## 16. Security review and escrow program v2 (2026-11-06)
+
+A review of the first build found ways for one party to lock, steer or drain funds. Version 2 of the program and the agents fix them; the tests in `tests/escrow.test.ts` and the "review fixes" block of `tests/flow.test.ts` cover each one.
+
+**Nobody else can lock an escrow (program).**
+- **Pull payments.** If a share can't be paid because the account was closed, frozen or doesn't belong to the party, it is recorded as `payee_owed` or `payer_owed`. The owner collects it later with `claim` (instruction 3), to a token account it signs for.
+- **Surplus.** Tokens sent into a vault beyond price plus fee go to the payer, on resolve, on reclaim or by claim. Without this, a 1-unit deposit made the vault impossible to close.
+- **The fee account.** If the processor closes or freezes its fee account, the fee goes to the payer. The processor can't hold anyone's payout hostage.
+- The vault closes only when nothing is owed and it is empty.
+
+**Other program fixes.**
+- **Distinct keys.** Payer, payee and arbiter must be three different keys, so one signature never counts twice.
+- **Addresses.** The escrow address is derived from `["escrow", payer key, terms hash]`. Nobody can front-run an open and squat on the address for a payer's terms.
+- `refund_after` must be in the future at open.
+- **Version byte.** Accounts carry a version byte (2), and messages are prefixed `settle/v2`.
+- **Hold (instruction 4).** The arbiter's signature over `settle/v2|<program>|<escrow>|hold-until:<t>` pushes the reclaim deadline back, by up to 180 days at a time. A dispute now blocks the payer from waiting out the deadline and reclaiming.
+
+**Agent fixes.**
+- **The processor sponsors only what it means to pay for.**
+  - It sponsors only a single Settle instruction (open, reclaim or claim) whose only use of its key is as fee payer and rent payer.
+  - An open must come with terms both parties signed, and must match them field by field, including this processor's own fee schedule and fee account.
+  - The fee account is owned by a separate key, so the fee payer's signature can never move fees.
+- **The payee checks the terms against its own invoice:** price, purpose, token, arbiter, fee arithmetic, the processor's published fee account, and a reclaim deadline at least the dispute window plus 14 days away.
+- **The payee checks the escrow against the terms.** It checks the escrow on-chain field by field: owner program, derived address, amounts, keys, threshold, fee account and deadline.
+- **The arbiter and the attester trust an escrow announcement only if three things hold:** it comes from the payer, it carries both acceptances, and it matches the chain. They never overwrite one they already hold.
+- **Policy input is the attester's latest verified word**, from everything this party has received, not only the evidence the other side chose to send. The dispute window runs from when this party received it, in chain time.
+- **On a dispute, the arbiter signs a hold**, and the processor submits it.
+- **The log** records only verified documents, as roles and hashes.
+

@@ -11,7 +11,7 @@ export const GENESIS = "0".repeat(64);
 export interface LogEntry {
   seq: number;
   at: string;
-  kind: "opened" | "signature" | "dispute" | "ruling" | "settled";
+  kind: "opened" | "signature" | "dispute" | "ruling" | "hold" | "settled";
   termsHash: string;
   detail: Record<string, unknown>;
   prev: string;

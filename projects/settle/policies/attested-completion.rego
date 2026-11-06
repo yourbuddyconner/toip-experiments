@@ -12,19 +12,12 @@ ruling_matches if {
 	input.proposal.payeeUnits == input.ruling.payeeUnits
 }
 
-attested_complete if {
-	some a in input.attestations
-	a.verified
-	a.issuer == input.terms.attester
-	a.claim == "complete"
-}
+# The attester's latest verified word, timed from when this party received it (computed by the agent).
+attested_complete if input.completion.claim == "complete"
 
 window_passed if {
-	some a in input.attestations
-	a.verified
-	a.issuer == input.terms.attester
-	a.claim == "complete"
-	input.now >= a.atSeconds + input.terms.disputeWindowSeconds
+	attested_complete
+	input.now >= input.completion.atSeconds + input.terms.disputeWindowSeconds
 }
 
 disputed if count(input.disputes) > 0

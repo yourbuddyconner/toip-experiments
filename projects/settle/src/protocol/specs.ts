@@ -13,6 +13,8 @@ export const ESCROW_SIGN = ourSpec("settle/escrow/sign");
 export const ESCROW_DISPUTE = ourSpec("settle/escrow/dispute");
 export const ARBITER_RULING = ourSpec("settle/arbiter/ruling");
 export const ESCROW_SETTLED = ourSpec("settle/escrow/settled");
+/** The arbiter's signed hold, so a disputed escrow can't be reclaimed before a ruling (sent to the processor to submit). */
+export const ESCROW_HOLD = ourSpec("settle/escrow/hold");
 export const PAYMENT_RECEIPT = ourSpec("settle/payment/receipt");
 /** Request/response: a partially signed transaction the processor co-signs as fee payer and submits. */
 export const PROCESSOR_SUBMIT = ourSpec("settle/processor/submit");

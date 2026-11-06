@@ -10,7 +10,8 @@ export interface PolicyInput {
   now: number;
   proposal: { payeeUnits: string };
   terms: { amountUnits: string; attester: string; disputeWindowSeconds: number };
-  attestations: { issuer: string; claim: string; atSeconds: number; verified: boolean }[];
+  /** The attester's latest verified word, and when this party received it (chain time). */
+  completion: { claim: string; atSeconds: number } | null;
   disputes: { issuer: string }[];
   ruling: { payeeUnits: string } | null;
   payeeCancels?: boolean;

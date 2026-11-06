@@ -11,7 +11,7 @@ const base = (over: Partial<PolicyInput> = {}): PolicyInput => ({
   now: 1_000_000 + 8 * 86400,
   proposal: { payeeUnits: "340000000" },
   terms: { amountUnits: "340000000", attester: "did:key:tenant", disputeWindowSeconds: 7 * 86400 },
-  attestations: [{ issuer: "did:key:tenant", claim: "complete", atSeconds: 1_000_000, verified: true }],
+  completion: { claim: "complete", atSeconds: 1_000_000 },
   disputes: [],
   ruling: null,
   ...over,
@@ -24,10 +24,9 @@ describe("settle/policies/attested-completion/1 (design §8)", () => {
   it("payer waits for the window", () => {
     expect(policy.decide(base({ now: 1_000_000 + 86400 }))).toEqual({ sign: false, reasons: ["the dispute window hasn't passed"] });
   });
-  it("payer needs the attester's own, verified attestation", () => {
-    expect(policy.decide(base({ attestations: [] })).reasons).toEqual(["the work hasn't been attested complete"]);
-    expect(policy.decide(base({ attestations: [{ issuer: "did:key:mallory", claim: "complete", atSeconds: 1, verified: true }] })).sign).toBe(false);
-    expect(policy.decide(base({ attestations: [{ issuer: "did:key:tenant", claim: "complete", atSeconds: 1, verified: false }] })).sign).toBe(false);
+  it("payer needs the attester's latest word to be complete", () => {
+    expect(policy.decide(base({ completion: null })).reasons).toEqual(["the work hasn't been attested complete"]);
+    expect(policy.decide(base({ completion: { claim: "not-complete", atSeconds: 1_000_000 } })).reasons).toEqual(["the work hasn't been attested complete"]);
   });
   it("payer won't release over an open dispute", () => {
     expect(policy.decide(base({ disputes: [{ issuer: "did:key:landlord" }] }))).toEqual({ sign: false, reasons: ["there is an open dispute"] });
@@ -39,7 +38,7 @@ describe("settle/policies/attested-completion/1 (design §8)", () => {
     expect(policy.decide(base({ role: "arbiter", ruling: { payeeUnits: "200000000" } })).reasons).toContain("the arbiter only signs its own ruling");
   });
   it("payee signs a full release, or a full refund only when it chose to cancel", () => {
-    expect(policy.decide(base({ role: "payee", attestations: [] })).sign).toBe(true);
+    expect(policy.decide(base({ role: "payee", completion: null })).sign).toBe(true);
     expect(policy.decide(base({ role: "payee", proposal: { payeeUnits: "0" } })).sign).toBe(false);
     expect(policy.decide(base({ role: "payee", proposal: { payeeUnits: "0" }, payeeCancels: true })).sign).toBe(true);
   });

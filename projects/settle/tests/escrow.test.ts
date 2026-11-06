@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import type { Address, KeyPairSigner } from "@solana/kit";
-import { ed25519Instruction, escrowAddress, openInstruction, outcomeMessage, reclaimInstruction, resolveInstruction, STATE, vaultAddress } from "../src/chain/escrow";
+import { claimInstruction, ed25519Instruction, escrowAddress, holdInstruction, holdMessage, openInstruction, outcomeMessage, reclaimInstruction, resolveInstruction, STATE, vaultAddress } from "../src/chain/escrow";
 import { randomPaymentKey, type PaymentKey } from "../src/chain/keys";
 import { Simnet } from "../src/chain/simnet";
 
@@ -31,10 +31,10 @@ async function world(): Promise<World> {
   const feeToken = await net.createTokenAccount(mint, processor.address, processor);
   await net.mintTo(mint, payerToken, processor, USDC(500));
   const termsHash = crypto.getRandomValues(new Uint8Array(32));
-  return { net, processor, mint, payer, payee, arbiter, outsider, payerToken, payeeToken, feeToken, termsHash, escrow: await escrowAddress(net.programId, termsHash) };
+  return { net, processor, mint, payer, payee, arbiter, outsider, payerToken, payeeToken, feeToken, termsHash, escrow: await escrowAddress(net.programId, payer.address, termsHash) };
 }
 
-async function open(w: World, over: Partial<{ amount: bigint; fee: bigint; threshold: number; feeBps: number; refundAfter: bigint; payerToken: Address }> = {}) {
+async function open(w: World, over: Partial<{ amount: bigint; fee: bigint; threshold: number; feeBps: number; refundAfter: bigint; payerToken: Address; arbiter: Address }> = {}) {
   return w.net.send(w.processor, [
     await openInstruction({
       programId: w.net.programId,
@@ -47,7 +47,7 @@ async function open(w: World, over: Partial<{ amount: bigint; fee: bigint; thres
       amount: over.amount ?? USDC(340),
       fee: over.fee ?? USDC(3.4),
       payee: w.payee.address,
-      arbiter: w.arbiter.address,
+      arbiter: over.arbiter ?? w.arbiter.address,
       threshold: over.threshold ?? 2,
       feeBps: over.feeBps ?? 100,
       refundAfter: over.refundAfter ?? w.net.now() + 30n * 86400n,
@@ -55,7 +55,7 @@ async function open(w: World, over: Partial<{ amount: bigint; fee: bigint; thres
   ]);
 }
 
-async function resolve(w: World, payeeAmount: bigint, signers: PaymentKey[], over: Partial<{ payeeToken: Address; message: Uint8Array }> = {}) {
+async function resolve(w: World, payeeAmount: bigint, signers: PaymentKey[], over: Partial<{ payeeToken: Address; payerToken: Address; message: Uint8Array }> = {}) {
   const evidence = new Uint8Array(32).fill(7);
   const message = over.message ?? outcomeMessage(w.net.programId, w.escrow, payeeAmount, evidence);
   return w.net.send(w.processor, [
@@ -64,7 +64,7 @@ async function resolve(w: World, payeeAmount: bigint, signers: PaymentKey[], ove
       programId: w.net.programId,
       escrow: w.escrow,
       payeeToken: over.payeeToken ?? w.payeeToken,
-      payerToken: w.payerToken,
+      payerToken: over.payerToken ?? w.payerToken,
       feeToken: w.feeToken,
       rentPayer: w.processor.address,
       payeeAmount,
@@ -151,10 +151,72 @@ describe("Settle escrow program (design §5)", () => {
     expect((await open(w, { amount: USDC(10) })).ok).toBe(false);
   });
 
-  it("refuses to pay into a token account the payee doesn't hold", async () => {
+  it("never pays into a token account the payee doesn't hold: the share is owed, and only the payee can claim it", async () => {
     await open(w);
     const attacker = await w.net.createTokenAccount(w.mint, w.outsider.address, w.processor);
-    expect(await resolve(w, USDC(340), [w.payer, w.payee], { payeeToken: attacker })).toMatchObject({ ok: false, name: "WrongTokenAccount" });
+    expect((await resolve(w, USDC(340), [w.payer, w.payee], { payeeToken: attacker })).ok).toBe(true);
+    expect(w.net.balance(attacker)).toBe(0n);
+    expect(w.net.escrow(w.escrow)!.payeeOwed).toBe(USDC(340));
+    const claim = async (who: PaymentKey, to: Address) =>
+      w.net.send(w.processor, [await claimInstruction({ programId: w.net.programId, claimant: who.signer, escrow: w.escrow, to, rentPayer: w.processor.address })]);
+    expect((await claim(w.outsider, attacker)).ok).toBe(false);
+    expect((await claim(w.payee, w.payeeToken)).ok).toBe(true);
+    expect(w.net.balance(w.payeeToken)).toBe(USDC(340));
+    expect(w.net.exists(await vaultAddress(w.net.programId, w.escrow))).toBe(false);
+  });
+
+  it("can't be locked by depositing extra tokens into the vault: the surplus goes back to the payer (review C1)", async () => {
+    await open(w);
+    const outsiderToken = await w.net.createTokenAccount(w.mint, w.outsider.address, w.processor);
+    await w.net.mintTo(w.mint, outsiderToken, w.processor, 1n);
+    const { getTransferInstruction } = await import("@solana-program/token");
+    await w.net.send(w.processor, [getTransferInstruction({ source: outsiderToken, destination: await vaultAddress(w.net.programId, w.escrow), authority: w.outsider.signer, amount: 1n })]);
+    expect((await resolve(w, USDC(340), [w.payer, w.payee])).ok).toBe(true);
+    expect(w.net.balance(w.payerToken)).toBe(USDC(156.6) + 1n);
+    expect(w.net.exists(await vaultAddress(w.net.programId, w.escrow))).toBe(false);
+  });
+
+  it("can't be locked by the processor breaking its fee account: the fee goes to the payer instead (review C2)", async () => {
+    await open(w);
+    const { getCloseAccountInstruction } = await import("@solana-program/token");
+    await w.net.send(w.processor, [getCloseAccountInstruction({ account: w.feeToken, destination: w.processor.address, owner: w.processor })]);
+    expect((await resolve(w, USDC(340), [w.payer, w.payee])).ok).toBe(true);
+    expect(w.net.balance(w.payeeToken)).toBe(USDC(340));
+    expect(w.net.balance(w.payerToken)).toBe(USDC(160));
+  });
+
+  it("can't be locked by the payer closing its token account: its refund is owed instead (review C1 follow-up)", async () => {
+    await open(w);
+    const { getCloseAccountInstruction } = await import("@solana-program/token");
+    await w.net.mintTo(w.mint, w.payerToken, w.processor, 0n);
+    const spare = await w.net.createTokenAccount(w.mint, w.payer.address, w.processor);
+    const { getTransferInstruction } = await import("@solana-program/token");
+    await w.net.send(w.processor, [getTransferInstruction({ source: w.payerToken, destination: spare, authority: w.payer.signer, amount: USDC(156.6) })]);
+    await w.net.send(w.processor, [getCloseAccountInstruction({ account: w.payerToken, destination: w.processor.address, owner: w.payer.signer })]);
+    expect((await resolve(w, USDC(200), [w.payer, w.arbiter])).ok).toBe(true);
+    expect(w.net.balance(w.payeeToken)).toBe(USDC(200));
+    expect(w.net.escrow(w.escrow)!.payerOwed).toBe(USDC(140));
+  });
+
+  it("refuses to open with the same key in two roles (review I5)", async () => {
+    expect(await open(w, { arbiter: w.payee.address })).toMatchObject({ ok: false, name: "BadInstruction" });
+  });
+
+  it("lets the arbiter hold off a reclaim while a dispute is open (review I6)", async () => {
+    const deadline = w.net.now() + 3600n;
+    await open(w, { refundAfter: deadline });
+    const until = deadline + 30n * 86400n;
+    const msg = holdMessage(w.net.programId, w.escrow, until);
+    const hold = async (k: PaymentKey) =>
+      w.net.send(w.processor, [ed25519Instruction(k.publicKey, k.sign(msg), msg), await holdInstruction({ programId: w.net.programId, escrow: w.escrow, until })]);
+    expect(await hold(w.payee)).toMatchObject({ ok: false, name: "NoQuorum" });
+    expect((await hold(w.arbiter)).ok).toBe(true);
+    expect(w.net.escrow(w.escrow)!.refundAfter).toBe(until);
+    w.net.setNow(deadline + 1n);
+    const reclaim = await w.net.send(w.processor, [
+      await reclaimInstruction({ programId: w.net.programId, payer: w.payer.signer, escrow: w.escrow, payerToken: w.payerToken, feeToken: w.feeToken, rentPayer: w.processor.address }),
+    ]);
+    expect(reclaim).toMatchObject({ ok: false, name: "TooEarly" });
   });
 
   it("lets the payer reclaim alone only after the deadline", async () => {
