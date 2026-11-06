@@ -39,7 +39,8 @@ export function signDocument<T extends { issuer: string }>(doc: T, issuer: Ident
 
 /** Verifies the proof of any JSON object signed by `signDocument`. */
 export async function verifyDocument(doc: object, clock: Clock) {
-  const verifier = new DataIntegrityProofVerifier({ now: () => clock.now() });
+  // Devices' clocks drift; tolerate a proof dated up to 5 minutes ahead (design v2 §4.5).
+  const verifier = new DataIntegrityProofVerifier({ now: () => clock.now(), clockSkewMs: 5 * 60_000 });
   return verifier.verifyDetailed(doc as unknown as TrustTaskDocument<unknown>);
 }
 

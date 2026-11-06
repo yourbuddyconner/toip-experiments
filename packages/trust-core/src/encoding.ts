@@ -15,3 +15,4 @@ export function fromB64u(text: string): Uint8Array {
 
 export const utf8 = (s: string): Uint8Array => new TextEncoder().encode(s);
 export const fromUtf8 = (b: Uint8Array): string => new TextDecoder().decode(b);
+export { canonicalize as canonicalJson } from "@openvtc/trust-tasks-proof";
