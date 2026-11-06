@@ -9,3 +9,4 @@ export * from "./sealing";
 export * from "./policy";
 export * from "./encoding";
 export * from "./knowledge";
+export * from "./relayTransport";

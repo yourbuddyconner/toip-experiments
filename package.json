@@ -4,6 +4,7 @@
   "type": "module",
   "workspaces": [
     "packages/trust-core",
+    "packages/relay",
     "projects/shared-todo"
   ],
   "scripts": {
