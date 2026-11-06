@@ -9,6 +9,7 @@ import {
   createKeyPairSignerFromBytes,
   createTransactionMessage,
   generateKeyPairSigner,
+  getBase58Decoder,
   lamports,
   pipe,
   setTransactionMessageFeePayerSigner,
@@ -29,7 +30,7 @@ export const PROGRAM_SO = join(PROGRAM_DIR, "dist", "settle_escrow.so");
 /** A development deploy keypair, so the program has the same address everywhere. Local and devnet use only. */
 export const PROGRAM_KEYPAIR = join(PROGRAM_DIR, "keys", "settle_escrow-keypair.json");
 
-export type SendResult = { ok: true; logs: string[] } | { ok: false; error: string; code?: number; name?: string; logs: string[] };
+export type SendResult = { ok: true; logs: string[]; signature: string } | { ok: false; error: string; code?: number; name?: string; logs: string[] };
 
 /** Reads an SPL token account's balance from its raw data. */
 export const tokenAmount = (data: Uint8Array): bigint => new DataView(data.buffer, data.byteOffset, data.byteLength).getBigUint64(64, true);
@@ -75,7 +76,7 @@ export class Simnet {
       const code = custom ? (custom[0].startsWith("Custom") ? Number(custom[1]) : parseInt(custom[1], 16)) : undefined;
       return { ok: false, error: text, code, name: code !== undefined ? ERRORS[code] : undefined, logs };
     }
-    return { ok: true, logs: r.logs() };
+    return { ok: true, logs: r.logs(), signature: getBase58Decoder().decode(r.signature()) };
   }
 
   private async mustSend(feePayer: TransactionSigner, ixs: Instruction[]): Promise<void> {
