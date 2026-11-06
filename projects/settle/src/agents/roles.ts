@@ -17,6 +17,7 @@ import {
   derivePaymentKey,
   dispute,
   evidenceHash,
+  facilitatorFee,
   receipt,
   rule,
   termsHash,
@@ -88,6 +89,9 @@ async function tokenAccountFor(net: Simnet, key: PaymentKey, mint: Address): Pro
 
 export class Payee extends Agent {
   readonly credentials: Credential[] = [];
+  /** The most this payee accepts the processor charging (the payer pays it, but it's part of the deal). */
+  maxFeeBps = 200;
+  maxMinFeeUnits = 2_000_000n;
   private readonly keys = new Map<string, { key: PaymentKey; token: Address }>();
 
   constructor(opts: AgentOptions) {
@@ -131,7 +135,8 @@ export class Payee extends Agent {
     else {
       if (t.payee.did !== this.did || t.payee.paymentKey !== mine.key.address || t.payee.tokenAccount !== mine.token) problems.push("my payment details were changed");
       if (t.arbiter.did !== this.directory.arbiter.did || t.arbiter.key !== this.directory.arbiter.key) problems.push("an arbiter I didn't agree to");
-      if (t.fee.bps > 200) problems.push("fee too high");
+      if (t.fee.bps > this.maxFeeBps || units(t.fee.minUnits) > this.maxMinFeeUnits) problems.push("fee too high");
+      else if (units(t.fee.units) !== facilitatorFee(units(t.amount.units), t.fee.bps, units(t.fee.minUnits))) problems.push("the fee doesn't add up");
       if (t.threshold !== 2) problems.push("unexpected threshold");
       if (t.payer.did !== sender || !(await verifyAcceptance(m.acceptance, t, sender, this.clock))) problems.push("not signed by the payer");
       if (!(await verifyBinding(t.payer.binding, { did: t.payer.did, payment: t.payment, key: t.payer.paymentKey }, this.clock))) problems.push("payer's payment key isn't bound to them");
@@ -141,14 +146,24 @@ export class Payee extends Agent {
     p.terms = t;
     p.acceptances = [m.acceptance, accept(t, this.identity, this.clock)];
     await this.endpoint.notify(sender, TERMS_ACCEPT, { terms: t, acceptance: p.acceptances[1] });
-    this.say(`accepted terms: ${t.amount.display}, attester ${this.nameOf(t.conditions.attester)}, ${t.conditions.disputeWindowSeconds / 86400}-day dispute window, arbiter ${this.nameOf(t.arbiter.did)}`);
+    this.say(
+      `accepted terms: ${t.amount.display} to me on completion, attester ${this.nameOf(t.conditions.attester)}, ` +
+        `${t.conditions.disputeWindowSeconds / 86400}-day dispute window, arbiter ${this.nameOf(t.arbiter.did)}, processor fee ${usdc(t.fee.units)} paid by the landlord`,
+    );
   }
 
   private async onOpened(m: OpenedPayload): Promise<void> {
     const p = this.payments.get(m.terms?.payment);
     if (!p?.terms) return;
     const s = this.net.escrow(m.escrow);
-    if (!s || s.state !== STATE.funded || hex(s.termsHash) !== hex(termsHash(p.terms)) || s.amount !== units(p.terms.amount.units) || s.payee !== p.terms.payee.paymentKey) {
+    if (
+      !s ||
+      s.state !== STATE.funded ||
+      hex(s.termsHash) !== hex(termsHash(p.terms)) ||
+      s.amount !== units(p.terms.amount.units) ||
+      s.fee !== units(p.terms.fee.units) ||
+      s.payee !== p.terms.payee.paymentKey
+    ) {
       return this.say(`escrow ${m.escrow} doesn't match our terms`);
     }
     p.escrow = m.escrow;
@@ -247,7 +262,10 @@ export class Payer extends Agent {
   }
 
   /** Agrees terms for an invoice: the attester, the window and the arbiter, and funds this payment's key. */
-  proposeTerms(paymentId: string, conditions: { attester: string; disputeWindowDays: number; feeBps: number; feeAccount: Address; refundAfterDays: number }): Promise<void> {
+  proposeTerms(
+    paymentId: string,
+    conditions: { attester: string; disputeWindowDays: number; feeBps: number; minFeeUnits: bigint; feeAccount: Address; refundAfterDays: number },
+  ): Promise<void> {
     return this.serial(async () => {
       const r = this.requests.get(paymentId);
       if (!r) throw new Error("no such invoice");
@@ -265,7 +283,13 @@ export class Payer extends Agent {
         arbiter: this.directory.arbiter,
         amount: { mint: this.directory.mint, units: r.offer.units, display: usdc(r.offer.units) },
         conditions: { policy: "settle/policies/attested-completion/1", attester: conditions.attester, disputeWindowSeconds: conditions.disputeWindowDays * 86400 },
-        fee: { bps: conditions.feeBps, account: conditions.feeAccount, to: this.directory.processor },
+        fee: {
+          bps: conditions.feeBps,
+          minUnits: conditions.minFeeUnits.toString(),
+          units: facilitatorFee(units(r.offer.units), conditions.feeBps, conditions.minFeeUnits).toString(),
+          account: conditions.feeAccount,
+          to: this.directory.processor,
+        },
         threshold: 2,
         refundAfter: Math.floor(this.clock.now() / 1000) + conditions.refundAfterDays * 86400,
       };
@@ -277,12 +301,12 @@ export class Payer extends Agent {
     });
   }
 
-  /** Moves USDC into this payment's account, as the payer's wallet would. */
+  /** Moves the price plus the processor's fee into this payment's account, as the payer's wallet would. */
   async fund(paymentId: string, fromWallet: (to: Address, units: bigint) => Promise<void>): Promise<void> {
     const k = this.keys.get(paymentId);
     const p = this.payments.get(paymentId);
     if (!k || !p?.terms) throw new Error("no terms yet");
-    await fromWallet(k.token, units(p.terms.amount.units));
+    await fromWallet(k.token, units(p.terms.amount.units) + units(p.terms.fee.units));
   }
 
   private async onAccept(m: { terms: Terms; acceptance: Acceptance }, sender: string): Promise<void> {
@@ -310,6 +334,7 @@ export class Payer extends Agent {
       feeAccount: t.fee.account,
       termsHash: th,
       amount: units(t.amount.units),
+      fee: units(t.fee.units),
       payee: t.payee.paymentKey,
       arbiter: t.arbiter.key,
       threshold: t.threshold,
@@ -320,7 +345,7 @@ export class Payer extends Agent {
     const res = await this.endpoint.request<{ transaction: string }, { ok: boolean; signature?: string; error?: string }>(this.directory.processor, PROCESSOR_SUBMIT, { transaction: wire });
     if (!res.payload.ok) return this.say(`couldn't open the escrow: ${res.payload.error}`);
     p.escrow = await escrowAddress(this.net.programId, th);
-    this.say(`opened escrow ${p.escrow.slice(0, 8)}… with ${t.amount.display}; the processor paid the fees`);
+    this.say(`opened escrow ${p.escrow.slice(0, 8)}… with ${t.amount.display} plus a ${usdc(t.fee.units)} processor fee; the processor paid the network fees`);
     const opened: OpenedPayload = { terms: t, acceptances: p.acceptances, escrow: p.escrow, transaction: res.payload.signature! };
     for (const to of new Set([t.payee.did, t.conditions.attester, t.arbiter.did, this.directory.processor])) await this.endpoint.notify(to, ESCROW_OPENED, opened);
   }
@@ -383,7 +408,14 @@ export class Payer extends Agent {
       const p = this.payments.get(paymentId);
       const k = this.keys.get(paymentId);
       if (!p?.escrow || !k) throw new Error("no escrow");
-      const ix = await reclaimInstruction({ programId: this.net.programId, payer: k.key.signer, escrow: p.escrow, payerToken: k.token, rentPayer: await this.processorFeePayer() });
+      const ix = await reclaimInstruction({
+        programId: this.net.programId,
+        payer: k.key.signer,
+        escrow: p.escrow,
+        payerToken: k.token,
+        feeToken: p.terms!.fee.account,
+        rentPayer: await this.processorFeePayer(),
+      });
       const wire = await buildForSponsor(this.net, await this.processorFeePayer(), [ix]);
       const res = await this.endpoint.request<{ transaction: string }, { ok: boolean; error?: string }>(this.directory.processor, PROCESSOR_SUBMIT, { transaction: wire });
       this.say(res.payload.ok ? `reclaimed the escrow after its deadline` : `couldn't reclaim: ${res.payload.error?.split("\n")[0]}`);
@@ -397,7 +429,7 @@ export class Payer extends Agent {
     const s = this.net.escrow(m.escrow);
     if (!s || s.state !== STATE.resolved) return;
     p.settled = { transaction: m.transaction, payeeUnits: s.payeePaid.toString() };
-    this.say(`settled on-chain: ${usdc(s.payeePaid)} to ${this.nameOf(p.terms.payee.did)}, ${usdc(s.amount - s.payeePaid)} back to me`);
+    this.say(`settled on-chain: ${usdc(s.payeePaid)} to ${this.nameOf(p.terms.payee.did)}, ${usdc(s.amount - s.payeePaid)} back to me, ${usdc(s.fee)} to the processor`);
   }
 
   private async onReceipt(c: Credential): Promise<void> {
@@ -578,6 +610,7 @@ export class Processor extends Agent {
     ];
     const r = await this.net.send(this.feePayer, ixs);
     if (!r.ok) return this.say(`resolve failed: ${r.name ?? r.error.split("\n")[0]}`);
+    this.say(`earned its ${usdc(chain.fee)} facilitator fee`);
     const transaction = r.signature;
     this.log.append("settled", hex(chain.termsHash), { escrow: s.escrow, payeeUnits: s.payeeUnits, evidence: eh, signers: [...got.keys()] });
     this.say(`had ${got.size} of ${chain.threshold} signatures for ${usdc(s.payeeUnits)} to the payee: submitted it`);

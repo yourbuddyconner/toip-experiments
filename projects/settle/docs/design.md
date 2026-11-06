@@ -77,7 +77,7 @@ One escrow account per payment, a PDA with seeds `["escrow", terms_hash]`, plus 
 | `mint`, `amount` | Token and amount (devnet USDC) |
 | `payer_key`, `payee_key`, `arbiter_key` | The three Ed25519 keys that may sign |
 | `threshold` | Signatures needed: 2 by default |
-| `fee_bps`, `fee_account` | The processor's agreed fee, paid only on release. 0 means none. |
+| `fee`, `fee_bps`, `fee_account` | The processor's facilitator fee in token units, fixed at opening as max(price × `fee_bps`, a minimum), funded on top of the price and paid on every outcome. 0 means none. |
 | `refund_after` | After this time the payer alone can take the money back, if nothing was released |
 | `state` | `funded`, `released`, `refunded` |
 
@@ -124,7 +124,7 @@ The **terms** document is what both sides sign before money moves. It's Trust Ta
   arbiter: { did, key, rulesUrl },
   amount: { mint: <devnet USDC>, value: "340.00" },
   conditions: { policy: "settle/policies/attested-completion/1", params: { attester: <tenant DID>, disputeWindowHours: 168 } },
-  fee: { bps: 100, account: <processor fee account>, to: <processor DID> },
+  fee: { bps: 100, minUnits: "500000", units: "3400000", account: <processor fee account>, to: <processor DID> },
   refundAfter: <date>,
   proofs: [payer, payee]
 }
@@ -204,7 +204,7 @@ The protocol is chain-agnostic: terms, Trust Tasks, policies and rulings don't c
 
 - **Free and open:** the Trust Tasks, the policies, the escrow program and the reference processor and arbiter.
 - **Settle's default arbiter** charges for dispute resolution, a flat fee per case set out in its rules, and builds the public track record that makes it the default.
-- **The processor** may charge its agreed fee (`fee_bps`). Others can run processors.
+- **The processor** charges a facilitator fee on every payment it handles: a percentage with a minimum, agreed in the terms, funded by the payer on top of the price, and paid whatever the outcome (release, split, refund or reclaim). It also pays every network fee. Others can run processors and set their own fees.
 - **Later:** protected payments. Payees post bonds in the escrow, and a guarantee pays out if a ruling goes against them, priced like insurance. Then Commons for property managers on top.
 
 ## 13. Open questions
@@ -238,3 +238,4 @@ What changed while building it:
 - **Fee sponsorship works by co-signing.** A party builds the transaction with the processor as fee payer and rent payer, signs its own part, and sends it in `settle/processor/submit`. The processor refuses anything that calls a program other than Settle and the Ed25519 precompile, then co-signs and submits.
 - **Handlers must never wait on a request.** The relay delivers a device's messages in order. A handler that awaited a request/response would block the very reply it was waiting for, as the payer's escrow opening first did.
 - The chain is LiteSVM in-process (`src/chain/simnet.ts`). USDC is a test mint whose authority stands in for each party's wallet or on-ramp.
+- **The facilitator fee is paid on every outcome** (convener's decision, 2026-11-06). The terms fix `fee.units` = max(price × `bps`, `minUnits`). The payer funds price plus fee. `resolve` and `reclaim` always pay the fee to the processor's fee account; the outcome message still names how much of the *price* goes to the payee, so a normal release pays the payee the full price. Earlier the fee came out of the payee's share, so refunds and reclaims earned the processor nothing despite its paying the network fees.

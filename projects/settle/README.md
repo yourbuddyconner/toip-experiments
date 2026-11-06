@@ -12,8 +12,8 @@ npm run demo --workspace @zk-toip/settle
 ```
 
 The demo plays a repair job twice, end to end:
-- **The job gets done:** Joe the plumber invoices the landlord with his contractor license as a credential. They agree terms, and the landlord funds a USDC escrow. Alice, the tenant, attests the work is complete. The landlord's policy refuses to pay until the 7-day dispute window has passed. Then two signatures release the money: Joe gets 336.60, and the processor its 1% fee.
-- **The job isn't done right:** Alice reports a leak. The landlord disputes, and Settle Arbitration rules a split. Two signatures carry out the ruling: Joe gets 198.00 and the landlord 140.00 back.
+- **The job gets done:** Joe the plumber invoices the landlord with his contractor license as a credential. They agree terms, and the landlord funds a USDC escrow with the price plus the processor's fee. Alice, the tenant, attests the work is complete. The landlord's policy refuses to pay until the 7-day dispute window has passed. Then two signatures release the money: Joe gets the full 340.00, and the processor its 3.40 facilitator fee.
+- **The job isn't done right:** Alice reports a leak. The landlord disputes, and Settle Arbitration rules a split. Two signatures carry out the ruling: Joe gets 200.00, the landlord 140.00 back, and the processor still earns its 3.40.
 
 After each story, the demo shows the on-chain balances, what anyone watching the chain could see (unlinked payment keys, amounts, a terms hash; no DIDs or purposes), and a check of the processor's transparency log.
 
@@ -26,7 +26,7 @@ Everything is real except the network and the money:
 
 | Path | What |
 |---|---|
-| `program/src/lib.rs` | The escrow program. `open` funds an escrow for a terms hash. `resolve` pays `n` to the payee, minus the agreed fee, and the rest back to the payer, given a quorum of Ed25519 signatures over `settle/v1\|program\|escrow\|pay:n\|evidence:hash`. `reclaim` lets the payer alone take everything back after the deadline. |
+| `program/src/lib.rs` | The escrow program. `open` funds an escrow for a terms hash with the price plus the facilitator fee. `resolve` pays the fee to the processor, `n` of the price to the payee, and the rest back to the payer, given a quorum of Ed25519 signatures over `settle/v1\|program\|escrow\|pay:n\|evidence:hash`. `reclaim` lets the payer alone take the price back after the deadline; the fee is still paid. |
 | `program/dist/`, `program/keys/` | The compiled program and its development keypair, so the TypeScript side runs without the Solana toolchain. |
 | `src/chain/` | The client: addresses, instruction encoding, Ed25519 instructions, LiteSVM wrapper (`Simnet`), and fee sponsorship (a party signs its part; the processor checks, co-signs as fee payer, submits). |
 | `src/protocol/` | Terms, each party's acceptance, payment-key bindings, attestations, disputes, rulings, evidence, receipts. The Trust Task types, the `attested-completion/1` Rego policy, and the transparency log. |
@@ -39,12 +39,12 @@ Everything is real except the network and the money:
 2. **Terms.** Both parties sign the terms, and the escrow stores their hash, so everything off-chain is pinned to the escrow.
 3. **Every signer decides for itself.** Before signing a release, each party's device runs the payment's Rego policy over the signed evidence: attestations, disputes, rulings. The chain enforces only that 2 of 3 named keys signed the same outcome.
 4. **Signed messages, not co-signed transactions.** Parties sign outcome messages whenever they're ready, even hours apart. The processor submits them with Ed25519 verification instructions, and the program checks them by introspection.
-5. **The processor never holds funds.** It pays fees, logs everything to a hash-chained log whose head it signs, and takes the fee the terms agreed.
+5. **The processor never holds funds.** It pays every network fee, logs everything to a hash-chained log whose head it signs, and earns a facilitator fee on every payment: a percentage with a minimum, fixed in the terms, funded by the payer on top of the price, and paid whatever the outcome.
 
 ## Tests
 
 ```bash
-npm test --workspace @zk-toip/settle    # 26 tests
+npm test --workspace @zk-toip/settle    # 28 tests
 npm run build:program --workspace @zk-toip/settle   # rebuild the program (needs Rust and Agave's cargo-build-sbf)
 npm run policies --workspace @zk-toip/settle        # recompile the Rego (needs opa)
 ```

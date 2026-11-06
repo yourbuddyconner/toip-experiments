@@ -33,7 +33,7 @@ async function setup(): Promise<{ w: World; id: string }> {
   w = await createWorld({ relayUrl: relay.url });
   const id = await w.joe.request(w.landlord.did, "Fix kitchen sink leak, Unit 4B", USDC(340));
   await until(() => w!.landlord.requests.has(id), "the invoice");
-  await w.landlord.proposeTerms(id, { attester: w.alice.did, disputeWindowDays: 7, feeBps: 100, feeAccount: w.processor.feeAccount, refundAfterDays: 30 });
+  await w.landlord.proposeTerms(id, { attester: w.alice.did, disputeWindowDays: 7, feeBps: 100, minFeeUnits: USDC(0.5), feeAccount: w.processor.feeAccount, refundAfterDays: 30 });
   await w.landlord.fund(id, w.wallet);
   await until(() => !!w!.joe.payments.get(id)?.escrow && !!w!.alice.payments.get(id), "the escrow to open");
   return { w, id };
@@ -58,7 +58,7 @@ describe("Settle end to end: a repair job (design §10)", () => {
     w.joe.payments.get(id)!.signed = [];
     await w.joe.requestRelease(id);
     await until(() => escrowOf(w, id).state === STATE.resolved, "settlement");
-    expect(w.net.balance(joeToken(w, id))).toBe(USDC(336.6));
+    expect(w.net.balance(joeToken(w, id))).toBe(USDC(340));
     expect(w.net.balance(w.processor.feeAccount)).toBe(USDC(3.4));
     await until(() => w.landlord.receipts.length === 1, "the receipt");
     expect(w.landlord.receipts[0].credentialSubject.paidUnits).toBe(USDC(340).toString());
@@ -73,9 +73,9 @@ describe("Settle end to end: a repair job (design §10)", () => {
     await until(() => escrowOf(w, id).state === STATE.resolved, "settlement");
     const s = escrowOf(w, id);
     expect(s.payeePaid).toBe(USDC(200));
-    expect(w.net.balance(joeToken(w, id))).toBe(USDC(198));
+    expect(w.net.balance(joeToken(w, id))).toBe(USDC(200));
     expect(w.net.balance(w.landlord.tokenAccount(id)!)).toBe(USDC(140));
-    expect(w.net.balance(w.processor.feeAccount)).toBe(USDC(2));
+    expect(w.net.balance(w.processor.feeAccount)).toBe(USDC(3.4));
   });
 
   it("lets the payer reclaim alone only after the deadline", async () => {
@@ -84,7 +84,24 @@ describe("Settle end to end: a repair job (design §10)", () => {
     w.advance(31 * 86400);
     expect(await w.landlord.reclaim(id)).toBe(true);
     expect(w.net.balance(w.landlord.tokenAccount(id)!)).toBe(USDC(340));
+    expect(w.net.balance(w.processor.feeAccount)).toBe(USDC(3.4));
     expect(escrowOf(w, id).state).toBe(STATE.reclaimed);
+  });
+
+  it("charges the minimum fee on a small job, and the payee refuses a fee above its limit", async () => {
+    const { w } = await setup();
+    const small = await w.joe.request(w.landlord.did, "Replace a washer", USDC(20));
+    await until(() => w.landlord.requests.has(small), "the small invoice");
+    await w.landlord.proposeTerms(small, { attester: w.alice.did, disputeWindowDays: 7, feeBps: 100, minFeeUnits: USDC(0.5), feeAccount: w.processor.feeAccount, refundAfterDays: 30 });
+    await w.landlord.fund(small, w.wallet);
+    await until(() => !!w.joe.payments.get(small)?.escrow, "the small escrow");
+    expect(escrowOf(w, small).fee).toBe(USDC(0.5));
+
+    const greedy = await w.joe.request(w.landlord.did, "Another job", USDC(100));
+    await until(() => w.landlord.requests.has(greedy), "the third invoice");
+    await w.landlord.proposeTerms(greedy, { attester: w.alice.did, disputeWindowDays: 7, feeBps: 500, minFeeUnits: USDC(0.5), feeAccount: w.processor.feeAccount, refundAfterDays: 30 });
+    await until(() => w.joe.events.some((e) => e.text.includes("refused terms")), "joe to refuse");
+    expect(w.joe.events.at(-1)!.text).toContain("fee too high");
   });
 
   it("publishes a transparency log anyone can verify", async () => {
@@ -109,7 +126,7 @@ describe("Settle end to end: a repair job (design §10)", () => {
     await until(() => w.landlord.requests.has(id2), "the second invoice");
     const realArbiter = w.landlord["directory"].arbiter;
     w.landlord["directory"].arbiter = { did: realArbiter.did, key: w.processor.feePayer.address };
-    await w.landlord.proposeTerms(id2, { attester: w.alice.did, disputeWindowDays: 7, feeBps: 100, feeAccount: w.processor.feeAccount, refundAfterDays: 30 });
+    await w.landlord.proposeTerms(id2, { attester: w.alice.did, disputeWindowDays: 7, feeBps: 100, minFeeUnits: USDC(0.5), feeAccount: w.processor.feeAccount, refundAfterDays: 30 });
     await until(() => w.joe.events.some((e) => e.text.includes("refused terms")), "joe to refuse");
     expect(w.joe.events.at(-1)!.text).toContain("an arbiter I didn't agree to");
     w.landlord["directory"].arbiter = realArbiter;

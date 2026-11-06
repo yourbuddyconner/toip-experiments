@@ -34,7 +34,7 @@ async function world(): Promise<World> {
   return { net, processor, mint, payer, payee, arbiter, outsider, payerToken, payeeToken, feeToken, termsHash, escrow: await escrowAddress(net.programId, termsHash) };
 }
 
-async function open(w: World, over: Partial<{ amount: bigint; threshold: number; feeBps: number; refundAfter: bigint; payerToken: Address }> = {}) {
+async function open(w: World, over: Partial<{ amount: bigint; fee: bigint; threshold: number; feeBps: number; refundAfter: bigint; payerToken: Address }> = {}) {
   return w.net.send(w.processor, [
     await openInstruction({
       programId: w.net.programId,
@@ -45,6 +45,7 @@ async function open(w: World, over: Partial<{ amount: bigint; threshold: number;
       feeAccount: w.feeToken,
       termsHash: w.termsHash,
       amount: over.amount ?? USDC(340),
+      fee: over.fee ?? USDC(3.4),
       payee: w.payee.address,
       arbiter: w.arbiter.address,
       threshold: over.threshold ?? 2,
@@ -78,25 +79,26 @@ describe("Settle escrow program (design §5)", () => {
     w = await world();
   });
 
-  it("opens: funds move from the payer into a vault the escrow owns", async () => {
+  it("opens: the price plus the facilitator fee move from the payer into a vault the escrow owns", async () => {
     expect((await open(w)).ok).toBe(true);
-    expect(w.net.balance(w.payerToken)).toBe(USDC(160));
-    expect(w.net.balance(await vaultAddress(w.net.programId, w.escrow))).toBe(USDC(340));
+    expect(w.net.balance(w.payerToken)).toBe(USDC(156.6));
+    expect(w.net.balance(await vaultAddress(w.net.programId, w.escrow))).toBe(USDC(343.4));
     const s = w.net.escrow(w.escrow)!;
     expect(s.state).toBe(STATE.funded);
     expect(s.amount).toBe(USDC(340));
     expect(s.payee).toBe(w.payee.address);
     expect(s.threshold).toBe(2);
     expect(s.feeBps).toBe(100);
+    expect(s.fee).toBe(USDC(3.4));
   });
 
-  it("releases on payer and payee signatures, paying the agreed fee", async () => {
+  it("releases on payer and payee signatures: the payee gets the full price, the processor its fee", async () => {
     await open(w);
     const r = await resolve(w, USDC(340), [w.payer, w.payee]);
     expect(r.ok).toBe(true);
-    expect(w.net.balance(w.payeeToken)).toBe(USDC(336.6));
+    expect(w.net.balance(w.payeeToken)).toBe(USDC(340));
     expect(w.net.balance(w.feeToken)).toBe(USDC(3.4));
-    expect(w.net.balance(w.payerToken)).toBe(USDC(160));
+    expect(w.net.balance(w.payerToken)).toBe(USDC(156.6));
     expect(w.net.escrow(w.escrow)!.state).toBe(STATE.resolved);
     expect(w.net.exists(await vaultAddress(w.net.programId, w.escrow))).toBe(false);
   });
@@ -105,16 +107,23 @@ describe("Settle escrow program (design §5)", () => {
     await open(w);
     const r = await resolve(w, USDC(200), [w.arbiter, w.payer]);
     expect(r.ok).toBe(true);
-    expect(w.net.balance(w.payeeToken)).toBe(USDC(198));
-    expect(w.net.balance(w.feeToken)).toBe(USDC(2));
-    expect(w.net.balance(w.payerToken)).toBe(USDC(300));
+    expect(w.net.balance(w.payeeToken)).toBe(USDC(200));
+    expect(w.net.balance(w.feeToken)).toBe(USDC(3.4));
+    expect(w.net.balance(w.payerToken)).toBe(USDC(296.6));
     expect(w.net.escrow(w.escrow)!.payeePaid).toBe(USDC(200));
   });
 
-  it("refunds everything on payee and arbiter signatures for pay:0, with no fee", async () => {
+  it("refunds the price on payee and arbiter signatures for pay:0, and still pays the facilitator fee", async () => {
     await open(w);
     expect((await resolve(w, 0n, [w.payee, w.arbiter])).ok).toBe(true);
-    expect(w.net.balance(w.payerToken)).toBe(USDC(500));
+    expect(w.net.balance(w.payerToken)).toBe(USDC(496.6));
+    expect(w.net.balance(w.feeToken)).toBe(USDC(3.4));
+  });
+
+  it("opens with no fee when the terms agree none", async () => {
+    await open(w, { fee: 0n, feeBps: 0 });
+    expect((await resolve(w, USDC(340), [w.payer, w.payee])).ok).toBe(true);
+    expect(w.net.balance(w.payeeToken)).toBe(USDC(340));
     expect(w.net.balance(w.feeToken)).toBe(0n);
   });
 
@@ -152,11 +161,14 @@ describe("Settle escrow program (design §5)", () => {
     const deadline = w.net.now() + 3600n;
     await open(w, { refundAfter: deadline });
     const reclaim = async () =>
-      w.net.send(w.processor, [await reclaimInstruction({ programId: w.net.programId, payer: w.payer.signer, escrow: w.escrow, payerToken: w.payerToken, rentPayer: w.processor.address })]);
+      w.net.send(w.processor, [
+        await reclaimInstruction({ programId: w.net.programId, payer: w.payer.signer, escrow: w.escrow, payerToken: w.payerToken, feeToken: w.feeToken, rentPayer: w.processor.address }),
+      ]);
     expect(await reclaim()).toMatchObject({ ok: false, name: "TooEarly" });
     w.net.setNow(deadline + 1n);
     expect((await reclaim()).ok).toBe(true);
-    expect(w.net.balance(w.payerToken)).toBe(USDC(500));
+    expect(w.net.balance(w.payerToken)).toBe(USDC(496.6));
+    expect(w.net.balance(w.feeToken)).toBe(USDC(3.4));
     expect(w.net.escrow(w.escrow)!.state).toBe(STATE.reclaimed);
     expect(await resolve(w, USDC(340), [w.payer, w.payee])).toMatchObject({ ok: false, name: "NotFunded" });
   });

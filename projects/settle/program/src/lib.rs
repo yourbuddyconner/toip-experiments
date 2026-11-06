@@ -1,16 +1,17 @@
 //! Settle escrow (design: projects/settle/docs/design.md §5).
 //!
-//! One escrow per payment holds an SPL token amount. It pays out only when at least `threshold`
-//! of three named Ed25519 keys (payer, payee, arbiter) have signed the exact outcome, as a message
-//! verified by the Ed25519 precompile earlier in the same transaction. Nobody, including whoever
-//! submits the transaction, can move the funds alone. There is no policy and no fee logic here
-//! beyond the fee the payment's terms fixed at opening: conditions live in each signer's policy.
+//! One escrow per payment holds a price plus the processor's facilitator fee, in an SPL token.
+//! It pays out only when at least `threshold` of three named Ed25519 keys (payer, payee, arbiter)
+//! have signed the exact outcome, as a message verified by the Ed25519 precompile earlier in the
+//! same transaction. Nobody, including whoever submits the transaction, can move the funds alone.
+//! The fee is fixed at opening and paid on every outcome (release, split, refund or reclaim);
+//! conditions live in each signer's policy, not here.
 //!
 //! Instructions:
-//!   0 open     payer funds a new escrow for `terms_hash`
-//!   1 resolve  pay `payee_amount` to the payee (minus the agreed fee) and the rest back to the payer,
+//!   0 open     payer funds a new escrow for `terms_hash` with the price plus the fee
+//!   1 resolve  pay the fee to the processor, `payee_amount` of the price to the payee and the rest back to the payer,
 //!              given a quorum of signatures over `settle/v1|<program>|<escrow>|pay:<n>|evidence:<hex>`
-//!   2 reclaim  after `refund_after`, the payer alone takes everything back
+//!   2 reclaim  after `refund_after`, the payer alone takes the price back (the fee is still paid)
 //!
 //! An escrow account is never closed, only marked resolved, so its address can't be reused and old
 //! signatures can't be replayed against a new escrow for the same terms.
@@ -36,7 +37,7 @@ pub const TOKEN_PROGRAM_ID: Pubkey = pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9S
 pub const ED25519_PROGRAM_ID: Pubkey = pubkey!("Ed25519SigVerify111111111111111111111111111");
 pub const SYSTEM_PROGRAM_ID: Pubkey = pubkey!("11111111111111111111111111111111");
 
-pub const ESCROW_LEN: usize = 288;
+pub const ESCROW_LEN: usize = 296;
 const TOKEN_ACCOUNT_LEN: usize = 165;
 
 pub const STATE_FUNDED: u8 = 1;
@@ -78,6 +79,8 @@ pub struct Escrow {
     pub refund_after: i64,
     pub payee_paid: u64,
     pub evidence_hash: [u8; 32],
+    /// The facilitator fee, in token units, held on top of `amount` and paid on every outcome.
+    pub fee: u64,
 }
 
 impl Escrow {
@@ -104,6 +107,7 @@ impl Escrow {
             refund_after: i64::from_le_bytes(d[238..246].try_into().unwrap()),
             payee_paid: u64::from_le_bytes(d[246..254].try_into().unwrap()),
             evidence_hash: arr(254),
+            fee: u64::from_le_bytes(d[286..294].try_into().unwrap()),
         })
     }
 
@@ -124,6 +128,7 @@ impl Escrow {
         d[238..246].copy_from_slice(&self.refund_after.to_le_bytes());
         d[246..254].copy_from_slice(&self.payee_paid.to_le_bytes());
         d[254..286].copy_from_slice(&self.evidence_hash);
+        d[286..294].copy_from_slice(&self.fee.to_le_bytes());
     }
 }
 
@@ -320,6 +325,7 @@ fn open(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramRe
     let arbiter = Pubkey::new_from_array(r.arr32()?);
     let threshold = r.u8()?;
     let fee_bps = r.u16()?;
+    let fee = r.u64()?;
     let refund_after = r.i64()?;
 
     if !payer.is_signer || !rent_payer.is_signer {
@@ -357,7 +363,8 @@ fn open(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramRe
         },
         &[vault.clone(), mint.clone(), token_program.clone()],
     )?;
-    token_transfer(token_program, payer_token, vault, payer, amount, None)?;
+    let total = amount.checked_add(fee).ok_or(ProgramError::from(SettleError::BadAmount))?;
+    token_transfer(token_program, payer_token, vault, payer, total, None)?;
 
     let state = Escrow {
         state: STATE_FUNDED,
@@ -376,9 +383,10 @@ fn open(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramRe
         refund_after,
         payee_paid: 0,
         evidence_hash: [0; 32],
+        fee,
     };
     state.write(&mut escrow.try_borrow_mut_data()?);
-    msg!("settle: opened {} for {}", escrow.key, amount);
+    msg!("settle: opened {} for {} plus fee {}", escrow.key, amount, fee);
     Ok(())
 }
 
@@ -424,14 +432,13 @@ fn resolve(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> Progra
         return Err(SettleError::NoQuorum.into());
     }
 
-    let fee = ((payee_amount as u128 * s.fee_bps as u128) / 10_000) as u64;
     let refund = s.amount - payee_amount;
     let seeds: &[&[u8]] = &[b"escrow", &s.terms_hash, &[s.bump]];
-    if payee_amount - fee > 0 {
-        token_transfer(token_program, vault, payee_token, escrow, payee_amount - fee, Some(seeds))?;
+    if payee_amount > 0 {
+        token_transfer(token_program, vault, payee_token, escrow, payee_amount, Some(seeds))?;
     }
-    if fee > 0 {
-        token_transfer(token_program, vault, fee_token, escrow, fee, Some(seeds))?;
+    if s.fee > 0 {
+        token_transfer(token_program, vault, fee_token, escrow, s.fee, Some(seeds))?;
     }
     if refund > 0 {
         token_transfer(token_program, vault, payer_token, escrow, refund, Some(seeds))?;
@@ -442,7 +449,7 @@ fn resolve(program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> Progra
     s.payee_paid = payee_amount;
     s.evidence_hash = evidence_hash;
     s.write(&mut escrow.try_borrow_mut_data()?);
-    msg!("settle: resolved {}: payee {}, fee {}, refund {}", escrow.key, payee_amount - fee, fee, refund);
+    msg!("settle: resolved {}: payee {}, fee {}, refund {}", escrow.key, payee_amount, s.fee, refund);
     Ok(())
 }
 
@@ -454,6 +461,7 @@ fn reclaim(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let escrow = next_account_info(it)?;
     let vault = next_account_info(it)?;
     let payer_token = next_account_info(it)?;
+    let fee_token = next_account_info(it)?;
     let rent_payer = next_account_info(it)?;
     let token_program = next_account_info(it)?;
 
@@ -463,6 +471,9 @@ fn reclaim(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let mut s = Escrow::read(&escrow.try_borrow_data()?)?;
     if s.state != STATE_FUNDED {
         return Err(SettleError::NotFunded.into());
+    }
+    if fee_token.key != &s.fee_account {
+        return Err(SettleError::BadAccount.into());
     }
     if !payer.is_signer || payer.key != &s.payer {
         return Err(ProgramError::MissingRequiredSignature);
@@ -477,6 +488,9 @@ fn reclaim(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     check_token_account(payer_token, &s.mint, Some(&s.payer))?;
     let seeds: &[&[u8]] = &[b"escrow", &s.terms_hash, &[s.bump]];
     token_transfer(token_program, vault, payer_token, escrow, s.amount, Some(seeds))?;
+    if s.fee > 0 {
+        token_transfer(token_program, vault, fee_token, escrow, s.fee, Some(seeds))?;
+    }
     token_close(token_program, vault, rent_payer, escrow, seeds)?;
     s.state = STATE_RECLAIMED;
     s.write(&mut escrow.try_borrow_mut_data()?);

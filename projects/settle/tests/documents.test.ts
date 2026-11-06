@@ -20,7 +20,7 @@ async function terms(): Promise<Terms> {
     arbiter: { did: "did:key:arb", key: pk.address },
     amount: { mint: pk.address, units: "340000000", display: "340.00 USDC" },
     conditions: { policy: "settle/policies/attested-completion/1", attester: tenant.did, disputeWindowSeconds: 604800 },
-    fee: { bps: 100, account: pk.address, to: "did:key:proc" },
+    fee: { bps: 100, minUnits: "500000", units: "3400000", account: pk.address, to: "did:key:proc" },
     threshold: 2,
     refundAfter: 0,
   };

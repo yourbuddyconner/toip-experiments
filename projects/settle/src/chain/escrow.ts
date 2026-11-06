@@ -80,7 +80,10 @@ export interface OpenParams {
   mint: Address;
   feeAccount: Address;
   termsHash: Uint8Array;
+  /** The price, split between payee and payer by the outcome. */
   amount: bigint;
+  /** The processor's facilitator fee, funded on top of the price and paid on every outcome. */
+  fee: bigint;
   payee: Address;
   arbiter: Address;
   threshold: number;
@@ -112,6 +115,7 @@ export async function openInstruction(p: OpenParams): Promise<Instruction> {
       addressBytes(p.arbiter),
       new Uint8Array([p.threshold]),
       u16(p.feeBps),
+      u64(p.fee),
       i64(p.refundAfter),
     ),
   } as Instruction;
@@ -146,7 +150,7 @@ export async function resolveInstruction(p: ResolveParams): Promise<Instruction>
   } as Instruction;
 }
 
-export async function reclaimInstruction(p: { programId: Address; payer: TransactionSigner; escrow: Address; payerToken: Address; rentPayer: Address }): Promise<Instruction> {
+export async function reclaimInstruction(p: { programId: Address; payer: TransactionSigner; escrow: Address; payerToken: Address; feeToken: Address; rentPayer: Address }): Promise<Instruction> {
   const vault = await vaultAddress(p.programId, p.escrow);
   return {
     programAddress: p.programId,
@@ -155,6 +159,7 @@ export async function reclaimInstruction(p: { programId: Address; payer: Transac
       { address: p.escrow, role: AccountRole.WRITABLE },
       { address: vault, role: AccountRole.WRITABLE },
       { address: p.payerToken, role: AccountRole.WRITABLE },
+      { address: p.feeToken, role: AccountRole.WRITABLE },
       { address: p.rentPayer, role: AccountRole.WRITABLE },
       { address: TOKEN_PROGRAM, role: AccountRole.READONLY },
     ],
@@ -203,6 +208,7 @@ export interface EscrowState {
   refundAfter: bigint;
   payeePaid: bigint;
   evidenceHash: Uint8Array;
+  fee: bigint;
 }
 
 export function decodeEscrow(d: Uint8Array): EscrowState {
@@ -223,5 +229,6 @@ export function decodeEscrow(d: Uint8Array): EscrowState {
     refundAfter: v.getBigInt64(238, true),
     payeePaid: v.getBigUint64(246, true),
     evidenceHash: d.slice(254, 286),
+    fee: v.getBigUint64(286, true),
   };
 }

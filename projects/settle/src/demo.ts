@@ -51,8 +51,8 @@ async function run(title: string, play: (w: World, id: string) => Promise<void>)
     await until(() => w.landlord.requests.has(id));
     await pause();
 
-    step("The landlord agrees terms: Alice attests, 7-day dispute window, Settle arbitrates, 1% processor fee");
-    await w.landlord.proposeTerms(id, { attester: w.alice.did, disputeWindowDays: 7, feeBps: 100, feeAccount: w.processor.feeAccount, refundAfterDays: 30 });
+    step("The landlord agrees terms: Alice attests, 7-day dispute window, Settle arbitrates, processor fee 1% (at least 0.50)");
+    await w.landlord.proposeTerms(id, { attester: w.alice.did, disputeWindowDays: 7, feeBps: 100, minFeeUnits: USDC(0.5), feeAccount: w.processor.feeAccount, refundAfterDays: 30 });
     await w.landlord.fund(id, w.wallet);
     await until(() => !!w.joe.payments.get(id)?.escrow && !!w.alice.payments.get(id));
     await pause();
@@ -112,5 +112,6 @@ await run("2 · The job isn't done right", async (w, id) => {
   await pause(200);
 });
 
-console.log(`\n${dim("Neither the processor nor the arbiter could move the money alone: every payout above needed two of the three keys.")}\n`);
+console.log(`\n${dim("Neither the processor nor the arbiter could move the money alone: every payout above needed two of the three keys.")}`);
+console.log(`${dim("The processor paid every network fee and earned its facilitator fee on both outcomes, the paid job and the split.")}\n`);
 process.exit(0);

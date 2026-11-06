@@ -78,9 +78,16 @@ export interface Terms {
   arbiter: { did: string; key: Address };
   amount: { mint: Address; units: string; display: string };
   conditions: { policy: "settle/policies/attested-completion/1"; attester: string; disputeWindowSeconds: number };
-  fee: { bps: number; account: Address; to: string };
+  /** The processor's facilitator fee: `units` = max(price × bps, minUnits), funded on top of the price, paid on every outcome. */
+  fee: { bps: number; minUnits: string; units: string; account: Address; to: string };
   threshold: number;
   refundAfter: number;
+}
+
+/** The facilitator fee for a price: the percentage, or the minimum, whichever is larger. */
+export function facilitatorFee(priceUnits: bigint, bps: number, minUnits: bigint): bigint {
+  const pct = (priceUnits * BigInt(bps)) / 10_000n;
+  return pct > minUnits ? pct : minUnits;
 }
 
 /** A party's signature on the terms, as its own small document bound to the terms hash. */
