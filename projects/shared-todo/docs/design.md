@@ -1,204 +1,250 @@
-# Shared To-Do: design
+# Shared To-Do: design (v2, a working app)
 
-A multi-user to-do list with no trusted server, built on the ToIP specs through the Apache-2.0 OpenVTC libraries. The first thing to build in this repository, before Community Rides. Date: 2026-11-05.
+A shared to-do list app that people use on their own devices, with no server they have to trust. Built on the ToIP specs through the Apache-2.0 OpenVTC libraries and this repository's `packages/trust-core`. Date: 2026-11-05.
 
-Facts about the stack cite `docs/sources/` (S02, S03). Choices marked **(our call)** were made by the assistant and are open to change.
+v1 was a scripted, single-page demo. The convener asked for "a practical application that would be as close to reality as possible", not "a demo on rails". v2 replaces it (decision 0004). v1 is in git history at `b3e9fd7`.
 
-## 1. Why this exists
+The convener chose: an installable web app, a relay server we write, and an optional inspector for the trust mechanics. Choices marked **(our call)** were made by the assistant. Section 4.8 lists what v1's code review taught.
 
-Community Rides is a lot to build and a lot to explain. A shared to-do list is something everyone has used, so the audience can watch the trust mechanics instead of learning a new app. It shows the basic ToIP ideas, one layer at a time:
+## 1. What it is
 
-| ToIP layer | What the demo shows |
-|---|---|
-| 1. Identifiers | Each person, and the list itself, has a self-certifying DID made from a key pair on their device. No registry. |
-| 2. Trust spanning | People connect by scanning each other's invitation (an OOBI-style QR). Every message after that is a TSP message, encrypted to the recipient and signed by the sender. |
-| 3. Trust tasks and credentials | The list is a small community. Its admin issues membership credentials with a role, and members acknowledge them. Each change to the list is a signed operation. Every member's device checks each operation against the list's rules before applying it. |
-| 4. Application | The to-do list. |
+A to-do app for households and small groups. Each person opens it in a browser on a laptop or phone, can install it, gives a display name, and then can:
 
-The idea to leave the audience with: **there is no server you have to trust. Each copy of the list decides for itself, from signatures and credentials, what to accept. A relay helps offline members catch up, but it only ever holds ciphertext, and it can't forge anything.**
+- create lists and invite people with a link or QR code, as editor or viewer
+- add, check off, edit and delete items, including private items that only chosen members can read
+- keep working offline; changes send when the device reconnects
+- remove members, or leave a list
 
-It also builds the shared trust plumbing that Community Rides will reuse (section 7).
+Underneath, every person and every list has its own key and DID, made on the device. Membership is a credential the list's key signs. Every change is a signed operation sent to each member as a sealed TSP message, and every device checks every change before applying it. A relay passes sealed messages along and holds them for devices that are offline. It never sees list contents and can't forge changes.
 
 ## 2. Goals, non-goals, anti-goals
 
 **Goals**
 
-1. A scripted demo of about five to seven minutes, with a "next step" button and a one-line caption per step. Runs on one laptop with one command.
-2. Free play on the same screen.
-3. Real cryptography and real wire formats, as in Community Rides: TSP through `@openvtc/vti-tsp-js` and `@openvtc/trust-tasks-tsp`, Trust Task envelopes through `@openvtc/trust-tasks`, and Data Integrity proofs through `@openvtc/trust-tasks-proof` (S02). Tampering really fails.
-4. Make it visible that each device decides on its own: every copy of the list shows the operations it accepted, and the ones it rejected with the reason.
+1. Real use by real people on separate devices. Keys and data persist across restarts, and devices connect through a relay that can be deployed.
+2. The trust model from v1: self-certifying identifiers, membership credentials with roles, signed operations checked on every device, private items and revocation, without v1's flaws (section 4.8).
+3. It works offline. Changes made offline are sent on reconnect, and messages to an offline device wait at the relay.
+4. Every device ends up with the same list once it has the same operations, whatever order they arrived in.
+5. An optional inspector shows, for this device only, what it sent and received, each message as decrypted, the checks each change went through, and what the relay can see.
+6. Runs locally with one command, and deploys as one static web app plus one small Node relay.
 
-**Non-goals**
+**Non-goals (for now)**
 
-- Production use, persistence across reloads, real devices or networking. All agents run in one browser page, as in Community Rides.
-- Merging edits in a real offline-first way. Ordering is simple (section 4.5).
-- Several lists. One list is enough to show the ideas.
+- Several devices per person. Each device is its own identity.
+- Recovering a lost device's keys.
+- Federation between relays. A list uses one relay.
+- Hiding from the relay who talks to whom.
+- Native mobile apps.
 
 **Anti-goals**
 
-- **A trusted server.** No component may read the list, change it, or decide who is in. Each member's device holds its own copy. The relay stores sealed messages it can't open.
-- **Mocked checks.** Every tick and every rejection comes from code that computed it.
-- **Copyleft code.** No GPL or other copyleft dependency, and nothing from the TrustStackers repositories (S03).
-- **Overclaiming.** Section 8 lists where we guessed how the stack would do it.
+- **A trusted server.** The relay must not be able to read lists, change them, or decide who is in.
+- **Rails.** No scripted steps, and no global view of other people's devices. Each running app is one person's device and knows only what it was told.
+- **Mocked checks.** Everything the inspector shows was computed.
+- **Copyleft code.** No GPL or other strong copyleft dependency, and nothing from the TrustStackers repositories (S03). MPL-2.0 is tolerated only in build tooling.
 
-## 3. The story
+## 3. Using it
 
-The list is "Maple St House", a household's shared list. All names are fictional.
+**First run.** The app asks for a display name, then makes this device's key pair and DID and stores them.
 
-| Who | Role |
+**Lists.** A sidebar shows your lists, plus "New list" and "Join with a link". Creating a list makes a new key and DID for it on this device, and you are its admin.
+
+**Inviting.** In a list's members sheet, an admin picks a role and gets an invitation as a link, a QR code and a copy button. An invitation can be used once and expires after 7 days.
+
+**Joining.** Opening an invitation link, or pasting it, sends a join request to the inviter's device through the relay. If the inviter is offline, the request waits at the relay, and the joiner sees "Waiting for Alice's device to let you in". When the inviter's device next runs, it checks the code, issues a membership credential, and sends a welcome with the list so far. The joiner's device then signs an acknowledgement back.
+
+**Items.** Add, check off, edit and delete. "Private" picks which members can read the item. Others see a locked row, "Private item from Alice".
+
+**When a change is refused.** The device records why and shows a quiet notice, for example "A change from Carol was refused: viewers can't add items". The inspector shows the full check.
+
+**Members.** Admins can remove a member. Anyone can leave a list.
+
+**Offline.** The header shows "Connected" or "Offline: changes will send when you reconnect". A change applies locally right away and goes into an outbox, which is sent on reconnect.
+
+## 4. Architecture
+
+```
+ browser device (one person)                       relay (Node)
+ ┌──────────────────────────────────┐              ┌────────────────────────┐
+ │ UI (React)                       │              │ WebSocket /v1          │
+ │ Device: identity, lists, checks  │   sealed     │ DID challenge auth     │
+ │ trust-core Endpoint (TSP)        │◀──TSP──────▶ │ live delivery          │
+ │ RelayTransport (WebSocket)       │   bytes      │ queue for offline DIDs │
+ │ IndexedDB store, outbox          │              │ (node:sqlite)          │
+ └──────────────────────────────────┘              └────────────────────────┘
+```
+
+### 4.1 Identity and storage
+
+- Each device has one Ed25519 key pair, made from 32 random bytes, which gives its `did:key`. Its X25519 key is derived from the Ed25519 key (S02). Each list's key pair is made the same way, on its admin's device.
+- Everything is stored in IndexedDB: the seed, the display name, each list's operations, roster and credentials, the outbox, and the inspector log.
+- **Keys are stored in plain IndexedDB (our call).** The TSP and signing libraries need raw key bytes, so WebCrypto non-extractable keys can't be used. Script running in the app's origin can read them. The README says so.
+- **Profiles (our call).** A `?profile=<name>` URL parameter gives storage a separate namespace, so one browser can hold several people for local testing. Each profile is its own device with its own keys. Only one tab per profile is active at a time (Web Locks). Other tabs say "This profile is open in another tab".
+
+### 4.2 The relay
+
+A small Node service, `packages/relay`, with one WebSocket endpoint, `/v1`.
+
+1. On connect, the relay sends a random challenge.
+2. The client replies with its DID and an Ed25519 signature over `toip-relay-auth/v1|<challenge>|<relay URL>`. The relay verifies it from the `did:key`. Including the relay URL stops a signature being replayed at another relay.
+3. The relay then delivers that DID's queued messages, each with a relay id. The client acknowledges each one once it has processed it, and the relay deletes it.
+4. The client sends `{ to, wire }`. The relay delivers it live if `to` is connected, and otherwise queues it. Either way it confirms which.
+
+Queues persist in SQLite (`node:sqlite`, built into Node 22.5+), so a relay restart loses nothing. Delivery is at least once, and devices drop duplicates.
+
+Limits **(our call)**: 256 KiB per message, 5,000 queued messages per recipient, and queued messages expire after 30 days.
+
+**What the relay learns:** each connected DID, who sends to whom, when, and how big. It can't read contents, because the messages are sealed TSP for the recipient. It could drop or delay messages. It can't forge or alter them, because the recipient checks the seal and the signatures. This stands in for the stack's planned Routed Mode (S02).
+
+### 4.3 Messages
+
+Every message is a Trust Task document (`trust-task/0.6.0` envelope), signed with a Data Integrity proof, sealed as a Direct TSP message, and sent through the relay. All messages are one-way, because either side may be offline. Types are under `https://zk-toip.example/spec/todo/<name>/0.1`.
+
+| Message | From → to | Carries |
+|---|---|---|
+| `join` | joiner → inviter | invitation code, list DID, display name |
+| `welcome` | admin → joiner | membership credential, the current signed roster, every accepted op with its author's membership |
+| `join-refused` | admin → joiner | reason |
+| `ack` | member → admin | the member's signed acknowledgement credential |
+| `op` | author → each member | the signed op, and the author's membership |
+| `roster` | admin → each current member | the current signed roster |
+| `sync-request` | member → member | list DID |
+| `sync` | member → member | the current signed roster, and every accepted op with its author's membership |
+| `leave` | member → admin | list DID |
+
+Operations are signed separately from the message that carries them, as in v1, so a forwarded op still proves who wrote it.
+
+### 4.4 The roster: the list's signed state of membership
+
+The list's key signs a **roster** document **(our call, prompted by v1's review)**. It replaces v1's separate status list and unsigned member lists. It has:
+
+- the list DID and name
+- a `version` that increases by one with each change
+- an `issuedAt` time
+- one entry per member: their DID, display name, role, membership credential id, the date they joined, and `removedAt` if they've been removed
+
+The roster is what a device trusts about membership:
+
+- A device replaces its roster only with one that is signed by the list's key, is for the same list, has a **higher version**, and keeps every earlier removal. This stops an old roster from undoing a revocation, which was v1's critical bug.
+- Display names come only from the signed roster. A name for a known DID never changes because a message said so.
+- A roster can come from anyone, inside `welcome`, `roster` or `sync`. Because it is signed and versioned, the sender doesn't matter.
+- Membership credentials still matter: an op must name its author's credential, and that credential must verify and match the roster entry.
+
+### 4.5 What each device checks for an op
+
+The checks from v1, in `src/todo/checks.ts`, with the Rego rules in `policies/todo.rego`, with fixes from v1's review:
+
+1. The op is well formed: its fields have the right types, and a private op's sealed part has the right shape. Otherwise it is refused with `"malformed operation"`.
+2. It is for this list. Otherwise `"for a different list"`.
+3. Its signature verifies.
+4. A direct op came from its author. A forwarded op is labeled with who forwarded it.
+5. Its `at` time is no more than 5 minutes in the future by this device's clock.
+6. Its author is a member in the roster, and the op names that member's membership credential, which verifies, was issued by the list, and is for the author.
+7. The author hadn't been removed when they made it:
+   - An op from a member whose `removedAt` is set is accepted only if its `at` is earlier than `removedAt`, **and** it arrived forwarded (in `welcome` or `sync`), not directly from the removed member.
+   - This keeps history from before a removal, which fixes v1's I5. It stops a removed member from sending anything new. A removed member could still backdate an op if a current member colluded with them by forwarding it. That member could add things themselves anyway.
+8. The role rules, including private-item readers.
+
+**Duplicates.** Ops are identified by `(author, id)`. A copy of a known op is ignored if it is identical in JCS canonical form. A different op under the same `(author, id)` is refused.
+
+**Missing items.** An op on an item this device hasn't seen yet is held, not refused, and retried as other ops arrive. It is refused only if the item is still unknown after a sync.
+
+### 4.6 Every device ends up with the same list
+
+v1 applied ops in arrival order, so copies could disagree for good. That was v1's I4. v2 builds each item from its ops in a fixed order **(our call)**:
+
+- Ops are sorted by `(at, author DID, op id)`.
+- The add creates the item.
+- For "checked" and for "text", the last op in that order wins.
+- A delete wins over everything, permanently. A deleted item stays deleted.
+
+Each device's clock sets `at`, so a device with a wrong clock can make its changes win or lose. Step 5's 5-minute limit bounds how far ahead it can be.
+
+### 4.7 Private items
+
+As in v1: the text is encrypted under a fresh item key, and that key is sealed to each reader with HPKE base mode. The author is always a reader. Readers are fixed when the item is created. Admins can't read private items unless they're listed as readers.
+
+A locked row shows readers from the op's sealed key list, which is what was actually sealed, not from what the author claims (v1's M4).
+
+### 4.8 What v1's review taught, and where v2 deals with it
+
+| v1 finding | v2 |
 |---|---|
-| Alice | Creates the list, so she's its admin. Her device holds the list's keys. |
-| Bob | Housemate. Role `editor`. |
-| Carol | The landlord. Role `viewer`: she can see the list but not change it. |
-| Mallory | Not a member. Tries to get in. |
-| The relay | A mailbox "hosted by anyone". It keeps sealed messages for members who are offline. Not trusted. |
+| C1: an old status list could undo a revocation | A signed, versioned roster that must keep earlier removals (4.4) |
+| I1: anyone could rename members | Names only from the signed roster (4.4) |
+| I2, I3: "offline" still sent, and senders hung | Real offline: a local outbox, and the relay queues (3, 4.2) |
+| I4: copies drifted | A fixed order, last write wins, delete wins (4.6) |
+| I5: revocation erased history for newcomers | Ops before `removedAt`, when forwarded, are kept (4.5) |
+| I5: removed members got roster updates | Roster messages go to current members only |
+| I6: scripted captions out of step with what happened | No script |
+| M1: duplicate detection by JSON text, and by global id | JCS canonical form, keyed by `(author, id)` (4.5) |
+| M2: wrong reason for another list's op | `"for a different list"` (4.5) |
+| M4: claimed readers | Readers from the sealed key list (4.7) |
+| M5: any list-signed document taken as a status list | The roster has a type and is checked (4.4) |
+| M8: a malformed sealed part threw | Shape checked first (4.5) |
 
-Scripted steps, one or more presses of "next" each:
+### 4.9 Catching up
 
-1. **Everyone has an identity.** Five panes, each showing a DID made on that device: four people and the relay. The caption says nobody registered anywhere.
-2. **Alice creates the list.** Her device makes a new key pair and DID for "Maple St House" and records the rules: who may add, check off, edit and delete. Alice holds an admin membership credential issued by the list.
-3. **Alice invites Bob.** Alice shows an invitation QR, and Bob's device "scans" it. They connect, and the first encrypted message appears on the wire panel. The list issues Bob an `editor` membership credential, and Bob's device signs an acknowledgement back. That's the two-way relationship. Bob's device gets a copy of the list.
-4. **Alice invites Carol** the same way, as `viewer`.
-5. **Bob adds "Milk", and Alice adds "Fix the porch light".** Each addition is an operation the author's device signs and sends, encrypted, to each other member. The other devices each check it before showing it: the signature is the author's, the author's membership is valid and not revoked, and their role may add. The wire panel shows only ciphertext.
-6. **Alice adds a private item.** "Carol's birthday present", readable only by Alice and Bob. It goes into everyone's copy of the list, but its text is encrypted so that only Alice and Bob can read it. Carol's pane shows "🔒 private item by Alice". Carol's device still checked it and accepted it: the signature is Alice's and an admin may add, so permission can be verified without reading the content. The caption says what still leaks: that a private item exists, who wrote it, when, and who can read it.
-7. **Carol tries to add "Raise rent".** Her app refuses locally, because viewers can't add. In free play there is a "send anyway" switch that sends it regardless, and the scripted demo uses it. Alice's and Bob's devices reject it: "viewer may not add". The rejection shows in each pane's "rejected" list, and the item appears nowhere.
-8. **Mallory tries to sneak in.** Bob once showed Mallory his membership credential, to prove he lives there. Credentials are not secrets. She sends an operation with it. Everyone rejects it: "credential is for someone else". The message is signed by Mallory's key, not Bob's.
-9. **Bob goes offline.** Bob's device disconnects. Alice checks off "Milk". Her message to Bob can't be delivered, so her device leaves it, still sealed for Bob, at the relay. The relay pane shows a message it can't read.
-10. **Bob catches up.** Bob reconnects, collects the message from the relay, and his device checks Alice's signature before applying it. The caption: "the relay delivered it, but Alice's signature says who wrote it".
-11. **Alice removes Bob.** Alice revokes Bob's membership. The list's signed revocation list goes to every member. Bob's next edit is rejected by Alice and Carol: "membership revoked". The caption says Bob still has his old copy. Revocation stops future changes; it can't make anyone forget.
-12. **Tampering.** Bob, now removed, edits a copy of Alice's "Fix the porch light" operation to say "Give Bob his deposit back" and forwards it to Carol. Carol's device rejects it: "operation: signature does not verify".
+- On start and on reconnect, a device sends `sync-request` for each list to one other current member, a different one each time.
+- A `sync` reply is processed like any forwarded op, one op at a time, and its roster like any roster.
+- Ops held for missing items are retried after each sync.
 
-Free play allows any of these actions from any pane: invite, add (shared or private, choosing the readers), check, uncheck, edit, delete, go offline, collect from the relay, sync from a chosen member, revoke, "send anyway", and forward a tampered copy of a held operation.
+### 4.10 The inspector
 
-## 4. How it works
+A side panel, closed by default, that shows only this device's view:
 
-### 4.1 Identities
+- **Activity:** each message sent or received, with time, the other party's name, type, size, the decrypted document, and the check results for received ops.
+- **Identity:** this device's DID, and for each list its DID, your role, your membership credential and acknowledgement, and the roster version.
+- **What the relay sees:** the same messages reduced to sender, recipient, time and size.
+- **Refused:** every refused change, with its reason.
 
-Each person has one Ed25519 key pair and a `did:key`. The list has its own key pair and `did:key`, held on Alice's device. A community can be as small as one key that one person holds. Later, its governance could move to several keys without the list's DID changing. That part is out of scope, and the caption says so. X25519 encryption keys are derived from the Ed25519 keys (S02 glossary). The choice of `did:key` over `did:peer:4` is the same call as in Community Rides.
+It keeps the last 500 entries.
 
-### 4.2 Connecting
+## 5. Look and feel
 
-An invitation is a small JSON object, shown as a QR code: the inviter's DID, the list's DID, a display name and a one-time code. This is OOBI-style (S02 glossary), not the stack's OOBI format. **(our call)**
+A calm, practical list app that works well on a phone. It must not look like a debugger. Trust mechanics show only as a connection indicator, the lock on private rows, refusal notices, and the inspector. The visual design is left to the builder, for a real app used every day, not a projector.
 
-Scanning it makes the invitee's device send `todo/join` to the inviter, carrying the one-time code and the invitee's display name. The admin's device checks the code, and the list's key issues the membership credential.
+## 6. Running and deploying
 
-This is a simplification. The stack forms relationships with a TSP RFI/RFA handshake (S02), but `@openvtc/trust-tasks-tsp` carries only Direct messages, so the relationship here starts at the first Direct message. The caption and section 8 say so.
+- `npm run dev` at the repository root starts the relay on `ws://localhost:8787` and the web app on `http://localhost:5181`.
+- The web app's relay URL comes from `VITE_RELAY_URL`, defaulting to `ws://localhost:8787/v1`. An invitation carries its list's relay URL, so the joiner connects to the same relay.
+- To deploy, build the web app to static files, and run `packages/relay` anywhere Node 22.5+ runs, behind TLS (`wss://`). The README explains how.
 
-### 4.3 Credentials
+## 7. Where we guess about the stack
 
-All are VC-shaped JSON with one issuer and one `eddsa-jcs-2022` proof, as in Community Rides.
-
-| Credential | Issuer | Subject | Carries |
-|---|---|---|---|
-| Membership | the list | member DID | list DID, role (`admin`, `editor` or `viewer`), revocation index |
-| Acknowledgement | the member | the list DID | the member's acceptance |
-
-The list's revocation list is a signed bit list, as in Community Rides. Alice's device re-signs it on each revocation and sends it to every member with `todo/status`.
-
-### 4.4 Operations
-
-An operation is a signed JSON record, separate from the message that carries it, so that anyone can forward it and it still proves its author **(our call)**. It has an `id`, the list DID, the author DID, a kind (`add`, `check`, `uncheck`, `edit`, `delete`), the item id, the text where relevant, a timestamp from the demo clock, and the author's membership credential id. The proof is the author's.
-
-Operations travel in `todo/op` messages: one sealed TSP message to each member the sender knows, with the author's membership credential alongside. `todo/sync` asks a member for every operation it has accepted, and the reply carries the signed operations, which the asker checks one by one.
-
-### 4.4a The relay
-
-When a message can't be delivered because the recipient is offline, the sender's device wraps the already-sealed TSP message in a `todo/relay/deposit` to the relay. The relay stores it under the recipient's DID. When the recipient is back, its device sends `todo/relay/collect`. The relay checks that the TSP sender is that DID and returns the stored messages. The recipient opens each one as if it had arrived directly, and checks it the usual way.
-
-The relay can't read the inner messages, and can't change them without breaking their seal. It does learn who messages whom, when, and how much. It could also drop messages, which the demo doesn't show.
-
-This stands in for the stack's planned Routed Mode, in which intermediaries relay messages they can't read (S02). **(our call)**
-
-### 4.4b Private items
-
-A private `add` names its readers (by DID) and carries no plain text. Instead:
-- The text is encrypted with a fresh random key for that item (ChaCha20-Poly1305).
-- The key is sealed separately to each reader's X25519 key with HPKE base mode, the same RFC 9180 suite TSP uses (S02).
-- Later `edit`s to a private item encrypt the new text under the same item key.
-
-The author is always a reader. Readers are fixed when the item is added: adding or removing readers later is out of scope.
-
-Everyone stores and checks a private operation. The signature covers the ciphertext, so a device can check who wrote it and whether their role allows it without being able to read it. The readers list, the author and the time are visible to every member. That's the leak, and the UI says so.
-
-**Admins don't see private items unless they are listed as readers. (our call)** Whether an admin may always read private items is a governance rule a real list would have to state.
-
-### 4.5 Each device decides
-
-When an operation arrives, directly or forwarded, the device checks it in this order, and records the first failure as the reason:
-
-1. The operation's signature verifies, and its author is its issuer.
-2. When delivered directly, the TSP sender is the author. A forwarded operation skips this check and is marked "forwarded by <name>".
-3. The author's membership credential (sent alongside, or already held) verifies, is issued by the list, has the author as its subject, and isn't revoked in the latest revocation list this device holds.
-4. The list's policy allows this role to do this kind of operation on this item, including the private-item rule below.
-
-Accepted operations are applied in timestamp order, with the author DID as the tie-break. An operation on an item that doesn't exist, or one that's been deleted, is rejected: "no such item".
-
-### 4.6 The rules
-
-Rego, as in Community Rides, compiled to WebAssembly and evaluated on each device:
-
-| Kind | admin | editor | viewer |
-|---|---|---|---|
-| add | yes | yes | no |
-| check, uncheck, edit | yes | yes | no |
-| delete | yes | only items they added | no |
-| invite, revoke | yes | no | no |
-
-On a private item, only its readers may check, uncheck, edit or delete it, and only within their role. For example, a viewer reader still can't edit.
-
-The fixed reason strings follow the pattern `"<role> may not <kind>"`, plus `"not a reader of this item"`, `"membership revoked"`, `"not a member"`, `"credential is for someone else"`, `"operation: signature does not verify"` and `"no such item"`.
-
-## 5. What's on screen
-
-One page at 1920×1080. **(our call)**
-
-- **Four person panes**, plus a relay pane that lists the sealed messages it holds (for whom, size, first bytes) and "what I can read: nothing". Each person pane shows:
-  - that person's DID
-  - the credentials they hold
-  - their copy of the list
-  - a "rejected" list with reasons
-  - their connections
-  - an online/offline switch
-  - free-play actions
-- **A wire panel**: one row per TSP message, with sender, receiver, size and the first bytes. Clicking a row shows the decrypted content, labeled "only <name> can read this".
-- **Demo controls**: next, previous, reset, the step caption, and a scripted or free-play switch.
-
-The four lists side by side make the main point without words: after step 6, every pane is missing "Raise rent" for its own reason.
-
-## 6. Disclosure
-
-A test asserts this table.
-
-| Party | Learns |
-|---|---|
-| A network observer | Who messages whom, when, and how much. Never item text or roles. |
-| The relay | The same as an observer, for the messages it holds. Never their content. |
-| A member who isn't a reader of a private item | That it exists, who wrote it, when, who can read it, and whether it's checked off. Never its text. |
-| Mallory (not a member) | Nothing about the list. In step 8 she holds Bob's membership credential, because Bob showed it to her. |
-| Carol (viewer) | Everything on the list, as the role allows. |
-
-## 7. Shared plumbing with Community Rides
-
-Both apps need the same core: identities, the demo clock, the in-memory bus, the Trust Task endpoint over TSP, credentials, the status list, and the Rego policy loader. That is Tasks 1 to 4 of `projects/community-rides/docs/plan.md`. It moves into a shared package, `packages/trust-core/`, built first and used by both apps (decision 0003). Each app's Rego policies stay in the app.
-
-## 8. Where we guessed about the stack
-
-- Relationship formation without the TSP RFI/RFA handshake (section 4.2).
-- An invitation format that's OOBI-style, not the stack's.
+- Relationships start with the first Direct TSP message, not the RFI/RFA handshake.
 - `did:key` instead of `did:peer:4`.
-- A list as a community whose key one person holds. The stack's VTCs have a governance document and M-of-N signing (S02), which this demo doesn't model.
-- Operation, sync, relay and private-item formats are ours: `https://zk-toip.example/spec/todo/<name>/0.1`.
-- A relay through a deposit-and-collect task, not TSP Routed Mode.
-- That the OpenVTC libraries behave like the P2P Trust Stack's own implementation (S03).
+- Invitations are links carrying an OOBI-style object, not the stack's OOBI format.
+- A list is a community whose key its creator holds. Real VTCs have a governance document and M-of-N signing.
+- The relay is our own WebSocket mailbox, not TSP Routed Mode or the stack's libp2p relays.
+- Our message types and formats are under `https://zk-toip.example/spec/todo/…`.
+- That the OpenVTC libraries interoperate with the P2P Trust Stack's own implementation. This wasn't checked.
 
-## 9. Testing and done
+## 8. Testing and done
 
-- Tests for the shared core as in Community Rides' plan, Tasks 1 to 4.
-- App tests: each check in section 4.5 rejects with its reason string; the role table in 4.6, one test per cell; sync from a third party accepts forwarded operations and rejects tampered ones; revocation takes effect at every member.
-- A headless scenario test that runs steps 1 to 12 and asserts each pane's list and rejected list after each step.
-- A disclosure test: no wire record contains item text in plaintext; the relay's stored state contains no item text; Carol's state never contains the private item's text.
-- Done: steps 1 to 12 run in the browser from a fresh install, the tests pass, and the README explains how to run it and lists section 8's guesses.
+- **Unit tests** for trust-core, the op checks (including each section 4.5 rule), the roster rules (4.4) and the ordering (4.6). Ordering is tested by applying the same ops in many orders and asserting the same result.
+- **Relay tests:**
+  - authentication: a good signature, a wrong DID, and a replayed signature
+  - live delivery
+  - queueing, and delivery on connect
+  - acknowledgement and deletion
+  - persistence across a relay restart
+  - the limits
+- **Integration tests in Node:** a real relay on a random port, and several devices using the real WebSocket transport and an in-memory store. They cover:
+  - create, invite and join, including while the inviter is offline
+  - shared and private items
+  - a viewer's refused change
+  - someone else's credential refused
+  - an offline device's outbox sent on reconnect
+  - catching up by sync
+  - revocation, and the history before a removal kept for a later joiner
+  - an old roster refused
+  - leaving a list
+  - a device restored from its store after a restart
+  - the relay's database never containing item text
+- **A UI smoke test**, and a **manual check in Chrome** with two or three profiles.
+- **Done** when two people on two browser profiles can do everything in section 3 through a relay running locally, the tests pass, and the README covers running, deploying and the security notes.
 
-## 10. Left to the builder
+## 9. Later
 
-Visual design; field names; the Rego text; the bus API; how the scenario drives the UI; whether invitations show a real QR image or a stand-in.
+Several devices per person, by delegating from a person's DID to device keys. Key recovery. Lists governed by more than one admin key. Federation across relays. Community Rides on the same core.
