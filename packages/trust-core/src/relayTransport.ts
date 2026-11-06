@@ -48,6 +48,8 @@ export class RelayTransport implements Transport {
       url: string;
       identity: Identity;
       outbox?: OutboxStore;
+      /** A WebSocket implementation, when the global one isn't suitable (e.g. under jsdom in tests). */
+      webSocket?: typeof WebSocket;
     },
   ) {
     this.loaded = (opts.outbox?.load() ?? Promise.resolve([])).then((items) => {
@@ -121,7 +123,7 @@ export class RelayTransport implements Transport {
     this.setStatus("connecting");
     let ws: WebSocket;
     try {
-      ws = new WebSocket(this.opts.url);
+      ws = new (this.opts.webSocket ?? WebSocket)(this.opts.url);
     } catch {
       this.scheduleReconnect();
       return;
@@ -204,7 +206,7 @@ export class RelayTransport implements Transport {
   }
 
   private transmit(item: OutboxItem): void {
-    if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify({ t: "send", cid: item.cid, to: item.to, wire: item.wire }));
+    if (this.ws?.readyState === 1 /* OPEN */) this.ws.send(JSON.stringify({ t: "send", cid: item.cid, to: item.to, wire: item.wire }));
   }
 
   private async persist(): Promise<void> {

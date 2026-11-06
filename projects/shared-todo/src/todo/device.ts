@@ -120,6 +120,8 @@ export interface DeviceOptions {
   clock: Clock;
   /** Required the first time, to create this device's identity. */
   name?: string;
+  /** Passed to the relay transport; only tests need it. */
+  webSocket?: typeof WebSocket;
 }
 
 const randomSeed = () => crypto.getRandomValues(new Uint8Array(32));
@@ -156,6 +158,7 @@ export class Device {
     this.transport = new RelayTransport({
       url: opts.relayUrl,
       identity: this.identity,
+      webSocket: opts.webSocket,
       outbox: {
         load: async () => (await store.get<OutboxItem[]>("outbox")) ?? [],
         save: (items) => store.put("outbox", items),

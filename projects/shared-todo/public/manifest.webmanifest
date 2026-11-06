@@ -1,0 +1,8 @@
+{
+  "name": "Shared lists",
+  "short_name": "Lists",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f8f6",
+  "theme_color": "#2e6a4f"
+}

@@ -27,13 +27,15 @@ describe("Endpoint over TSP", () => {
   it("round-trips a signed request and response", async () => {
     const { bus, alice, bob } = setup();
     bob.handle<{ text: string }, { echoed: string }>(echo, (doc) => ({ echoed: doc.payload.text }));
-    const res = await alice.request<{ text: string }, { echoed: string }>(bob.vid, echo, { text: "hi" });
-    expect(res.payload.echoed).toBe("hi");
+    // Long enough that random ciphertext can't contain it by chance.
+    const secret = "a secret nobody on the wire should see";
+    const res = await alice.request<{ text: string }, { echoed: string }>(bob.vid, echo, { text: secret });
+    expect(res.payload.echoed).toBe(secret);
     expect(res.issuer).toBe(bob.vid);
     expect(res.type.endsWith("#response")).toBe(true);
     const recs = bus.records();
     expect(recs).toHaveLength(2);
-    for (const r of recs) expect(contains(r.raw, utf8("hi"))).toBe(false);
+    for (const r of recs) expect(contains(r.raw, utf8(secret))).toBe(false);
     expect(recs[0].opened?.by).toBe(bob.vid);
     expect(recs[1].opened?.by).toBe(alice.vid);
   });

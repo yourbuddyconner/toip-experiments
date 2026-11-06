@@ -2,3 +2,5 @@ node_modules
 dist
 policies/bundle.tar.gz
 *.tsbuildinfo
+.data
+*.db
