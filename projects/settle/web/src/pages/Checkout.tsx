@@ -6,6 +6,7 @@ import { A, Action } from "../ui";
 import { money, useSession } from "../model";
 import { api, type Session } from "../session";
 import { Splash, Welcome, Wordmark, type AccountSession } from "../App";
+import { Unlock } from "./Accounts";
 
 const clock = new SystemClock();
 
@@ -51,9 +52,13 @@ export function Checkout({ token, acct }: { token: string; acct: AccountSession 
       <Protection link={link} />
       {acct.state === "opening" ? (
         <p>Opening your account…</p>
+      ) : acct.state === "unlock" && acct.account ? (
+        <div className="co-account">
+          <Unlock account={acct.account} onOpen={acct.choose} onOther={() => (sessionStorage.removeItem("settle.active"), location.reload())} />
+        </div>
       ) : !acct.session ? (
         <div className="co-account">
-          <Welcome locked={acct.state === "locked"} onChoose={acct.choose} title="Who's paying?" placeholder="Dana Whitfield" />
+          <Welcome locked={acct.state === "locked"} onOpen={acct.choose} title="Who's paying?" placeholder="Dana Whitfield" />
         </div>
       ) : (
         <Pay s={acct.session} link={link} onLeave={acct.leave} />

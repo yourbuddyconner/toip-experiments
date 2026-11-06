@@ -25,6 +25,8 @@ export interface Person {
 
 export class SettleApi {
   private cfg?: Promise<PlatformConfig>;
+  /** Outside a browser, the operator session cookie is kept here (a browser keeps it itself). */
+  private cookie?: string;
 
   constructor(readonly base = "") {}
 
@@ -45,7 +47,19 @@ export class SettleApi {
       mint: config.mint,
       fee: config.processor.fee,
     };
-    const party = new Party({ name: o.name, identity: o.identity, relayUrl: config.relayUrl, clock: o.clock ?? new SystemClock(), chain, policy: o.policy, directory, outbox: o.outbox, onChange: o.onChange });
+    const party = new Party({
+      name: o.name,
+      identity: o.identity,
+      relayUrl: config.relayUrl,
+      clock: o.clock ?? new SystemClock(),
+      chain,
+      policy: o.policy,
+      directory,
+      outbox: o.outbox,
+      onChange: o.onChange,
+      // SOL for the party's own accounts comes from the platform's gas station, on any cluster.
+      gas: async (address, lamports) => void (await this.post("/api/gas", { address, lamports: lamports.toString() })),
+    });
     party.trustedLicensers = [config.verifier];
     party.requireLicense = false;
     party.autoRelease = true;
@@ -79,6 +93,21 @@ export class SettleApi {
     return credential;
   }
 
+  /**
+   * Signs in as an operator of this platform by signing a one-time challenge with the identity's key.
+   * With the setup code the platform printed, the identity becomes its first operator.
+   */
+  async operatorSignIn(identity: Identity, setupCode?: string): Promise<{ operator: string }> {
+    const { nonce, audience } = await this.post<{ nonce: string; audience: string }>("/api/operator/challenge", {});
+    const proof = signDocument({ type: "settle/operator-login" as const, issuer: identity.did, nonce, audience }, identity, new SystemClock());
+    return this.post("/api/operator/login", setupCode === undefined ? { proof } : { proof, setupCode });
+  }
+
+  async operatorSignOut(): Promise<void> {
+    await this.post("/api/operator/logout", {});
+    this.cookie = undefined;
+  }
+
   async now(): Promise<number> {
     return (await this.get<{ now: number }>("/api/time")).now;
   }
@@ -97,7 +126,11 @@ export class SettleApi {
   }
 
   private async call<T>(path: string, init: RequestInit): Promise<T> {
-    const res = await fetch(this.base + path, init);
+    const inBrowser = typeof document !== "undefined";
+    if (!inBrowser && this.cookie) init.headers = { ...(init.headers as Record<string, string>), cookie: this.cookie };
+    const res = await fetch(this.base + path, { ...init, credentials: "same-origin" });
+    const set = !inBrowser ? res.headers.get("set-cookie") : null;
+    if (set) this.cookie = set.split(";")[0];
     const out = (await res.json().catch(() => ({}))) as T & { error?: string };
     if (!res.ok) throw new Error(out.error ?? `${res.status} from ${path}`);
     return out;

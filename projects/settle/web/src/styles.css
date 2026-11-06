@@ -250,3 +250,18 @@ a.row:hover { background: #ffffff8c; }
   .seal svg { width: 4rem; height: 4rem; }
   .co-price { font-size: 3rem; }
 }
+
+/* ---------------------------------------------------------------- accounts, sealed keys, operators */
+.chip-network { align-self: flex-start; background: rgba(255, 255, 255, 0.1); color: inherit; font-weight: 600; }
+.console-head .chip-network { background: var(--rule-soft); color: var(--ink-2); }
+.console-me { font-size: 0.85rem; color: var(--quiet); }
+.console-head .devclock + .console-me, .console-head .chip-network + .console-me { margin-left: auto; }
+.unlock { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem; }
+.unlock .error { flex-basis: 100%; margin: 0.2rem 0 0; }
+.unlock-pass { display: flex; align-items: flex-end; gap: 0.8rem; flex-wrap: wrap; }
+.notice.protect { flex-direction: column; align-items: stretch; gap: 0.6rem; margin-bottom: 1.5rem; }
+.notice.protect p { margin: 0; }
+.backup-code { background: var(--rule-soft); padding: 0.8rem 1rem; border-radius: 6px; font-size: 0.85rem; user-select: all; }
+.operators { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; margin: 1rem 0 1.5rem; }
+.operators li { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: baseline; }
+.welcome-form .actions { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }

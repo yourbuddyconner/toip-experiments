@@ -12,7 +12,9 @@
     "demo": "tsx src/demo.ts",
     "app": "tsx src/platform/main.ts",
     "build:web": "vite build --config web/vite.config.ts",
-    "e2e": "tsx web/e2e.ts"
+    "e2e": "tsx web/e2e.ts",
+    "deploy": "tsx src/platform/deploy.ts",
+    "test:cluster": "vitest run tests/cluster.test.ts"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "5.3.0",

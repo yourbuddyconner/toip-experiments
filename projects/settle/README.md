@@ -3,13 +3,13 @@
 An open payments layer for the Trust over IP world. Settle handles conditional payments between parties who don't trust each other. The money is stablecoins, held in an escrow that nobody controls alone, not even the processor.
 
 - Design: `docs/design.md`.
-- Status: a working app on a local Solana chain.
+- Status: a working app. It runs on its own local Solana cluster, which survives restarts, or on a real cluster such as devnet. Tested end to end against `solana-test-validator`.
 
 ## Run the app
 
 ```bash
 npm install     # at the repository root
-npm run settle  # http://127.0.0.1:4300
+npm run settle  # http://localhost:4300
 ```
 
 One command starts a whole Settle network on your machine:
@@ -17,19 +17,42 @@ One command starts a whole Settle network on your machine:
 - the TSP relay;
 - Settle's processor and arbiter;
 - a verification issuer;
-- a faucet for test USDC;
+- a faucet for test USDC, and a gas station for the SOL that accounts need;
 - the web app.
 
-Open the app in two browser windows (one normal, one private) to be two different people. You can also give each tab its own account.
+Everything is kept in `projects/settle/.data/local`, so stopping and starting again loses nothing. Add `-- --fresh` to start a new network.
+
+Open the app in two browser windows (one normal, one private) to be two different people. You can also give each tab its own account. **Your key is sealed with a passkey** (Touch ID, Windows Hello or your phone), or with a passphrase if your browser's passkeys can't do it. Profile shows a backup code for the account.
 
 Try this:
 1. **Create the business's account.** In the first window, make an account for a business. On **Profile**, select **Get verified**. On **Payment links**, make a link for a job.
 2. **Pay as the customer.** Open the link in the second window. Make an account, add test USDC, and pay. The money goes into escrow, and the business's dashboard shows it held for them.
 3. **Release the money.** On the payment page, the customer selects **Confirm the work is done**. The three seals fill in as the payer and payee sign. The business is paid.
-4. **Settle a dispute.** Pay a second link, and select **Report a problem** instead of confirming. Open the **Operator view** (`/console`) to rule a split as Settle Arbitration. The arbiter's signature, plus one party's, carries out the ruling.
+4. **Settle a dispute.** Pay a second link, and select **Report a problem** instead of confirming. Open the setup link the platform printed when it first started (`/console?setup=…`), and sign in with one of your accounts. That account becomes the platform's operator. Rule a split as Settle Arbitration: the arbiter's signature, plus one party's, carries out the ruling.
 5. **Have someone else confirm.** Make a link that a third person confirms, with a dispute window. Use **Skip ahead** in the sidebar to move the network's clock past the window. The payer's device signs as soon as its policy allows.
 
-To serve the built app instead of the dev server, run `npm run build:web --workspace @zk-toip/settle`, then `npm run app --workspace @zk-toip/settle -- --static`. The platform's ports are set by `PORT`, `RELAY_PORT` and `RPC_PORT`; the defaults are 4300, 4301 and 4302.
+To serve the built app instead of the dev server, run `npm run build:web --workspace @zk-toip/settle`, then `npm run app --workspace @zk-toip/settle -- --static`. Settings:
+- **Ports:** `PORT`, `RELAY_PORT` and `RPC_PORT` (defaults 4300, 4301 and 4302).
+- **Where it listens:** `HOST`, default this machine only. If you change it, put the platform behind TLS.
+- **Where it keeps its data:** `--data <dir>` or `SETTLE_DATA`.
+
+### Operators
+
+The **Operator view** (`/console`) shows the arbiter's cases and the processor's books, and is where disputes are ruled. Operators sign in with their own Settle account: its key signs a one-time challenge, so there is no password and the platform never holds the key.
+- A new platform prints a setup link once. The first account to use it becomes the operator.
+- An operator can add or remove others on the **Operators** tab, by their identifier (`did:key:…`, shown on Profile).
+- The processor's transparency log stays public, at `/api/log`.
+
+### On Solana devnet
+
+```bash
+npm run deploy --workspace @zk-toip/settle -- --cluster devnet          # once: deploys the program
+npm run app --workspace @zk-toip/settle -- --cluster devnet             # the platform, on devnet
+```
+
+On a real cluster, the platform's **treasury** key pays for the test-USDC mint, the processor's network fees and the gas station. The deploy also comes from it, so the treasury needs about 1.5 SOL to deploy and 0.3 SOL to run. Devnet's RPC faucet is closed, so the first run prints the treasury's address. Send it SOL from https://faucet.solana.com, then run the command again. The treasury's key is in `.data/devnet/platform.json`.
+
+On devnet, clocks keep real time, so **Skip ahead** is hidden. `--cluster localnet` uses a `solana-test-validator` on port 8899, and `--cluster <url>` uses any RPC endpoint.
 
 ## For developers: the whole integration
 
@@ -40,7 +63,7 @@ import { identityFromSeed } from "@zk-toip/trust-core";
 import { SettleApi, encodeLink, decodeLink } from "./src/client/client";
 import { SettlePolicy } from "./src/protocol/policy";
 
-const settle = new SettleApi("http://127.0.0.1:4300");
+const settle = new SettleApi("http://localhost:4300");
 const party = await settle.party({ identity: identityFromSeed(seed), name: "Joe's Plumbing", policy: await SettlePolicy.load(wasm) });
 await party.start();
 setInterval(() => party.tick(), 2000); // acts on what time makes possible, such as a dispute window that has passed
@@ -73,9 +96,9 @@ Other calls:
 | `src/protocol/` | The signed documents: terms, acceptances, payment-key bindings, attestations, disputes, rulings, evidence and receipts. Also the Trust Task types, the `attested-completion/1` Rego policy, and the transparency log. |
 | `src/agents/party.ts` | The party: payer, payee and attester in one. Covers payment links, checkout, the wallet, auto-release, refunds, claims and snapshots. |
 | `src/agents/roles.ts` | The network's services: the processor (sponsors transactions, collects signatures, keeps the log) and the arbiter (holds disputed escrows, rules). |
-| `src/platform/` | The platform: the whole network in one process, with a REST API (`/api/config`, faucet, verify, directory, operator views, dev clock) that also serves the web app. |
+| `src/platform/` | The platform: the whole network in one process.<br>• `platform.ts`: a REST API (config, faucet, gas station, verify, directory, operator sign-in and views, public log, dev clock) that also serves the web app.<br>• `cluster.ts`: the local cluster or a real one.<br>• `state.ts`: the data directory.<br>• `operators.ts`: operator sign-in.<br>• `deploy.ts`: deploys the program to a real cluster. |
 | `src/client/client.ts` | `SettleApi`: connects a party to a platform. Used by the web app and the tests alike. |
-| `web/` | The web app (React):<br>• a dashboard, payment links and a hosted checkout at `/pay/:link`;<br>• payment pages with the three seals;<br>• a wallet, verification, and the operator view at `/console`;<br>• `web/e2e.ts` drives all of it in a real browser. |
+| `web/` | The web app (React):<br>• a dashboard, payment links and a hosted checkout at `/pay/:link`;<br>• payment pages with the three seals;<br>• a wallet, verification, and the operator view at `/console`;<br>• `src/vault.ts` seals each account's key with a passkey (WebAuthn PRF) or a passphrase;<br>• `web/e2e.ts` drives all of it in a real browser, with virtual passkeys. |
 | `src/world.ts`, `src/demo.ts` | The repair job's cast, and the narrated terminal demo (`npm run demo`). |
 
 ## How it fits together
@@ -90,8 +113,9 @@ Other calls:
 ## Tests
 
 ```bash
-npm test --workspace @zk-toip/settle        # 49 tests
-npm run e2e --workspace @zk-toip/settle     # the app in a real browser: 4 jobs, 3 people, screenshots in web/e2e-shots/
+npm test --workspace @zk-toip/settle        # 53 tests (and 3 that need a real cluster, skipped)
+npm run e2e --workspace @zk-toip/settle     # the app in a real browser: 4 jobs, 5 people, passkeys, operators; screenshots in web/e2e-shots/
+SETTLE_CLUSTER=localnet npm run test:cluster --workspace @zk-toip/settle   # against solana-test-validator (deploy first)
 npm run build:program --workspace @zk-toip/settle   # rebuild the program (needs Rust and Agave's cargo-build-sbf)
 npm run policies --workspace @zk-toip/settle        # recompile the Rego (needs opa)
 ```
@@ -107,13 +131,17 @@ The tests cover:
   - refunds;
   - restoring a party from a snapshot;
   - refused requests;
-  - a checkout ignoring an invoice from anyone but the link's issuer.
+  - a checkout ignoring an invoice from anyone but the link's issuer;
+  - a restart: the chain, keys, cases and log carry over, and a payment opened before it settles after it;
+  - operator sign-in: setup code, one-use challenges, forged and replayed proofs, adding and removing operators, cross-site requests;
+  - the gas station's limits.
+- **A real cluster** (`tests/cluster.test.ts`): a paid link, a dispute held and ruled, and a refund, with real confirmations and real time.
 
 ## Not yet
 
-- Solana devnet. The client speaks standard JSON-RPC, but only the local cluster is wired up. On devnet the faucet, verifier and clock would go.
-- Keys in the browser live in `localStorage`. A real wallet would keep them in a passkey or hardware.
-- The operator view and its API have no login. The platform listens only on localhost.
+- A run on devnet itself. It's wired and tested against `solana-test-validator`, but needs the treasury funded by hand first (see above).
+- Signing with the passkey itself. A passkey seals the key, but can't sign Ed25519 for a `did:key` or a Solana address, so the key is unsealed in memory while the account is open.
+- TLS and a public deployment. The platform can listen beyond localhost, but it doesn't terminate TLS itself.
 - Base, the second rail (design §11).
 - Guarantees and bonds.
 - A payee-protecting timeout (design §13).

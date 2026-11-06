@@ -98,6 +98,11 @@ export interface AgentOptions {
   onTraffic?: (who: string, t: Traffic) => void;
   /** Where unsent messages wait across restarts (a browser's storage, say). Defaults to memory. */
   outbox?: OutboxStore;
+  /**
+   * Tops up an address with SOL for rent and network fees (the platform's gas station). Without it the
+   * agent asks the cluster's faucet, which only a local cluster gives freely.
+   */
+  gas?: (address: Address, lamports: bigint) => Promise<void>;
 }
 
 export const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
@@ -115,6 +120,7 @@ export abstract class Agent {
   protected readonly policy: SettlePolicy;
   readonly directory: Directory;
   private readonly onEvent?: (e: AgentEvent) => void;
+  private readonly gas?: (address: Address, lamports: bigint) => Promise<void>;
   private queue: Promise<unknown> = Promise.resolve();
 
   constructor(opts: AgentOptions) {
@@ -126,6 +132,7 @@ export abstract class Agent {
     this.policy = opts.policy;
     this.directory = opts.directory;
     this.onEvent = opts.onEvent;
+    this.gas = opts.gas;
     this.transport = new RelayTransport({ url: opts.relayUrl, identity: opts.identity, outbox: opts.outbox });
     this.endpoint = new Endpoint({
       identity: opts.identity,
@@ -148,6 +155,18 @@ export abstract class Agent {
   stop(): void {
     this.transport.stop();
     this.endpoint.close();
+  }
+
+  /**
+   * Makes sure `addr` holds `min` lamports to spend on rent and network fees, on top of the minimum a key
+   * itself must keep (an account may not drop below rent exemption).
+   */
+  protected async ensureSol(addr: Address, spend: bigint): Promise<void> {
+    const min = spend + (await this.chain.rent(0));
+    const have = await this.chain.lamports(addr);
+    if (have >= min) return;
+    if (this.gas) await this.gas(addr, min - have);
+    else await this.chain.airdropLamports(addr, min - have);
   }
 
   nameOf(did: string): string {

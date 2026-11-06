@@ -28,7 +28,7 @@ export interface Relay {
 export interface RelayOptions {
   port: number;
   dbPath: string;
-  /** The URL clients use, e.g. wss://relay.example.com/v1. Defaults to ws://localhost:<port>/v1. */
+  /** The URL clients use, e.g. wss://relay.example.com/v1. Defaults to ws://<host>:<port>/v1, or ws://localhost:<port>/v1 when bound to every interface. */
   publicUrl?: string;
   host?: string;
   log?: (line: string) => void;
@@ -101,7 +101,9 @@ export async function startRelay(opts: RelayOptions): Promise<Relay> {
     wss.once("error", reject);
   });
   const port = (wss.address() as { port: number }).port;
-  const url = opts.publicUrl ?? `ws://localhost:${port}/v1`;
+  // A relay bound to one address is reached at that address; one on every interface, at localhost.
+  const reachable = opts.host && opts.host !== "0.0.0.0" && opts.host !== "::" ? (opts.host.includes(":") ? `[${opts.host}]` : opts.host) : "localhost";
+  const url = opts.publicUrl ?? `ws://${reachable}:${port}/v1`;
   const online = new Map<string, Session>();
 
   const send = (s: Session, frame: object) => {

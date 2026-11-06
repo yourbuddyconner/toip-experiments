@@ -37,6 +37,17 @@ export class TransparencyLog {
     private readonly clock: Clock,
   ) {}
 
+  /** Picks up a saved log, refusing one whose entries don't chain together. */
+  load(entries: LogEntry[]): void {
+    let prev = this.entries.at(-1)?.hash ?? GENESIS;
+    for (const [i, e] of entries.entries()) {
+      const { hash, ...body } = e;
+      if (e.seq !== this.entries.length + i || e.prev !== prev || entryHash(body) !== hash) throw new Error(`saved log entry ${i} doesn't check out`);
+      prev = hash;
+    }
+    this.entries.push(...entries);
+  }
+
   append(kind: LogEntry["kind"], termsHash: string, detail: Record<string, unknown>): LogEntry {
     const body = { seq: this.entries.length, at: this.clock.iso(), kind, termsHash, detail, prev: this.entries.at(-1)?.hash ?? GENESIS };
     const e = { ...body, hash: entryHash(body) };

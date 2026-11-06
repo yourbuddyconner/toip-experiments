@@ -73,7 +73,7 @@ import {
   TERMS_PROPOSE,
 } from "../protocol/specs";
 import { TransparencyLog, type LogEntry, type LogHead } from "../protocol/log";
-import { Agent, genuineOpening, hex, termsAgreed, verifyOutcomeSignature, type AgentOptions, type OutcomeSignature } from "./base";
+import { Agent, genuineOpening, hex, termsAgreed, verifyOutcomeSignature, type AgentEvent, type AgentOptions, type OutcomeSignature, type PaymentState } from "./base";
 import type { HoldPayload, OpenedPayload, RulingPayload, SettledPayload, SubmitPayload } from "./messages";
 
 export { Party, Payer, Payee, Attester, encodeLink, decodeLink, verifyLink, type PaymentLink, type Checkout, type PartySnapshot } from "./party";
@@ -88,6 +88,21 @@ const HOLD_SECONDS = 60 * 86400;
 
 // ====================================================================== arbiter
 
+export interface ArbiterSnapshot {
+  v: 1;
+  payments: PaymentState[];
+  rulings: Ruling[];
+  events: AgentEvent[];
+}
+
+export interface ProcessorSnapshot {
+  v: 1;
+  terms: [Address, Terms][];
+  sigs: [string, OutcomeSignature[]][];
+  log: LogEntry[];
+  events: AgentEvent[];
+}
+
 export class Arbiter extends Agent {
   readonly rulings: Ruling[] = [];
   private key!: PaymentKey;
@@ -97,6 +112,18 @@ export class Arbiter extends Agent {
     this.endpoint.handle<OpenedPayload, void>(ESCROW_OPENED, (doc, ctx) => this.serial(() => this.onOpened(doc.payload, ctx.sender)));
     this.endpoint.handle<Attestation, void>(ESCROW_ATTEST, (doc) => this.serial(() => this.onAttest(doc.payload)));
     this.endpoint.handle<Dispute, void>(ESCROW_DISPUTE, (doc) => this.serial(() => this.onDispute(doc.payload)));
+  }
+
+  /** What the arbiter knows, to pick up after a restart. */
+  snapshot(): ArbiterSnapshot {
+    return structuredClone({ v: 1 as const, payments: [...this.payments.values()], rulings: this.rulings, events: this.events.slice(-300) });
+  }
+
+  restore(s: ArbiterSnapshot): void {
+    if (s?.v !== 1) throw new Error("not an arbiter snapshot");
+    for (const p of s.payments) this.payments.set(p.id, p);
+    this.rulings.push(...s.rulings);
+    this.events.push(...s.events);
   }
 
   /** The arbiter's published key, the same for every payment it serves. */
@@ -183,12 +210,36 @@ export class Processor extends Agent {
     this.endpoint.handle<Record<string, never>, { entries: LogEntry[]; head: LogHead }>(PROCESSOR_LOG, () => this.log.snapshot());
   }
 
-  /** Sets up the processor's fee-payer key (with SOL) and its fee account, owned by a separate key. */
-  async setup(mint: Address): Promise<void> {
-    this.feePayer = await generateKeyPairSigner();
-    this.feeOwner = await generateKeyPairSigner();
-    await this.chain.airdrop(this.feePayer.address, 100n);
-    this.feeAccount = await this.chain.createTokenAccount(mint, this.feeOwner.address, this.feePayer, await generateKeyPairSigner());
+  /**
+   * Sets up the processor's fee-payer key and its fee account, owned by a separate key. A platform that keeps
+   * its keys across restarts passes them in (and funds the fee payer itself); otherwise they're fresh, with SOL
+   * from the cluster's faucet.
+   */
+  async setup(mint: Address, keys?: { feePayer: KeyPairSigner; feeOwner: KeyPairSigner; feeAccount: KeyPairSigner }): Promise<void> {
+    this.feePayer = keys?.feePayer ?? (await generateKeyPairSigner());
+    this.feeOwner = keys?.feeOwner ?? (await generateKeyPairSigner());
+    if (!keys) await this.chain.airdrop(this.feePayer.address, 100n);
+    const account = keys?.feeAccount ?? (await generateKeyPairSigner());
+    this.feeAccount = (await this.chain.exists(account.address)) ? account.address : await this.chain.createTokenAccount(mint, this.feeOwner.address, this.feePayer, account);
+  }
+
+  /** What the processor knows (escrows it checked, signatures it holds, its log), to pick up after a restart. */
+  snapshot(): ProcessorSnapshot {
+    return structuredClone({
+      v: 1 as const,
+      terms: [...this.terms],
+      sigs: [...this.sigs].map(([k, m]) => [k, [...m.values()]] as [string, OutcomeSignature[]]),
+      log: this.log.snapshot().entries,
+      events: this.events.slice(-300),
+    });
+  }
+
+  restore(s: ProcessorSnapshot): void {
+    if (s?.v !== 1) throw new Error("not a processor snapshot");
+    this.log.load(s.log);
+    for (const [k, t] of s.terms) this.terms.set(k, t);
+    for (const [k, list] of s.sigs) this.sigs.set(k, new Map(list.map((x) => [x.signer, x])));
+    this.events.push(...s.events);
   }
 
   /** How many escrows this processor has seen opened and checked. */

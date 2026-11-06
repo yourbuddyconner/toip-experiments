@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Action, Field } from "../ui";
 import { api, type Session } from "../session";
+import { Backup } from "./Accounts";
 
 export function Profile({ s, onLeave }: { s: Session; onLeave: () => void }) {
   const party = s.party;
@@ -20,7 +21,7 @@ export function Profile({ s, onLeave }: { s: Session; onLeave: () => void }) {
       </dl>
       <p className="hint">
         Your identifier is a <code>did:key</code>: your public key, written as a name. Anyone can check your signatures with it, and only this browser holds the private
-        key.
+        key, sealed {s.account.lock?.kind === "passphrase" ? "with your passphrase" : s.account.lock ? "with your passkey" : "not yet: protect it from the banner above"}.
       </p>
 
       <section className="section">
@@ -51,10 +52,12 @@ export function Profile({ s, onLeave }: { s: Session; onLeave: () => void }) {
         </form>
       </section>
 
+      <Backup u={s.unlocked} />
+
       <section className="section">
         <h2>This browser</h2>
         <div className="actions">
-          <Action onRun={async () => onLeave()}>Switch account</Action>
+          <Action onRun={async () => onLeave()}>Lock and switch account</Action>
         </div>
       </section>
     </>

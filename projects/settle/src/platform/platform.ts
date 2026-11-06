@@ -1,42 +1,62 @@
 /**
- * A whole Settle network on one machine (design §17): a local Solana cluster running the escrow program,
- * the TSP relay, the processor and the arbiter, a verification issuer, a test-money faucet, and the web app.
+ * A whole Settle network in one process (design §17, §18): the TSP relay, the processor and the arbiter,
+ * a verification issuer, a test-money faucet, a gas station, operator sign-in, and the web app. The chain
+ * is either the platform's own local cluster or a real one such as devnet (cluster.ts).
  *
  * Nothing here can move anyone's money: the browser parties hold their own keys and sign for themselves.
  * The platform pays network fees (the processor), arbitrates when asked (the arbiter), and runs the
- * conveniences a development network needs: test USDC, a phone book of display names, time travel.
+ * conveniences a development network needs: test USDC, SOL for rent, a phone book of display names, and,
+ * on a local cluster, time travel.
+ *
+ * Everything it knows is kept in its data directory (state.ts), so it picks up where it left off.
  */
 import { existsSync, mkdtempSync, readFileSync, statSync } from "node:fs";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { tmpdir } from "node:os";
 import { extname, join, normalize } from "node:path";
 import { startRelay, type Relay } from "@zk-toip/relay";
-import { identityFromSeed, issueCredential, SystemClock, verifyDocument, type Clock, type Identity } from "@zk-toip/trust-core";
+import { issueCredential, SystemClock, verifyDocument, type Clock, type Identity } from "@zk-toip/trust-core";
 import type { Address, KeyPairSigner } from "@solana/kit";
-import { Chain } from "../chain/chain";
+import type { Chain } from "../chain/chain";
 import { STATE } from "../chain/escrow";
-import { startChainServer, type ChainServer } from "../chain/rpcServer";
 import { verifyLog } from "../protocol/log";
 import { loadPolicy } from "../protocol/policyFile";
-import { Arbiter, Processor } from "../agents/roles";
+import { Arbiter, Processor, type ArbiterSnapshot, type ProcessorSnapshot } from "../agents/roles";
 import type { AgentEvent, Directory } from "../agents/base";
+import { LAMPORTS_PER_SOL, openCluster, type Cluster } from "./cluster";
+import { autosave, DataDir, identityOf, signerOf } from "./state";
+import { OperatorError, Operators, sessionCookie, SESSION_TTL_MS, type OperatorProof } from "./operators";
 
 export const WEB_DIR = join(import.meta.dirname, "..", "..", "web");
 
 export interface PlatformOptions {
   /** The web app and API. 0 picks a free port. */
   port?: number;
+  /** The local cluster's RPC port (unused on a real cluster). */
   rpcPort?: number;
   relayPort?: number;
+  /** Where the servers listen. Defaults to this machine only (127.0.0.1); "0.0.0.0" serves the network. */
+  host?: string;
+  /** The host name browsers use to reach the relay and the local cluster, when it isn't `host`. */
+  publicHost?: string;
   /** How to serve the web app: Vite with hot reload, the built files in web/dist, or not at all. */
   web?: "dev" | "static" | "none";
+  /** Where the platform keeps everything between runs. Defaults to a fresh temporary directory. */
   dataDir?: string;
+  /** "local" (default), "devnet", "localnet", or an RPC URL. */
+  cluster?: string;
+  /** The deployed Settle program on a real cluster; defaults to the development program id. */
+  programId?: Address;
   log?: (line: string) => void;
 }
 
 export interface PlatformConfig {
-  /** Changes every time the platform starts: the local chain starts empty, so browsers drop old payments. */
+  /** The same for as long as the platform keeps its data directory. Browsers keep payments per network id. */
   networkId: string;
+  /** "local", "devnet", or an RPC URL. */
+  cluster: string;
+  /** Whether the chain's clock can be moved forward (only a local cluster's can). */
+  devClock: boolean;
   rpcUrl: string;
   relayUrl: string;
   programId: Address;
@@ -48,11 +68,16 @@ export interface PlatformConfig {
 }
 
 export interface Platform {
+  /** The API, at the address the platform listens on. */
   url: string;
+  /** The web app, for people: http://localhost:<port> on this machine. */
+  appUrl: string;
   config: PlatformConfig;
   chain: Chain;
-  chainServer: ChainServer;
+  cluster: Cluster;
+  dataDir: string;
   relay: Relay;
+  operators: Operators;
   processor: Processor;
   arbiter: Arbiter;
   verifier: Identity;
@@ -64,6 +89,28 @@ export interface Platform {
 const MAX_BODY = 256 * 1024;
 const MAX_FAUCET_UNITS = 10_000n * 1_000_000n;
 const MAX_ADVANCE_SECONDS = 400 * 86400;
+/** The gas station gives at most this much SOL at a time, and only to addresses holding less than GAS_CEILING. */
+const MAX_GAS_LAMPORTS = 5_000_000n;
+const GAS_CEILING = 10_000_000n;
+/** What the processor's fee payer keeps on hand, and what the treasury needs to start on a real cluster. */
+const FEE_PAYER_FLOAT = { local: 100n * LAMPORTS_PER_SOL, remote: LAMPORTS_PER_SOL / 10n };
+const TREASURY_MINIMUM = LAMPORTS_PER_SOL / 5n;
+
+/** Requests per client address per minute, for the endpoints anyone can call. */
+class RateLimit {
+  private readonly hits = new Map<string, { n: number; since: number }>();
+  constructor(private readonly perMinute: number) {}
+  take(who: string): void {
+    const now = Date.now();
+    const h = this.hits.get(who);
+    if (!h || now - h.since > 60_000) {
+      if (this.hits.size > 10_000) this.hits.clear();
+      this.hits.set(who, { n: 1, since: now });
+      return;
+    }
+    if (++h.n > this.perMinute) throw new HttpError(429, "too many requests; wait a minute");
+  }
+}
 
 class HttpError extends Error {
   constructor(
@@ -96,17 +143,54 @@ const TYPES: Record<string, string> = { ".html": "text/html; charset=utf-8", ".j
 export async function startPlatform(opts: PlatformOptions = {}): Promise<Platform> {
   const log = opts.log ?? (() => {});
   const clock: Clock = new SystemClock();
-  const dataDir = opts.dataDir ?? mkdtempSync(join(tmpdir(), "settle-platform-"));
-  const relay = await startRelay({ port: opts.relayPort ?? 0, dbPath: join(dataDir, `relay-${Date.now()}.db`) });
-  const chainServer = await startChainServer({ port: opts.rpcPort ?? 0 });
-  const chain = await Chain.connect(chainServer.url);
-  const net = chainServer.net;
+  const host = opts.host ?? "127.0.0.1";
+  const loopbackOnly = host === "127.0.0.1" || host === "::1" || host === "localhost";
+  const publicHost = opts.publicHost ?? (loopbackOnly || host === "0.0.0.0" || host === "::" ? "127.0.0.1" : host);
+  const data = new DataDir(opts.dataDir ?? mkdtempSync(join(tmpdir(), "settle-platform-")));
+
+  const hadSecrets = existsSync(data.path("platform.json"));
+  const emptyChain = (opts.cluster ?? "local") === "local" && !existsSync(data.path("chain.bin"));
+  const cluster = await openCluster({ cluster: opts.cluster, programId: opts.programId, rpcPort: opts.rpcPort, host, snapshot: data.path("chain.bin") });
+  const chain = cluster.chain;
+  const secrets = data.secrets({ rpcUrl: cluster.local ? "local" : cluster.rpcUrl, programId: chain.programId });
+  // A kept platform over a local chain that's gone: it's a new network, so browsers drop payments that no longer exist.
+  const newNetwork = hadSecrets && emptyChain;
+  if (newNetwork) {
+    secrets.networkId = crypto.randomUUID();
+    data.saveSecrets(secrets);
+  }
+  const relay = await startRelay({ port: opts.relayPort ?? 0, host, dbPath: data.path("relay.db") });
+  const relayUrl = relay.url.replace(`//${host}:`, `//${publicHost}:`);
+  const rpcUrl = cluster.local ? cluster.rpcUrl.replace(`//${host}:`, `//${publicHost}:`) : cluster.rpcUrl;
   const policy = await loadPolicy();
 
-  const faucet: KeyPairSigner = await net.funded();
-  const mint = await net.createMint(faucet);
-  const fresh = (): Identity => identityFromSeed(crypto.getRandomValues(new Uint8Array(32)));
-  const ids = { processor: fresh(), arbiter: fresh(), verifier: fresh() };
+  // ---------------------------------------------------------------- keys, money for fees, the test-USDC mint
+  const treasury = await signerOf(secrets.keys.treasury);
+  const lamportsOf = (a: Address) => chain.lamports(a);
+  if (cluster.local) {
+    if ((await lamportsOf(treasury.address)) < 100n * LAMPORTS_PER_SOL) await cluster.fund(treasury, treasury.address, 1000n * LAMPORTS_PER_SOL);
+  } else if ((await lamportsOf(treasury.address)) < TREASURY_MINIMUM) {
+    await chain.airdrop(treasury.address, 1n).catch(() => {});
+    if ((await lamportsOf(treasury.address)) < TREASURY_MINIMUM) {
+      throw new Error(
+        `the platform's treasury needs SOL on ${cluster.name}: send at least ${Number(TREASURY_MINIMUM) / 1e9} SOL to ${treasury.address} ` +
+          `(on devnet, https://faucet.solana.com), then start again. Its key is in ${data.path("platform.json")}.`,
+      );
+    }
+  }
+  const mintKey = await signerOf(secrets.keys.mint);
+  const mint = (await chain.exists(mintKey.address)) ? mintKey.address : await chain.createMint(treasury, mintKey, treasury.address);
+  const processorKeys = { feePayer: await signerOf(secrets.keys.feePayer), feeOwner: await signerOf(secrets.keys.feeOwner), feeAccount: await signerOf(secrets.keys.feeAccount) };
+  const feePayerFloat = cluster.local ? FEE_PAYER_FLOAT.local : FEE_PAYER_FLOAT.remote;
+  /** Keeps the processor able to pay network fees and escrow rent. */
+  const topUpFeePayer = async () => {
+    const have = await lamportsOf(processorKeys.feePayer.address);
+    if (have < feePayerFloat / 2n) await cluster.fund(treasury, processorKeys.feePayer.address, feePayerFloat - have);
+  };
+  await topUpFeePayer();
+
+  // ---------------------------------------------------------------- the network's services
+  const ids = { processor: identityOf(secrets.seeds.processor), arbiter: identityOf(secrets.seeds.arbiter), verifier: identityOf(secrets.seeds.verifier) };
   const arbiterKey = await Arbiter.keyFor(ids.arbiter);
   const names: Record<string, string> = {
     [ids.processor.did]: "Settle Processor",
@@ -121,21 +205,42 @@ export async function startPlatform(opts: PlatformOptions = {}): Promise<Platfor
     mint,
   });
   const onEvent = (e: AgentEvent) => log(`${e.who}: ${e.text}`);
-  const common = { relayUrl: relay.url, clock, chain, policy, onEvent };
+  const common = { relayUrl, clock, chain, policy, onEvent };
   const processor = new Processor({ ...common, name: "Settle Processor", identity: ids.processor, directory: directory() });
   const arbiter = new Arbiter({ ...common, name: "Settle Arbitration", identity: ids.arbiter, directory: directory() });
-  await processor.setup(mint);
+  await processor.setup(mint, processorKeys);
   processor.directory.fee = { bps: processor.feeBps, minUnits: processor.minFeeUnits.toString() };
   arbiter.directory.processorFeeAccount = processor.feeAccount;
+  const saved = newNetwork ? undefined : data.read<{ processor: ProcessorSnapshot; arbiter: ArbiterSnapshot }>("agents.json");
+  if (saved) {
+    processor.restore(saved.processor);
+    arbiter.restore(saved.arbiter);
+  }
   await Promise.all([processor.start(), arbiter.start()]);
+  const agentsSaver = autosave(
+    () => ({ processor: processor.snapshot(), arbiter: arbiter.snapshot() }),
+    (json) => data.writeText("agents.json", json),
+  );
+  const feePayerTimer = setInterval(() => void topUpFeePayer().catch((e) => log(`couldn't top up the fee payer: ${String(e?.message ?? e)}`)), 60_000);
+  feePayerTimer.unref();
+
+  const operators = new Operators(secrets.operators, secrets.networkId, clock, () => data.saveSecrets(secrets));
 
   /** The phone book: display names people chose for themselves, and which ones Settle Verify vouched for. */
-  const people = new Map<string, { did: string; name: string; verified?: string }>();
+  type Person = { did: string; name: string; verified?: string };
+  const people = new Map<string, Person>((data.read<Person[]>("directory.json") ?? []).map((p) => [p.did, p]));
+  for (const p of people.values()) names[p.did] = p.name;
+  const peopleSaver = autosave(
+    () => [...people.values()],
+    (json) => data.writeText("directory.json", json),
+  );
 
   const config: PlatformConfig = {
-    networkId: crypto.randomUUID(),
-    rpcUrl: chainServer.url,
-    relayUrl: relay.url,
+    networkId: secrets.networkId,
+    cluster: cluster.name,
+    devClock: !!cluster.advance,
+    rpcUrl,
+    relayUrl,
     programId: chain.programId,
     mint,
     processor: { did: ids.processor.did, feePayer: processor.feePayer.address, feeAccount: processor.feeAccount, fee: { bps: processor.feeBps, minUnits: processor.minFeeUnits.toString() } },
@@ -176,10 +281,25 @@ export async function startPlatform(opts: PlatformOptions = {}): Promise<Platfor
       });
   }
 
-  const routes: Record<string, (req: IncomingMessage) => Promise<unknown>> = {
+  interface Ctx {
+    /** The client's address, for rate limits. */
+    ip: string;
+    /** The signed-in operator, if any. */
+    operator: string | null;
+    setCookie(c: string): void;
+  }
+  const mustBeOperator = (ctx: Ctx): string => {
+    if (!ctx.operator) throw new HttpError(401, "sign in as an operator first");
+    return ctx.operator;
+  };
+  const limits = { faucet: new RateLimit(cluster.local ? 600 : 20), gas: new RateLimit(cluster.local ? 600 : 30), open: new RateLimit(600) };
+  const secure = false; // served over plain HTTP here; behind TLS the proxy should set Secure
+
+  const routes: Record<string, (req: IncomingMessage, ctx: Ctx) => Promise<unknown>> = {
     "GET /api/config": async () => config,
     "GET /api/directory": async () => ({ people: [...people.values()] }),
-    "POST /api/directory": async (req) => {
+    "POST /api/directory": async (req, ctx) => {
+      limits.open.take(ctx.ip);
       const { profile } = (await body(req)) as { profile?: { type?: string; issuer?: string; name?: string } };
       if (profile?.type !== "settle/profile" || typeof profile.issuer !== "string" || typeof profile.name !== "string" || !profile.name.trim()) throw new HttpError(400, "expected a signed settle/profile");
       if (!(await verifyDocument(profile, clock)).valid) throw new HttpError(400, "the profile's signature doesn't check out");
@@ -191,7 +311,8 @@ export async function startPlatform(opts: PlatformOptions = {}): Promise<Platfor
       for (const a of [processor, arbiter]) a.directory.names[profile.issuer] = name;
       return { ok: true };
     },
-    "POST /api/faucet": async (req) => {
+    "POST /api/faucet": async (req, ctx) => {
+      limits.faucet.take(ctx.ip);
       const b = await body(req);
       const to = String(b.tokenAccount ?? "") as Address;
       let units: bigint;
@@ -202,11 +323,30 @@ export async function startPlatform(opts: PlatformOptions = {}): Promise<Platfor
       }
       if (units <= 0n || units > MAX_FAUCET_UNITS) throw new HttpError(400, "ask for between 0 and 10,000 test USDC");
       if (!(await isTokenAccountOfMint(to))) throw new HttpError(400, "not a test-USDC account on this network");
-      await net.mintTo(mint, to, faucet, units);
+      const r = await chain.mintTo(mint, to, treasury, units);
+      if (!r.ok) throw new HttpError(502, `couldn't mint: ${r.error.split("\n")[0]}`);
       log(`faucet: ${Number(units) / 1e6} test USDC to ${to}`);
       return { ok: true, balance: (await chain.balance(to)).toString() };
     },
-    "POST /api/verify": async (req) => {
+    /** SOL for the rent and network fees of a party's own accounts (its wallet and payment accounts). */
+    "POST /api/gas": async (req, ctx) => {
+      limits.gas.take(ctx.ip);
+      const b = await body(req);
+      const to = String(b.address ?? "");
+      if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(to)) throw new HttpError(400, "not a Solana address");
+      let lamports: bigint;
+      try {
+        lamports = BigInt(String(b.lamports ?? "0"));
+      } catch {
+        throw new HttpError(400, "lamports must be a whole number");
+      }
+      if (lamports <= 0n || lamports > MAX_GAS_LAMPORTS) throw new HttpError(400, `ask for between 0 and ${MAX_GAS_LAMPORTS} lamports`);
+      if ((await lamportsOf(to as Address)) >= GAS_CEILING) throw new HttpError(400, "that address has enough SOL already");
+      await cluster.fund(treasury, to as Address, lamports);
+      return { ok: true };
+    },
+    "POST /api/verify": async (req, ctx) => {
+      limits.open.take(ctx.ip);
       const { request } = (await body(req)) as { request?: { type?: string; issuer?: string; businessName?: string; category?: string } };
       if (request?.type !== "settle/verify-request" || typeof request.issuer !== "string" || typeof request.businessName !== "string" || !request.businessName.trim()) {
         throw new HttpError(400, "expected a signed settle/verify-request");
@@ -225,13 +365,53 @@ export async function startPlatform(opts: PlatformOptions = {}): Promise<Platfor
       return { credential };
     },
     "GET /api/time": async () => ({ now: Number(await chain.now()) }),
-    "POST /api/dev/advance": async (req) => {
+    "POST /api/dev/advance": async (req, ctx) => {
+      if (!cluster.advance) throw new HttpError(400, `${cluster.name}'s clock can't be moved: it keeps real time`);
+      // Anyone at this machine may move a local cluster's clock; on a shared host, only an operator.
+      if (!loopbackOnly) mustBeOperator(ctx);
       const seconds = Number((await body(req)).seconds);
       if (!Number.isFinite(seconds) || seconds <= 0 || seconds > MAX_ADVANCE_SECONDS) throw new HttpError(400, "seconds must be between 0 and 400 days");
-      await chain.advanceClock(Math.floor(seconds));
+      await cluster.advance(Math.floor(seconds));
       return { now: Number(await chain.now()) };
     },
-    "GET /api/processor": async () => {
+    /** The processor's transparency log, which anyone may check (design §9). */
+    "GET /api/log": async () => {
+      const snap = processor.log.snapshot();
+      return { did: ids.processor.did, log: snap, check: await verifyLog(snap.entries, snap.head, ids.processor.did, clock) };
+    },
+
+    // ------------------------------------------------------------ operators
+    "GET /api/operator": async (_req, ctx) => ({ operator: ctx.operator, setupNeeded: !!operators.setupCode, operators: ctx.operator ? [...operators.dids] : undefined }),
+    "POST /api/operator/challenge": async (_req, ctx) => {
+      limits.open.take(ctx.ip);
+      return operators.challenge();
+    },
+    "POST /api/operator/login": async (req, ctx) => {
+      limits.open.take(ctx.ip);
+      const b = await body(req);
+      const r = await operators.login(b.proof as OperatorProof, b.setupCode === undefined ? undefined : String(b.setupCode));
+      ctx.setCookie(sessionCookie(r.session, SESSION_TTL_MS, secure));
+      log(`operator signed in: ${r.did}`);
+      return { operator: r.did, expires: new Date(r.expires).toISOString() };
+    },
+    "POST /api/operator/logout": async (req, ctx) => {
+      operators.logout(req.headers.cookie);
+      ctx.setCookie(sessionCookie("", 0, secure));
+      return { ok: true };
+    },
+    "POST /api/operator/add": async (req, ctx) => {
+      mustBeOperator(ctx);
+      operators.add(String((await body(req)).did ?? "").trim());
+      return { operators: [...operators.dids] };
+    },
+    "POST /api/operator/remove": async (req, ctx) => {
+      const me = mustBeOperator(ctx);
+      operators.remove(String((await body(req)).did ?? ""), me);
+      return { operators: [...operators.dids] };
+    },
+
+    "GET /api/processor": async (_req, ctx) => {
+      mustBeOperator(ctx);
       const snap = processor.log.snapshot();
       return {
         did: ids.processor.did,
@@ -246,7 +426,8 @@ export async function startPlatform(opts: PlatformOptions = {}): Promise<Platfor
         events: processor.events.slice(-80),
       };
     },
-    "GET /api/arbiter": async () => {
+    "GET /api/arbiter": async (_req, ctx) => {
+      mustBeOperator(ctx);
       const list = cases();
       const states = await Promise.all(list.map(async (c) => (c.escrow ? await chain.escrow(c.escrow) : null)));
       return {
@@ -261,7 +442,8 @@ export async function startPlatform(opts: PlatformOptions = {}): Promise<Platfor
         })),
       };
     },
-    "POST /api/arbiter/rule": async (req) => {
+    "POST /api/arbiter/rule": async (req, ctx) => {
+      const by = mustBeOperator(ctx);
       const b = await body(req);
       const id = String(b.paymentId ?? "");
       const p = arbiter.payments.get(id);
@@ -278,6 +460,7 @@ export async function startPlatform(opts: PlatformOptions = {}): Promise<Platfor
       const reasons = String(b.reasons ?? "").trim();
       if (!reasons) throw new HttpError(400, "give reasons");
       const r = await arbiter.rule(id, payeeUnits, reasons.slice(0, 1000));
+      log(`ruling on ${id} by operator ${by}`);
       return { ruling: r };
     },
   };
@@ -296,12 +479,27 @@ export async function startPlatform(opts: PlatformOptions = {}): Promise<Platfor
     const url = new URL(req.url ?? "/", "http://x");
     if (url.pathname.startsWith("/api/")) {
       const route = routes[`${req.method} ${url.pathname}`];
+      const headers: Record<string, string | string[]> = { "content-type": "application/json", "cache-control": "no-store" };
       try {
         if (!route) throw new HttpError(404, "no such endpoint");
-        const out = await route(req);
-        res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify(out));
+        if (req.method === "POST") {
+          // No cross-site requests: a form on another site can't send JSON, and a script there sends its Origin.
+          if (!String(req.headers["content-type"] ?? "").startsWith("application/json")) throw new HttpError(415, "send JSON");
+          const origin = req.headers.origin;
+          const sameSite = (() => {
+            try {
+              return new URL(String(origin)).host === req.headers.host;
+            } catch {
+              return false;
+            }
+          })();
+          if (origin && !sameSite) throw new HttpError(403, "cross-site request refused");
+        }
+        const ctx: Ctx = { ip: req.socket.remoteAddress ?? "?", operator: operators.whoIs(req.headers.cookie), setCookie: (c) => (headers["set-cookie"] = c) };
+        const out = await route(req, ctx);
+        res.writeHead(200, headers).end(JSON.stringify(out));
       } catch (e) {
-        const status = e instanceof HttpError ? e.status : 500;
+        const status = e instanceof HttpError ? e.status : e instanceof OperatorError ? 403 : 500;
         if (status === 500) log(`error on ${url.pathname}: ${String((e as Error)?.stack ?? e)}`);
         res.writeHead(status, { "content-type": "application/json" }).end(JSON.stringify({ error: String((e as Error)?.message ?? e) }));
       }
@@ -318,27 +516,50 @@ export async function startPlatform(opts: PlatformOptions = {}): Promise<Platfor
   } else if (opts.web === "static" && !existsSync(join(distDir, "index.html"))) {
     throw new Error("the web app isn't built: run `npm run build:web --workspace @zk-toip/settle`");
   }
-  await new Promise<void>((resolve) => server.listen(opts.port ?? 0, "127.0.0.1", resolve));
+  await new Promise<void>((resolve, reject) => server.once("error", reject).listen(opts.port ?? 0, host, () => resolve()));
   const port = (server.address() as { port: number }).port;
+  // Passkeys need a domain, not an IP address, so the app is used at http://localhost. On this machine only,
+  // "localhost" can mean ::1 as well as 127.0.0.1: answer on both, so it never reaches another server.
+  let server6: Server | undefined;
+  if (loopbackOnly && host !== "::1") {
+    const s6 = createServer((req, res) => server.emit("request", req, res));
+    s6.on("upgrade", (...a) => server.emit("upgrade", ...a));
+    const ok = await new Promise<boolean>((resolve) => s6.once("error", () => resolve(false)).listen(port, "::1", () => resolve(true)));
+    if (ok) server6 = s6;
+    else log(`couldn't also listen on [::1]:${port}; if http://localhost:${port} doesn't open Settle, use http://127.0.0.1:${port} (passkeys won't work there)`);
+  }
+  const appUrl = loopbackOnly ? `http://localhost:${port}` : `http://${publicHost}:${port}`;
 
   return {
-    // The address it actually listens on: "localhost" can resolve to another server on ::1.
-    url: `http://127.0.0.1:${port}`,
+    // The API's address. The app's (for people, and for passkeys) is appUrl.
+    url: `http://${host.includes(":") ? `[${host}]` : host === "0.0.0.0" ? "127.0.0.1" : host}:${port}`,
+    appUrl,
     config,
     chain,
-    chainServer,
+    cluster,
+    dataDir: data.dir,
     relay,
+    operators,
     processor,
     arbiter,
     verifier: ids.verifier,
-    mintTo: (to, units) => net.mintTo(mint, to, faucet, units),
+    mintTo: async (to, units) => {
+      const r = await chain.mintTo(mint, to, treasury, units);
+      if (!r.ok) throw new Error(r.error);
+    },
     close: async () => {
+      clearInterval(feePayerTimer);
       processor.stop();
       arbiter.stop();
+      agentsSaver.stop();
+      peopleSaver.stop();
       await vite?.close();
-      await new Promise<void>((resolve) => server.close(() => resolve()));
-      server.closeAllConnections?.();
-      await chainServer.close();
+      for (const s of [server, server6]) {
+        if (!s) continue;
+        await new Promise<void>((resolve) => s.close(() => resolve()));
+        s.closeAllConnections?.();
+      }
+      await cluster.close();
       await relay.close();
     },
   };

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { A, Field } from "./ui";
+import { A } from "./ui";
 import { navigate, needsYou, usePath, useSession } from "./model";
-import { accounts, activeAccountId, createAccount, Session, setActiveAccount, type Account } from "./session";
+import { accounts, activeAccountId, Session, setActiveAccount } from "./session";
+import { unlockedAccount, type Account, type Unlocked } from "./vault";
 import { Home } from "./pages/Home";
 import { PaymentDetail, Payments } from "./pages/Payments";
 import { Links } from "./pages/Links";
@@ -10,32 +11,45 @@ import { Profile } from "./pages/Profile";
 import { Checkout } from "./pages/Checkout";
 import { Console } from "./pages/Console";
 import { DevClock } from "./pages/DevClock";
+import { ProtectBanner, Unlock, Welcome } from "./pages/Accounts";
+
+export { Welcome };
 
 /** Opens this tab's account, or asks which one to use. */
 export interface AccountSession {
   session: Session | null;
-  state: "none" | "opening" | "open" | "locked" | "error";
+  /** "unlock": the tab knows its account, but its key needs unlocking (after a reload). */
+  state: "none" | "unlock" | "opening" | "open" | "locked" | "error";
   error?: string;
-  choose: (a: Account) => void;
+  /** The account waiting to be unlocked. */
+  account?: Account;
+  choose: (u: Unlocked) => void;
   leave: () => void;
 }
 
 /** The app keeps one session for the whole tab, so moving between pages never interrupts the party. */
 function useAccountSession(enabled: boolean): AccountSession {
   const [session, setSession] = useState<Session | null>(null);
-  const [state, setState] = useState<"none" | "opening" | "open" | "locked" | "error">(activeAccountId() ? "opening" : "none");
+  const [state, setState] = useState<AccountSession["state"]>(activeAccountId() ? "opening" : "none");
   const [error, setError] = useState<string>();
   const [id, setId] = useState(activeAccountId());
+  const [kick, setKick] = useState(0);
+  const account = id ? accounts().find((x) => x.id === id) : undefined;
   useEffect(() => {
-    const a = enabled ? accounts().find((x) => x.id === id) : undefined;
+    const a = enabled && id ? accounts().find((x) => x.id === id) : undefined;
     if (!a) {
       setState("none");
+      return;
+    }
+    const u = unlockedAccount(a.id);
+    if (!u) {
+      setState("unlock");
       return;
     }
     let cancelled = false;
     let opened: Session | null = null;
     setState("opening");
-    Session.open(a)
+    Session.open(u)
       .then((s) => {
         if (cancelled) return s === "locked" ? undefined : s.close();
         if (s === "locked") {
@@ -54,18 +68,20 @@ function useAccountSession(enabled: boolean): AccountSession {
       cancelled = true;
       opened?.close();
     };
-  }, [id, enabled]);
+  }, [id, enabled, kick]);
   return {
     session,
     state,
     error,
-    choose: (a) => {
-      setActiveAccount(a.id);
-      setId(a.id);
+    account,
+    choose: (u) => {
+      setActiveAccount(u.account.id);
+      setId(u.account.id);
+      setKick((k) => k + 1);
     },
     leave: () => {
       setActiveAccount(null);
-      // Dropping the lock needs the tab to let go of the party entirely.
+      // Dropping the lock (and the key in memory) needs the tab to let go of the party entirely.
       location.assign("/");
     },
   };
@@ -82,7 +98,8 @@ export function App() {
 function Dashboard({ path, acct }: { path: string; acct: AccountSession }) {
   if (acct.state === "opening") return <Splash text="Opening your account…" />;
   if (acct.state === "error") return <Splash text={`Couldn't reach the Settle network: ${acct.error}. Is the platform running?`} />;
-  if (!acct.session) return <Welcome locked={acct.state === "locked"} onChoose={acct.choose} />;
+  if (acct.state === "unlock" && acct.account) return <Unlock account={acct.account} onOpen={acct.choose} onOther={acct.leave} />;
+  if (!acct.session) return <Welcome locked={acct.state === "locked"} onOpen={acct.choose} />;
   return <Shell session={acct.session} path={path} onLeave={acct.leave} />;
 }
 
@@ -105,50 +122,6 @@ export function Wordmark() {
       </svg>
       Settle
     </span>
-  );
-}
-
-export function Welcome({ locked, onChoose, title, placeholder }: { locked?: boolean; onChoose: (a: Account) => void; title?: string; placeholder?: string }) {
-  const [name, setName] = useState("");
-  const list = accounts();
-  return (
-    <main className="welcome">
-      <Wordmark />
-      <h1>{title ?? "Get paid when the work is done."}</h1>
-      <p className="lede">
-        Settle holds a payment in an escrow that nobody controls alone, and releases it when the work is confirmed. Your keys stay in this browser.
-      </p>
-      {locked && <p className="notice">That account is open in another tab. Pick another, or close that tab first.</p>}
-      <form
-        className="welcome-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (name.trim()) onChoose(createAccount(name));
-        }}
-      >
-        <Field label="Your name or your business's name" hint="People you pay or get paid by see this name.">
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder={placeholder ?? "Joe's Plumbing"} autoFocus maxLength={60} />
-        </Field>
-        <button className="btn btn-primary" disabled={!name.trim()}>
-          Create account
-        </button>
-      </form>
-      {list.length > 0 && (
-        <section className="account-list">
-          <h2>Accounts in this browser</h2>
-          <ul>
-            {list.map((a) => (
-              <li key={a.id}>
-                <button type="button" className="linkish" onClick={() => onChoose(a)}>
-                  {a.name}
-                </button>
-              </li>
-            ))}
-          </ul>
-          <p className="hint">Each tab can use a different account, so you can be the business in one tab and the customer in another.</p>
-        </section>
-      )}
-    </main>
   );
 }
 
@@ -196,16 +169,20 @@ function Shell({ session, path, onLeave }: { session: Session; path: string; onL
           ))}
         </ul>
         <div className="rail-foot">
-          <DevClock now={session.now} />
+          <span className="chip chip-network" title={session.config.rpcUrl}>
+            {session.config.cluster === "local" ? "Local network" : `Solana ${session.config.cluster}`}
+          </span>
+          {session.config.devClock ? <DevClock now={session.now} /> : null}
           <a href="/console" target="_blank" rel="noreferrer" className="small">
             Operator view
           </a>
         </div>
       </nav>
       <main className="page">
+        <ProtectBanner u={session.unlocked} onProtected={() => location.reload()} />
         {session.reset && (
           <p className="notice">
-            The local network restarted, so payments from before are gone. Your account and keys are still here.
+            This Settle network was started afresh, so payments from before are gone. Your account and keys are still here.
             <button type="button" className="linkish" onClick={() => ((session.reset = false), session.changed())}>
               Dismiss
             </button>

@@ -1,47 +1,19 @@
 /**
- * The browser side of a Settle account: the identity lives in this browser's storage, the party runs in
- * this tab, and its state is saved after every change. One tab per account at a time (a Web Lock), so
- * two tabs never answer the same messages.
+ * The browser side of a Settle account: the key is sealed in this browser's storage (vault.ts), the party
+ * runs in this tab once the account is unlocked, and its state is saved, sealed, after every change. One tab
+ * per account at a time (a Web Lock), so two tabs never answer the same messages.
  */
-import { fromB64u, identityFromSeed, toB64u, type OutboxItem, type OutboxStore } from "@zk-toip/trust-core";
+import { identityFromSeed, type OutboxItem, type OutboxStore } from "@zk-toip/trust-core";
 import { SettleApi, type Person, type PlatformConfig } from "../../src/client/client";
 import { SettlePolicy } from "../../src/protocol/policy";
 import type { Party, PartySnapshot } from "../../src/agents/party";
 import wasmUrl from "../../policies/policy.wasm?url";
+import { readState, writeState, type Account, type Unlocked } from "./vault";
 
-export interface Account {
-  id: string;
-  name: string;
-  seed: string;
-  created: string;
-}
+export { accounts, removeAccount, type Account } from "./vault";
 
-const ACCOUNTS = "settle.accounts";
 const ACTIVE = "settle.active";
 export const api = new SettleApi("");
-
-export function accounts(): Account[] {
-  try {
-    return JSON.parse(localStorage.getItem(ACCOUNTS) ?? "[]");
-  } catch {
-    return [];
-  }
-}
-
-export function createAccount(name: string): Account {
-  const a: Account = { id: crypto.randomUUID(), name: name.trim().slice(0, 60), seed: toB64u(crypto.getRandomValues(new Uint8Array(32))), created: new Date().toISOString() };
-  localStorage.setItem(ACCOUNTS, JSON.stringify([...accounts(), a]));
-  return a;
-}
-
-export function removeAccount(id: string): void {
-  const a = accounts().find((x) => x.id === id);
-  if (!a) return;
-  const did = identityFromSeed(fromB64u(a.seed)).did;
-  localStorage.removeItem(`settle.state.${did}`);
-  localStorage.removeItem(`settle.outbox.${did}`);
-  localStorage.setItem(ACCOUNTS, JSON.stringify(accounts().filter((x) => x.id !== id)));
-}
 
 /** The account this tab is using. Each tab picks its own, so one browser can be two people side by side. */
 export const activeAccountId = (): string | null => sessionStorage.getItem(ACTIVE);
@@ -88,23 +60,24 @@ export class Session {
   private timers: ReturnType<typeof setInterval>[] = [];
   private saveTimer?: ReturnType<typeof setTimeout>;
 
+  private saving: Promise<void> = Promise.resolve();
+
   private constructor(
-    readonly account: Account,
+    readonly unlocked: Unlocked,
     readonly config: PlatformConfig,
     readonly party: Party,
   ) {}
 
-  static async open(account: Account): Promise<Session | "locked"> {
+  get account(): Account {
+    return this.unlocked.account;
+  }
+
+  static async open(u: Unlocked): Promise<Session | "locked"> {
+    const account = u.account;
     if (!(await lockAccount(account.id))) return "locked";
     const config = await api.config();
-    const identity = identityFromSeed(fromB64u(account.seed));
-    const stateKey = `settle.state.${identity.did}`;
-    let saved: { networkId: string; snapshot: PartySnapshot } | null = null;
-    try {
-      saved = JSON.parse(localStorage.getItem(stateKey) ?? "null");
-    } catch {
-      saved = null;
-    }
+    const identity = identityFromSeed(u.seed);
+    const saved = await readState<{ networkId: string; snapshot: PartySnapshot }>(u);
     const fresh = !!saved && saved.networkId !== config.networkId;
     if (fresh) localStorage.removeItem(`settle.outbox.${identity.did}`);
     let session!: Session;
@@ -116,7 +89,7 @@ export class Session {
       snapshot: saved && !fresh ? saved.snapshot : undefined,
       onChange: () => session?.changed(),
     });
-    session = new Session(account, config, party);
+    session = new Session(u, config, party);
     session.reset = fresh;
     await party.start();
     await party.openWallet();
@@ -140,17 +113,22 @@ export class Session {
     this.saveTimer = setTimeout(() => this.save(), 250);
   }
 
-  save(): void {
-    localStorage.setItem(`settle.state.${this.party.did}`, JSON.stringify({ networkId: this.config.networkId, snapshot: this.party.snapshot() }));
+  /** Saves the party's state, sealed with the account's key. Saves run one after another, newest last. */
+  save(): Promise<void> {
+    const value = { networkId: this.config.networkId, snapshot: this.party.snapshot() };
+    this.saving = this.saving.then(() => writeState(this.unlocked, value)).catch((e) => console.error("settle: couldn't save", e));
+    return this.saving;
   }
 
   async refresh(): Promise<void> {
     try {
       await this.party.tick();
       const [wallet, now] = await Promise.all([this.party.walletBalance(), this.party.chain.now()]);
-      if (wallet !== this.wallet || Number(now) !== this.now) {
+      // The chain's clock ticks every second; pages show it by the minute, so redraw (and save) only then.
+      const minuteChanged = Math.floor(Number(now) / 60) !== Math.floor(this.now / 60);
+      this.now = Number(now);
+      if (wallet !== this.wallet || minuteChanged) {
         this.wallet = wallet;
-        this.now = Number(now);
         this.changed();
       }
     } catch (e) {
@@ -171,7 +149,7 @@ export class Session {
 
   close(): void {
     this.timers.forEach(clearInterval);
-    this.save();
+    void this.save();
     this.party.stop();
   }
 }

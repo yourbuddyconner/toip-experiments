@@ -317,3 +317,61 @@ If the payee is offline, the request waits on the relay, and checkout finishes w
 **Payment accounts and the wallet.** Each party has a wallet: a Solana key and a USDC account derived from its identity. Each payment still gets its own key and account. When a payment finishes, its money stays in that payment's account until the party moves it to the wallet. Moving it links the two on the chain, so it is the party's choice when to do it.
 
 **Requests outside the queue.** The relay delivers a party's messages in order, and a party handles them one at a time. A task that waited for the processor's reply inside that queue could block the reply behind other messages. Opening, reclaiming and claiming therefore build their transactions inside the queue, wait for the processor outside it, and record the result inside it again.
+
+## 18. Running for real: persistence, real clusters, operators, sealed keys (2026-11-06)
+
+§17 left four gaps. This section closes them.
+
+**The platform keeps its state.** A platform has a data directory (`src/platform/state.ts`). By default it is `projects/settle/.data/<cluster>`, and `--fresh` starts over. It holds:
+- `platform.json`: the platform's identities, its Solana keys (as seeds), the network id and the operators. Only the user can read this file.
+- `agents.json`: the processor's checked escrows, the signatures it holds and its transparency log, plus the arbiter's cases. It is written within a second of any change, and the log is re-verified when loaded.
+- `directory.json`: display names, and whom Settle Verify vouched for.
+- `relay.db`: messages waiting for offline parties.
+- `chain.bin` (local cluster only): the whole LiteSVM state, with its clock offset in `chain.bin.json`.
+
+The network id stays the same while the data stays. Browsers keep payments per network id, so a restart loses nothing. If a kept platform's local chain is deleted, it gets a new network id, and browsers drop the payments that are gone.
+
+**The local cluster keeps real time.** Its clock is wall-clock time plus however far it has been skipped ahead, and it never goes backwards. Time passes while the platform is off, as it would on a real chain. Clients confirm what they send and read at `confirmed`, through standard calls (`getSignatureStatuses`). They take chain time from the Clock sysvar, which is what the program reads. So nothing in the client relies on the local cluster being synchronous.
+
+**Real clusters.** `--cluster devnet` (or `localnet`, or any RPC URL) runs the same platform against a real Solana cluster (`src/platform/cluster.ts`). The differences:
+- **The program must be deployed.** `npm run deploy -- --cluster devnet` uses the Solana CLI to deploy `program/dist/settle_escrow.so` at the development program id. The platform's treasury is the upgrade authority.
+- **Nothing is free.** The platform's **treasury** key pays for:
+  - setup (the test-USDC mint and the processor's fee account);
+  - topping up the processor's fee payer;
+  - the **gas station** (`POST /api/gas`).
+
+  Parties used to airdrop SOL to themselves. Now they ask the gas station for exactly the rent and fees their own accounts need: at most 0.005 SOL at a time, only to addresses holding under 0.01 SOL, and rate-limited per client. On a local cluster the gas station airdrops instead.
+- **No time travel.** `devClock` is false, and the app hides the clock controls.
+- **The faucet** still mints the platform's own test USDC. Circle's devnet USDC is a different mint, and the platform doesn't hold its authority.
+
+`tests/cluster.test.ts` runs the following against a real cluster when `SETTLE_CLUSTER` is set:
+- a paid link;
+- a dispute held and ruled;
+- a refund.
+
+It passes against `solana-test-validator`. Devnet is wired the same way. Its RPC faucet is closed, so the treasury must be funded by hand (faucet.solana.com) before deploying.
+
+**Operators sign in with their own key** (`src/platform/operators.ts`). An operator is a DID on the platform's list:
+1. To sign in, the browser fetches a one-time challenge, bound to this platform's network id and good for two minutes.
+2. The account's identity key signs it as a `settle/operator-login` document.
+3. The platform sets a 12-hour session cookie (HttpOnly, SameSite=Strict).
+
+There is no password, and the platform never holds an operator's key. A new platform prints a setup link once. The first account to sign in with it becomes the operator and can add or remove others; removing an operator ends their sessions.
+
+Only operators can do the following:
+- see the arbiter's cases (which hold names and dispute reasons) and rule on them;
+- read the processor's books.
+
+The transparency log stays public (`GET /api/log`).
+
+Every POST must be JSON, and a request whose `Origin` isn't this host is refused. By default the platform listens on 127.0.0.1 (and ::1). With `HOST` set to listen elsewhere:
+- the dev clock also needs an operator;
+- the platform should sit behind TLS, with `Secure` added to the cookie.
+
+**Keys are sealed in the browser** (`web/src/vault.ts`). The identity seed is never stored in the clear. It is encrypted with AES-GCM under a key that exists only while the account is unlocked:
+- **Passkey (preferred).** The WebAuthn PRF extension makes the passkey produce a secret for a stored salt, and HKDF turns that into the AES key. Unlocking is Touch ID, Windows Hello or a phone.
+- **Passphrase (fallback).** Where the browser's passkeys can't do PRF, or the page isn't at a domain, PBKDF2-SHA256 with 600,000 rounds derives the key from a passphrase.
+
+The account's saved payment state is sealed under the same key. Each sealed blob is bound, as AES-GCM associated data, to its account and its purpose. An account from before sealing is asked to protect itself, and the clear copy is then removed. A tab asks to unlock again after a reload. **Profile → Back up this account** shows the seed as a backup code, which restores the account in another browser. Without it, losing the passkey loses the account.
+
+Passkeys need a domain, not an IP address. The app is therefore served at `http://localhost:<port>`, listening on both 127.0.0.1 and ::1 so that `localhost` can never reach another server, and `127.0.0.1` redirects there. The e2e test gives each browser page a virtual authenticator with PRF, so every account in it is made and unlocked with a real WebAuthn ceremony. One account uses a passphrase instead.

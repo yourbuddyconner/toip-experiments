@@ -3,10 +3,10 @@
  * client code talks to it, to devnet, or to mainnet by changing a URL. Node only.
  *
  * Standard methods: getLatestBlockhash, sendTransaction, simulateTransaction, getAccountInfo,
- * getBalance, getSlot, getBlockTime, getMinimumBalanceForRentExemption, requestAirdrop, getHealth, getVersion.
+ * getSignatureStatuses, getBalance, getSlot, getBlockTime, getMinimumBalanceForRentExemption, requestAirdrop, getHealth, getVersion.
  * Development methods: settle_info (program id), settle_advanceClock (move chain time forward).
  */
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { getBase58Decoder, getBase64Encoder, getCompiledTransactionMessageDecoder, getTransactionDecoder, lamports, type Address, type Transaction } from "@solana/kit";
 import { FailedTransactionMetadata, LiteSVM } from "litesvm";
@@ -21,8 +21,21 @@ export interface ChainServer {
 type RpcError = { code: number; message: string; data?: unknown };
 const toB64 = (b: Uint8Array) => Buffer.from(b).toString("base64");
 
-export async function startChainServer(opts: { port: number; host?: string; snapshot?: string; startTime?: number }): Promise<ChainServer> {
+export interface ChainServerOptions {
+  port: number;
+  host?: string;
+  /** A file to keep the chain in: loaded at start if it exists, saved as it changes and on close. */
+  snapshot?: string;
+  /** Where the clock starts (ms), for a chain that doesn't follow real time. */
+  startTime?: number;
+  /** The clock follows real time, as on a real cluster, plus however far it's been skipped ahead. */
+  realTime?: boolean;
+}
+
+export async function startChainServer(opts: ChainServerOptions): Promise<ChainServer> {
   const svm = opts.snapshot && existsSync(opts.snapshot) ? LiteSVM.loadFromFile(opts.snapshot) : undefined;
+  const metaFile = opts.snapshot ? `${opts.snapshot}.json` : undefined;
+  const meta: { offset: number } = metaFile && svm && existsSync(metaFile) ? JSON.parse(readFileSync(metaFile, "utf8")) : { offset: 0 };
   // Blockhashes behave as on a real cluster: a new one every ~400 ms, any of the last 150 accepted.
   // LiteSVM itself accepts only the latest, so the server checks recency and LiteSVM's check is off.
   const net = await Simnet.create({ svm, blockhashCheck: false });
@@ -39,15 +52,31 @@ export async function startChainServer(opts: { port: number; host?: string; snap
     return recent.at(-1)!;
   };
   if (!svm) net.setNow(BigInt(Math.floor((opts.startTime ?? Date.now()) / 1000)));
+  /** Real-time clock: chain time is wall time plus `meta.offset` seconds, and never goes backwards. */
+  const tickClock = () => {
+    if (!opts.realTime) return;
+    const target = BigInt(Math.floor(Date.now() / 1000) + meta.offset);
+    if (target > net.now()) net.setNow(target);
+  };
+  tickClock();
   let dirty = false;
   const save = () => {
     if (opts.snapshot && dirty) {
-      net.svm.saveToFile(opts.snapshot);
+      net.svm.saveToFile(`${opts.snapshot}.tmp`);
+      renameSync(`${opts.snapshot}.tmp`, opts.snapshot);
+      writeFileSync(metaFile!, JSON.stringify(meta));
       dirty = false;
     }
   };
   const saver = setInterval(save, 2000);
   saver.unref();
+  /** Signatures this node has processed, so clients can confirm them as on a real cluster. Everything here is final at once. */
+  const seen = new Map<string, number>();
+  const remember = (sig: string) => {
+    seen.set(sig, Number(net.svm.getClock().slot));
+    if (seen.size > 20_000) seen.delete(seen.keys().next().value!);
+    return sig;
+  };
 
   const methods: Record<string, (params: unknown[]) => unknown> = {
     getHealth: () => "ok",
@@ -74,16 +103,28 @@ export async function startChainServer(opts: { port: number; host?: string; snap
       };
     },
     requestAirdrop: ([addr, amount]) => {
-      net.svm.airdrop(addr as Address, lamports(BigInt(Number(amount))));
+      // LiteSVM airdrops are transactions: the same one twice under one blockhash is refused as already
+      // processed. Move the blockhash on and try again, and never report an airdrop that didn't happen.
+      let r = net.svm.airdrop(addr as Address, lamports(BigInt(Number(amount))));
+      if (r instanceof FailedTransactionMetadata) {
+        advanceBlockhash();
+        r = net.svm.airdrop(addr as Address, lamports(BigInt(Number(amount))));
+      }
+      if (r instanceof FailedTransactionMetadata || r === null) throw { code: -32603, message: `airdrop failed: ${r?.toString() ?? "unknown"}` } satisfies RpcError;
       dirty = true;
-      return `airdrop${Date.now()}`;
+      return remember(`airdrop-${crypto.randomUUID()}`);
     },
     settle_advanceClock: ([seconds]) => {
+      meta.offset += Number(seconds);
       net.setNow(net.now() + BigInt(Number(seconds)));
       advanceBlockhash();
       dirty = true;
       return { unixTimestamp: Number(net.now()) };
     },
+    getSignatureStatuses: ([sigs]) => ({
+      context: { slot: Number(net.svm.getClock().slot) },
+      value: (sigs as string[]).map((s) => (seen.has(s) ? { slot: seen.get(s)!, confirmations: null, err: null, status: { Ok: null }, confirmationStatus: "finalized" } : null)),
+    }),
     sendTransaction: ([wire]) => submit(String(wire), false),
     simulateTransaction: ([wire]) => submit(String(wire), true),
   };
@@ -107,7 +148,7 @@ export async function startChainServer(opts: { port: number; host?: string; snap
       throw { code: -32002, message: `Transaction failed: ${r.toString()}`, data: { logs: r.meta().logs(), err: r.toString() } } satisfies RpcError;
     }
     dirty = true;
-    return getBase58Decoder().decode(r.signature());
+    return remember(getBase58Decoder().decode(r.signature()));
   }
 
   const server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
@@ -118,6 +159,7 @@ export async function startChainServer(opts: { port: number; host?: string; snap
     if (req.method !== "POST") return void res.writeHead(405).end();
     let body = "";
     for await (const chunk of req) body += chunk;
+    tickClock();
     const handle = (call: { id?: unknown; method?: string; params?: unknown[] }) => {
       const fn = methods[call.method ?? ""];
       if (!fn) return { jsonrpc: "2.0", id: call.id ?? null, error: { code: -32601, message: `method not found: ${call.method}` } };

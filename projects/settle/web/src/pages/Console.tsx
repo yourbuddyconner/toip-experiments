@@ -2,8 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import type { LogEntry, LogHead } from "../../../src/protocol/log";
 import { Empty, Field } from "../ui";
 import { day, money, short, toUnits, when } from "../model";
-import { api } from "../session";
-import { Wordmark } from "../App";
+import { identityFromSeed } from "@zk-toip/trust-core";
+import type { PlatformConfig } from "../../../src/client/client";
+import { accounts, api } from "../session";
+import { Splash, Wordmark } from "../App";
+import { UnlockAccount } from "./Accounts";
+import type { Unlocked } from "../vault";
 import { DevClock } from "./DevClock";
 
 interface ProcessorView {
@@ -35,15 +39,102 @@ interface Case {
   refundAfter: number | null;
 }
 
-/** What the platform's operators see: the processor's books and log, the arbiter's cases, and the network clock. */
+interface OperatorStatus {
+  operator: string | null;
+  setupNeeded: boolean;
+  operators?: string[];
+}
+
+/** The operator view, behind sign-in: an operator signs a challenge with their account's key. */
 export function Console() {
-  const [tab, setTab] = useState<"arbitration" | "processor">("arbitration");
+  const [status, setStatus] = useState<OperatorStatus | null>(null);
+  const [config, setConfig] = useState<PlatformConfig | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const check = useCallback(async () => {
+    try {
+      const [st, c] = await Promise.all([api.get<OperatorStatus>("/api/operator"), api.config()]);
+      setStatus(st);
+      setConfig(c);
+      setError(null);
+    } catch (e) {
+      setError(String((e as Error).message));
+    }
+  }, []);
+  useEffect(() => void check(), [check]);
+  if (error) return <Splash text={`Can't reach the platform: ${error}`} />;
+  if (!status || !config) return <Splash text="Checking who you are…" />;
+  if (!status.operator) return <SignIn status={status} onSignedIn={check} />;
+  return (
+    <OperatorConsole
+      config={config}
+      me={status.operator}
+      onSignOut={async () => {
+        await api.operatorSignOut();
+        await check();
+      }}
+    />
+  );
+}
+
+function SignIn({ status, onSignedIn }: { status: OperatorStatus; onSignedIn: () => Promise<void> }) {
+  const setupCode = new URLSearchParams(location.search).get("setup") ?? undefined;
+  const [error, setError] = useState<string>();
+  const list = accounts();
+  const signIn = async (u: Unlocked) => {
+    setError(undefined);
+    try {
+      await api.operatorSignIn(identityFromSeed(u.seed), status.setupNeeded ? setupCode : undefined);
+      if (setupCode) history.replaceState(null, "", "/console");
+      await onSignedIn();
+    } catch (e) {
+      setError(String((e as Error).message));
+    }
+  };
+  return (
+    <main className="welcome">
+      <Wordmark />
+      <h1>Operator view</h1>
+      {status.setupNeeded && !setupCode ? (
+        <p className="lede">
+          This platform has no operator yet. When it started, it printed a link to become the first one (<code>/console?setup=…</code>). Open that link on this machine.
+        </p>
+      ) : status.setupNeeded ? (
+        <p className="lede">This platform has no operator yet. Sign in with one of your accounts to become its first operator; you can add others afterwards.</p>
+      ) : (
+        <p className="lede">Operators sign in with their Settle account: the account's key signs a one-time challenge. Choose your account.</p>
+      )}
+      {(!status.setupNeeded || setupCode) &&
+        (list.length ? (
+          <section className="account-list">
+            <h2>Accounts in this browser</h2>
+            <ul>
+              {list.map((a) => (
+                <li key={a.id}>
+                  <UnlockAccount account={a} onOpen={(u) => void signIn(u)} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : (
+          <p>
+            There are no Settle accounts in this browser. <a href="/">Make one</a>, then come back here.
+          </p>
+        ))}
+      {error && <p className="error">{error}</p>}
+    </main>
+  );
+}
+
+/** What the platform's operators see: the processor's books and log, the arbiter's cases, the operators, and the network clock. */
+function OperatorConsole({ config, me, onSignOut }: { config: PlatformConfig; me: string; onSignOut: () => Promise<void> }) {
+  const [tab, setTab] = useState<"arbitration" | "processor" | "operators">("arbitration");
   const [proc, setProc] = useState<ProcessorView | null>(null);
   const [arb, setArb] = useState<{ cases: Case[]; now: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const load = useCallback(async () => {
     try {
       const [p, a] = await Promise.all([api.get<ProcessorView>("/api/processor"), api.get<{ cases: Case[]; now: number }>("/api/arbiter")]);
+      if (!p || !a) return;
       setProc(p);
       setArb(a);
       setError(null);
@@ -63,7 +154,14 @@ export function Console() {
       <header className="console-head">
         <Wordmark />
         <span className="console-title">Operator view</span>
-        <DevClock now={arb?.now ?? 0} onMoved={() => void load()} />
+        <span className="chip chip-network">{config.cluster === "local" ? "Local network" : `Solana ${config.cluster}`}</span>
+        {config.devClock ? <DevClock now={arb?.now ?? 0} onMoved={() => void load()} /> : null}
+        <span className="console-me">
+          Signed in as {config.names[me] ?? short(me)}{" "}
+          <button type="button" className="linkish small" onClick={() => void onSignOut()}>
+            Sign out
+          </button>
+        </span>
       </header>
       {error && <p className="error">Can't reach the platform: {error}</p>}
       <div className="tabs" role="tablist">
@@ -73,9 +171,69 @@ export function Console() {
         <button role="tab" aria-selected={tab === "processor"} className={tab === "processor" ? "tab active" : "tab"} onClick={() => setTab("processor")}>
           Processor
         </button>
+        <button role="tab" aria-selected={tab === "operators"} className={tab === "operators" ? "tab active" : "tab"} onClick={() => setTab("operators")}>
+          Operators
+        </button>
       </div>
-      {tab === "arbitration" ? <Arbitration cases={disputed} all={arb?.cases.length ?? 0} reload={load} /> : <Processor v={proc} />}
+      {tab === "arbitration" ? <Arbitration cases={disputed} all={arb?.cases.length ?? 0} reload={load} /> : tab === "processor" ? <Processor v={proc} /> : <OperatorList me={me} />}
     </div>
+  );
+}
+
+function OperatorList({ me }: { me: string }) {
+  const [list, setList] = useState<string[]>([]);
+  const [people, setPeople] = useState<Record<string, string>>({});
+  const [did, setDid] = useState("");
+  const [error, setError] = useState<string>();
+  const load = useCallback(async () => {
+    const [st, dir] = await Promise.all([api.get<OperatorStatus>("/api/operator"), api.people()]);
+    setList(st.operators ?? []);
+    setPeople(Object.fromEntries(dir.map((p) => [p.did, p.name])));
+  }, []);
+  useEffect(() => void load(), [load]);
+  const act = async (path: string, d: string) => {
+    setError(undefined);
+    try {
+      await api.post(path, { did: d });
+      setDid("");
+      await load();
+    } catch (e) {
+      setError(String((e as Error).message));
+    }
+  };
+  return (
+    <section className="section">
+      <p className="lede">Operators can see every case and the processor's books, and rule on disputes as Settle Arbitration. Each signs in with their own account.</p>
+      <ul className="operators">
+        {list.map((d) => (
+          <li key={d}>
+            <span>{people[d] ?? "Unnamed account"}</span> <span className="mono small breakable">{d}</span>{" "}
+            {d === me ? (
+              <span className="hint small">you</span>
+            ) : (
+              <button type="button" className="linkish small" onClick={() => void act("/api/operator/remove", d)}>
+                Remove
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+      <form
+        className="form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void act("/api/operator/add", did.trim());
+        }}
+      >
+        <Field label="Add an operator" hint="Their account's identifier, from their Profile page (did:key:…).">
+          <input value={did} onChange={(e) => setDid(e.target.value)} className="mono" spellCheck={false} />
+        </Field>
+        <button className="btn" disabled={!did.trim().startsWith("did:")}>
+          Add operator
+        </button>
+        {error && <p className="error">{error}</p>}
+      </form>
+    </section>
   );
 }
 

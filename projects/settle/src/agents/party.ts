@@ -124,11 +124,8 @@ export interface PartyOptions extends AgentOptions {
   onChange?: () => void;
 }
 
-/** A token account for a payment key, with a little SOL for its rent from the faucet (devnet-style). */
-async function tokenAccountFor(chain: Chain, key: PaymentKey, mint: Address): Promise<Address> {
-  await chain.airdrop(key.address, 1n);
-  return chain.createTokenAccount(mint, key.address, key.signer, await generateKeyPairSigner());
-}
+/** Network fees a key keeps on hand: a few transactions' worth (5,000 lamports a signature). */
+const FEE_FLOAT = 50_000n;
 
 export class Party extends Agent {
   readonly credentials: Credential[] = [];
@@ -229,11 +226,17 @@ export class Party extends Agent {
     const key = await paymentKeyFromSeed(seed("settle/wallet/v1"));
     const tokenKey = await paymentKeyFromSeed(seed("settle/wallet-token/v1"));
     if (!(await this.chain.exists(tokenKey.address))) {
-      await this.chain.airdrop(key.address, 2n);
+      await this.ensureSol(key.address, (await this.chain.rent(165)) + FEE_FLOAT * 2n);
       await this.chain.createTokenAccount(this.directory.mint, key.address, key.signer, tokenKey.signer);
     }
     this.wallet = { key, token: tokenKey.address };
     return this.wallet;
+  }
+
+  /** A token account for a payment key, with SOL for its rent and the fee to move its money on later. */
+  private async tokenAccountFor(key: PaymentKey): Promise<Address> {
+    await this.ensureSol(key.address, (await this.chain.rent(165)) + FEE_FLOAT);
+    return this.chain.createTokenAccount(this.directory.mint, key.address, key.signer, await generateKeyPairSigner());
   }
 
   async walletBalance(): Promise<bigint> {
@@ -250,6 +253,7 @@ export class Party extends Agent {
         if (!p || (p.role === "payer" && !p.escrow && !p.cancelled)) continue;
         const bal = await this.chain.balance(k.token);
         if (bal === 0n) continue;
+        await this.ensureSol(k.key.address, FEE_FLOAT / 5n);
         const r = await this.chain.transfer(k.token, w.token, k.key.signer, bal);
         if (!r.ok) continue;
         total += bal;
@@ -304,7 +308,7 @@ export class Party extends Agent {
   private async invoice(payerDid: string, purpose: string, amountUnits: bigint, extra: Pick<OfferPayload, "link" | "checkout" | "conditions"> = {}): Promise<string> {
     const id = `pay-${crypto.randomUUID()}`;
     const key = await derivePaymentKey(this.identity, id);
-    const token = await tokenAccountFor(this.chain, key, this.directory.mint);
+    const token = await this.tokenAccountFor(key);
     this.keys.set(id, { key, token });
     const offer: OfferPayload = {
       payment: id,
@@ -556,7 +560,7 @@ export class Party extends Agent {
     let k = this.keys.get(paymentId);
     if (!k) {
       const key = await derivePaymentKey(this.identity, paymentId);
-      k = { key, token: await tokenAccountFor(this.chain, key, this.directory.mint) };
+      k = { key, token: await this.tokenAccountFor(key) };
       this.keys.set(paymentId, k);
     }
     const fee = facilitatorFee(units(r.offer.units), conditions.feeBps, conditions.minFeeUnits);
@@ -579,6 +583,7 @@ export class Party extends Agent {
       const w = await this.openWallet();
       const need = units(r.offer.units) + fee - (await this.chain.balance(k.token));
       if (need > 0n) {
+        await this.ensureSol(w.key.address, FEE_FLOAT / 5n);
         const t = await this.chain.transfer(w.token, k.token, w.key.signer, need);
         if (!t.ok) throw new Error(`couldn't move ${usdc(need)} from the wallet: ${t.error.split("\n")[0]}`);
         this.note(p, `moved ${usdc(need)} from the wallet into this payment's account`);
@@ -734,7 +739,7 @@ export class Party extends Agent {
     const owed = !s ? 0n : p.role === "payee" ? s.payeeOwed : s.payerOwed;
     if (owed === 0n && !(p.role === "payer" && s)) throw new Error("nothing is owed");
     const wire = await this.serial(async () => {
-      const to = await tokenAccountFor(this.chain, k.key, this.directory.mint);
+      const to = await this.tokenAccountFor(k.key);
       this.keys.set(paymentId, { key: k.key, token: to });
       return buildForSponsor(this.chain, this.processorFeePayer(), [await claimInstruction({ programId: this.chain.programId, claimant: k.key.signer, escrow: p.escrow!, to, rentPayer: this.processorFeePayer() })]);
     });
