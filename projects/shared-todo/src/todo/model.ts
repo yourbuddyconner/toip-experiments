@@ -14,7 +14,9 @@ export interface Item {
   addedAt: string;
 }
 
-const order = (a: Op, b: Op) => (a.at !== b.at ? (a.at < b.at ? -1 : 1) : a.issuer !== b.issuer ? (a.issuer < b.issuer ? -1 : 1) : a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+const time = (op: Op) => Date.parse(op.at);
+const order = (a: Op, b: Op) =>
+  time(a) !== time(b) ? time(a) - time(b) : a.issuer !== b.issuer ? (a.issuer < b.issuer ? -1 : 1) : a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 
 /**
  * One device's copy of a list, built from the ops it accepted (design v2 §4.6).
@@ -60,7 +62,9 @@ export class ListModel {
   }
 
   items(): Item[] {
-    return [...this.state().values()].sort((a, b) => (a.addedAt !== b.addedAt ? (a.addedAt < b.addedAt ? -1 : 1) : a.author < b.author ? -1 : 1));
+    return [...this.state().values()].sort((a, b) =>
+      Date.parse(a.addedAt) !== Date.parse(b.addedAt) ? Date.parse(a.addedAt) - Date.parse(b.addedAt) : a.author < b.author ? -1 : 1,
+    );
   }
 
   private state(): Map<string, Item> {

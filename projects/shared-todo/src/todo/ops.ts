@@ -48,6 +48,8 @@ export async function readableText(op: Op, me: Identity): Promise<string | undef
 }
 
 const KINDS = new Set(["add", "check", "uncheck", "edit", "delete"]);
+/** Strict UTC ISO 8601, so times compare the same way on every device and browser (review I2). */
+export const STRICT_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/;
 const isStr = (x: unknown): x is string => typeof x === "string";
 
 /** Shape check before anything else touches an op (design v2 §4.5 rule 1). */
@@ -55,7 +57,7 @@ export function validateOpShape(x: unknown): x is Op {
   const o = x as Op;
   if (!o || typeof o !== "object") return false;
   if (o.type !== "todo/op" || !isStr(o.id) || !isStr(o.list) || !isStr(o.issuer) || !KINDS.has(o.kind) || !isStr(o.itemId)) return false;
-  if (!isStr(o.at) || Number.isNaN(Date.parse(o.at)) || !isStr(o.membershipId)) return false;
+  if (!isStr(o.at) || !STRICT_UTC.test(o.at) || !isStr(o.membershipId)) return false;
   if (o.text !== undefined && !isStr(o.text)) return false;
   if (o.readers !== undefined && !(Array.isArray(o.readers) && o.readers.every(isStr))) return false;
   if (o.sealed !== undefined) {

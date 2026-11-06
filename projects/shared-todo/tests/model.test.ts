@@ -94,3 +94,17 @@ describe("ListModel (design 4.6)", () => {
     expect(model2.item("p")).toMatchObject({ locked: false, text: "Carol's birthday present" });
   });
 });
+
+describe("review fixes: ordering compares times as numbers (I2)", () => {
+  it("orders a millisecond-precision time and a whole-second time by value", async () => {
+    const { f } = await ops();
+    const model = new ListModel();
+    model.insert(signOp(f.people.bob, f.clock, { list: f.list.did, membershipId: "x", kind: "add", itemId: "i", text: "a" }));
+    const base = f.clock.now() + 5000;
+    const e1 = { ...signOp(f.people.alice, f.clock, { list: f.list.did, membershipId: "x", kind: "edit", itemId: "i", text: "later" }), at: new Date(base + 500).toISOString() };
+    const e2 = { ...signOp(f.people.bob, f.clock, { list: f.list.did, membershipId: "x", kind: "edit", itemId: "i", text: "earlier" }), at: new Date(base).toISOString().replace(".000Z", "Z") };
+    model.insert(e1);
+    model.insert(e2);
+    expect(model.item("i")?.text).toBe("later");
+  });
+});

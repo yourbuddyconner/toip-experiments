@@ -28,6 +28,9 @@ export interface OutboxStore {
 const SENT_TIMEOUT_MS = 10_000;
 const BACKOFF_START_MS = 500;
 const BACKOFF_MAX_MS = 15_000;
+const QUEUE_FULL_RETRY_MS = 30_000;
+/** The relay's per-message limit. A larger message is refused here rather than kept in the outbox forever. */
+export const MAX_WIRE_BYTES = 256 * 1024;
 
 export class RelayTransport implements Transport {
   status: RelayStatus = "offline";
@@ -36,6 +39,7 @@ export class RelayTransport implements Transport {
   private stopped = true;
   private backoff = BACKOFF_START_MS;
   private retry?: ReturnType<typeof setTimeout>;
+  private retryFull?: ReturnType<typeof setTimeout>;
   private readonly deliverers = new Map<string, (wire: Uint8Array) => Promise<void>>();
   private outbox: OutboxItem[] = [];
   private loaded: Promise<void>;
@@ -70,6 +74,7 @@ export class RelayTransport implements Transport {
   stop(): void {
     this.stopped = true;
     clearTimeout(this.retry);
+    clearTimeout(this.retryFull);
     this.ready = false;
     this.ws?.close();
     this.ws = undefined;
@@ -101,6 +106,7 @@ export class RelayTransport implements Transport {
   /** Hands a sealed message to the relay, or keeps it in the outbox until the relay is reachable. */
   async post(from: string, to: string, wire: Uint8Array): Promise<Delivery> {
     await this.loaded;
+    if (wire.length > MAX_WIRE_BYTES) return "undelivered";
     const item: OutboxItem = { cid: `${Date.now().toString(36)}-${++this.seq}-${Math.random().toString(36).slice(2, 8)}`, from, to, wire: toB64u(wire) };
     this.outbox.push(item);
     await this.persist();
@@ -193,6 +199,16 @@ export class RelayTransport implements Transport {
       }
       case "error": {
         const cid = typeof f.cid === "string" ? f.cid : undefined;
+        if (cid && f.code === "queueFull") {
+          // Temporary: the recipient's queue drains when they come online. Keep it and retry later (review I4).
+          this.waiting.get(cid)?.("queued");
+          this.waiting.delete(cid);
+          clearTimeout(this.retryFull);
+          this.retryFull = setTimeout(() => {
+            if (this.ready) for (const item of [...this.outbox]) this.transmit(item);
+          }, QUEUE_FULL_RETRY_MS);
+          return;
+        }
         if (cid) {
           // The relay refused this message (too large, queue full, bad recipient). Retrying won't help.
           this.outbox = this.outbox.filter((i) => i.cid !== cid);

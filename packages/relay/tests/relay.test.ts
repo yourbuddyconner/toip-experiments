@@ -206,3 +206,55 @@ describe("RelayTransport", () => {
     expect(statuses.at(-1)).toBe("connected");
   }, 30000);
 });
+
+describe("review fixes: relay robustness (C1, I4)", () => {
+  it("survives an oversized frame from an unauthenticated client", async () => {
+    const r = await relay();
+    const c = raw(r.url);
+    await c.opened;
+    await c.next();
+    c.ws.send("x".repeat(600 * 1024));
+    await c.closed;
+    const alice = client(r.url, id("alice"));
+    await until(() => alice.t.status === "connected");
+  });
+
+  it("closes sockets that never authenticate", async () => {
+    const r = await startRelay({ port: 0, dbPath: join(mkdtempSync(join(tmpdir(), "relay-")), "r.db"), limits: { authTimeoutMs: 150 } });
+    relays.push(r);
+    const c = raw(r.url);
+    await c.opened;
+    await c.closed;
+  });
+
+  it("caps what one sender can queue for one recipient, without blocking other senders", async () => {
+    const r = await startRelay({ port: 0, dbPath: join(mkdtempSync(join(tmpdir(), "relay-")), "r.db"), limits: { perSenderPerRecipient: 3 } });
+    relays.push(r);
+    const mallory = client(r.url, id("mallory"));
+    const alice = client(r.url, id("alice"));
+    await until(() => mallory.t.status === "connected" && alice.t.status === "connected");
+    for (let i = 0; i < 3; i++) expect(await mallory.t.post(id("mallory").did, id("bob").did, new Uint8Array([i]))).toBe("queued");
+    expect(await mallory.t.post(id("mallory").did, id("bob").did, new Uint8Array([9]))).toBe("queued");
+    expect(mallory.t.pending()).toBe(1);
+    expect(await alice.t.post(id("alice").did, id("bob").did, new Uint8Array([7]))).toBe("queued");
+    expect(r.queued(id("bob").did)).toBe(4);
+  });
+
+  it("refuses to send a message over the size limit, instead of keeping it forever", async () => {
+    const r = await relay();
+    const alice = client(r.url, id("alice"));
+    await until(() => alice.t.status === "connected");
+    expect(await alice.t.post(id("alice").did, id("bob").did, new Uint8Array(256 * 1024 + 1))).toBe("undelivered");
+    expect(alice.t.pending()).toBe(0);
+  });
+
+  it("delivers a long queue in windows", async () => {
+    const r = await relay();
+    const alice = client(r.url, id("alice"));
+    await until(() => alice.t.status === "connected");
+    for (let i = 0; i < 250; i++) await alice.t.post(id("alice").did, id("bob").did, new Uint8Array([i % 256, i >> 8]));
+    const bob = client(r.url, id("bob"));
+    await until(() => bob.got.length === 250, 10000);
+    expect(bob.got.map((w) => w[0] + (w[1] << 8))).toEqual([...Array(250).keys()]);
+  }, 20000);
+});
