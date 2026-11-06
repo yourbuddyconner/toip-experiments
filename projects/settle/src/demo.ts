@@ -76,7 +76,7 @@ async function run(title: string, play: (w: World, id: string) => Promise<void>)
     const v = await verifyLog(res.payload.entries, res.payload.head, w.processor.did, w.clock);
     console.log(`  ${v.ok ? "\x1b[32m✓ hash chain intact, head signed by the processor\x1b[0m" : `\x1b[31m✗ ${v.problem}\x1b[0m`}`);
   } finally {
-    w.stop();
+    await w.stop();
     await relay.close();
   }
 }
@@ -93,7 +93,7 @@ await run("1 · The job gets done", async (w, id) => {
   await until(() => w.landlord.events.some((e) => e.text.includes("not signing")));
   await pause();
   step("Eight days later: no dispute. Joe asks again");
-  w.advance(8 * 86400);
+  await w.advance(8 * 86400);
   w.joe.payments.get(id)!.signed = [];
   await w.joe.requestRelease(id);
   await until(() => w.landlord.receipts.length === 1);

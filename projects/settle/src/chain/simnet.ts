@@ -41,8 +41,9 @@ export class Simnet {
     readonly programId: Address,
   ) {}
 
-  static async create(opts: { svm?: LiteSVM } = {}): Promise<Simnet> {
-    const svm = (opts.svm ?? new LiteSVM()).withPrecompiles();
+  static async create(opts: { svm?: LiteSVM; blockhashCheck?: boolean } = {}): Promise<Simnet> {
+    let svm = (opts.svm ?? new LiteSVM()).withPrecompiles();
+    if (opts.blockhashCheck === false) svm = svm.withBlockhashCheck(false);
     const programKey = await createKeyPairSignerFromBytes(new Uint8Array(JSON.parse(readFileSync(PROGRAM_KEYPAIR, "utf8"))));
     svm.addProgramFromFile(programKey.address, PROGRAM_SO);
     return new Simnet(svm, programKey.address);
@@ -59,7 +60,7 @@ export class Simnet {
     this.svm.airdrop(to, lamports(sol * 1_000_000_000n));
   }
 
-  async send(feePayer: TransactionSigner, instructions: Instruction[]): Promise<SendResult> {
+  async send(feePayer: TransactionSigner, instructions: Instruction[], retried = false): Promise<SendResult> {
     const tx = await pipe(
       createTransactionMessage({ version: 0 }),
       (m) => setTransactionMessageFeePayerSigner(feePayer, m),
@@ -68,7 +69,12 @@ export class Simnet {
       (m) => signTransactionMessageWithSigners(m),
     );
     const r = this.svm.sendTransaction(tx);
-    this.svm.expireBlockhash(); // so an identical transaction later isn't refused as a duplicate
+    // An identical transaction under the same blockhash is refused as already processed. Only then move
+    // the blockhash on and retry: moving it every time would invalidate blockhashes other clients just fetched.
+    if (r instanceof FailedTransactionMetadata && !retried && /AlreadyProcessed/.test(r.toString())) {
+      this.svm.expireBlockhash();
+      return this.send(feePayer, instructions, true);
+    }
     if (r instanceof FailedTransactionMetadata) {
       const logs = r.meta().logs();
       const text = r.toString();

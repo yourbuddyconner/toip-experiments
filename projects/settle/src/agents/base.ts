@@ -7,7 +7,7 @@ import { ed25519 } from "@noble/curves/ed25519.js";
 import type { Address } from "@solana/kit";
 import { addressBytes, outcomeMessage } from "../chain/escrow";
 import type { PaymentKey } from "../chain/keys";
-import type { Simnet } from "../chain/simnet";
+import type { Chain } from "../chain/chain";
 import {
   evidenceHash,
   termsHash,
@@ -64,7 +64,7 @@ export interface AgentOptions {
   identity: Identity;
   relayUrl: string;
   clock: Clock;
-  net: Simnet;
+  chain: Chain;
   policy: SettlePolicy;
   directory: Directory;
   onEvent?: (e: AgentEvent) => void;
@@ -82,7 +82,7 @@ export abstract class Agent {
   readonly payments = new Map<string, PaymentState>();
   readonly events: AgentEvent[] = [];
   protected readonly clock: Clock;
-  protected readonly net: Simnet;
+  protected readonly chain: Chain;
   protected readonly policy: SettlePolicy;
   protected readonly directory: Directory;
   private readonly onEvent?: (e: AgentEvent) => void;
@@ -93,7 +93,7 @@ export abstract class Agent {
     this.identity = opts.identity;
     this.did = opts.identity.did;
     this.clock = opts.clock;
-    this.net = opts.net;
+    this.chain = opts.chain;
     this.policy = opts.policy;
     this.directory = opts.directory;
     this.onEvent = opts.onEvent;
@@ -170,7 +170,8 @@ export abstract class Agent {
     const ruling = evidence.ruling && (await verifySigned(evidence.ruling, t, t.arbiter.did, this.clock)) ? { payeeUnits: evidence.ruling.payeeUnits } : null;
     return this.policy.decide({
       role,
-      now: Math.floor(this.clock.now() / 1000),
+      // Chain time, so every party agrees on when a window has passed.
+      now: Number(await this.chain.now()),
       proposal: { payeeUnits: evidence.payeeUnits },
       terms: { amountUnits: t.amount.units, attester: t.conditions.attester, disputeWindowSeconds: t.conditions.disputeWindowSeconds },
       attestations,
@@ -184,7 +185,7 @@ export abstract class Agent {
   protected async signOutcome(p: PaymentState, key: PaymentKey, evidence: Evidence, alsoTo: string[]): Promise<void> {
     const eh = evidenceHash(evidence);
     if (p.signed.some((s) => s.payeeUnits === evidence.payeeUnits && s.evidenceHash === hex(eh))) return;
-    const message = outcomeMessage(this.net.programId, p.escrow!, BigInt(evidence.payeeUnits), eh);
+    const message = outcomeMessage(this.chain.programId, p.escrow!, BigInt(evidence.payeeUnits), eh);
     const sig: OutcomeSignature = {
       termsHash: evidence.termsHash,
       escrow: p.escrow!,

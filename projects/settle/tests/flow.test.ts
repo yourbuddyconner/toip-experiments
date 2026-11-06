@@ -16,7 +16,7 @@ import { createWorld, USDC, type World } from "../src/world";
 let relay: Relay | undefined;
 let w: World | undefined;
 afterEach(async () => {
-  w?.stop();
+  await w?.stop();
   await relay?.close();
 });
 
@@ -54,7 +54,7 @@ describe("Settle end to end: a repair job (design §10)", () => {
     await until(() => w.landlord.events.some((e) => e.text.includes("not signing")), "the landlord to refuse early");
     expect(escrowOf(w, id).state).toBe(STATE.funded);
 
-    w.advance(8 * 86400);
+    await w.advance(8 * 86400);
     w.joe.payments.get(id)!.signed = [];
     await w.joe.requestRelease(id);
     await until(() => escrowOf(w, id).state === STATE.resolved, "settlement");
@@ -81,7 +81,7 @@ describe("Settle end to end: a repair job (design §10)", () => {
   it("lets the payer reclaim alone only after the deadline", async () => {
     const { w, id } = await setup();
     expect(await w.landlord.reclaim(id)).toBe(false);
-    w.advance(31 * 86400);
+    await w.advance(31 * 86400);
     expect(await w.landlord.reclaim(id)).toBe(true);
     expect(w.net.balance(w.landlord.tokenAccount(id)!)).toBe(USDC(340));
     expect(w.net.balance(w.processor.feeAccount)).toBe(USDC(3.4));
@@ -107,7 +107,7 @@ describe("Settle end to end: a repair job (design §10)", () => {
   it("publishes a transparency log anyone can verify", async () => {
     const { w, id } = await setup();
     await w.alice.attest(id, "complete");
-    w.advance(8 * 86400);
+    await w.advance(8 * 86400);
     await w.joe.requestRelease(id);
     await until(() => escrowOf(w, id).state === STATE.resolved, "settlement");
     const res = await w.alice.endpoint.request<Record<string, never>, { entries: import("../src/protocol/log").LogEntry[]; head: import("../src/protocol/log").LogHead }>(w.processor.did, PROCESSOR_LOG, {});

@@ -4,7 +4,9 @@
  */
 import { DemoClock, identityFromSeed, issueCredential, seedFrom, type Traffic } from "@zk-toip/trust-core";
 import type { Address, KeyPairSigner } from "@solana/kit";
-import { Simnet } from "./chain/simnet";
+import { Chain } from "./chain/chain";
+import { startChainServer, type ChainServer } from "./chain/rpcServer";
+import type { Simnet } from "./chain/simnet";
 import { SettlePolicy } from "./protocol/policy";
 import { Arbiter, Attester, Payee, Payer, Processor } from "./agents/roles";
 import type { AgentEvent, Directory } from "./agents/base";
@@ -13,7 +15,10 @@ export const USDC = (n: number): bigint => BigInt(Math.round(n * 1_000_000));
 
 export interface World {
   clock: DemoClock;
+  /** The local cluster's ledger, for looking at balances directly. Agents go through `chain`. */
   net: Simnet;
+  chain: Chain;
+  chainServer: ChainServer;
   mint: Address;
   landlord: Payer;
   joe: Payee;
@@ -24,14 +29,15 @@ export interface World {
   /** Moves test USDC into an account, standing in for each party's wallet or on-ramp. */
   wallet: (to: Address, units: bigint) => Promise<void>;
   /** Moves the demo clock and the chain's clock forward together. */
-  advance: (seconds: number) => void;
-  stop: () => void;
+  advance: (seconds: number) => Promise<void>;
+  stop: () => Promise<void>;
 }
 
 export async function createWorld(opts: { relayUrl: string; start?: string; onEvent?: (e: AgentEvent) => void; onTraffic?: (who: string, t: Traffic) => void; seed?: string }): Promise<World> {
   const clock = new DemoClock(opts.start ?? "2026-11-06T09:00:00Z");
-  const net = await Simnet.create();
-  net.setNow(BigInt(Math.floor(clock.now() / 1000)));
+  const chainServer = await startChainServer({ port: 0, startTime: clock.now() });
+  const net = chainServer.net;
+  const chain = await Chain.connect(chainServer.url);
   const policy = await SettlePolicy.load();
   const tag = opts.seed ?? crypto.randomUUID();
   const id = (n: string) => identityFromSeed(seedFrom(`settle-world/${tag}/${n}`));
@@ -54,7 +60,7 @@ export async function createWorld(opts: { relayUrl: string; start?: string; onEv
     mint,
   };
   // Each agent gets its own copy of who's who, as separately configured devices would.
-  const common = () => ({ relayUrl: opts.relayUrl, clock, net, policy, directory: structuredClone(directory), onEvent: opts.onEvent, onTraffic: opts.onTraffic });
+  const common = () => ({ relayUrl: opts.relayUrl, clock, chain, policy, directory: structuredClone(directory), onEvent: opts.onEvent, onTraffic: opts.onTraffic });
   const landlord = new Payer({ ...common(), name: "Landlord", identity: ids.landlord });
   const joe = new Payee({ ...common(), name: "Joe (plumber)", identity: ids.joe });
   const alice = new Attester({ ...common(), name: "Alice (tenant)", identity: ids.alice });
@@ -76,6 +82,8 @@ export async function createWorld(opts: { relayUrl: string; start?: string; onEv
   return {
     clock,
     net,
+    chain,
+    chainServer,
     mint,
     landlord,
     joe,
@@ -84,10 +92,13 @@ export async function createWorld(opts: { relayUrl: string; start?: string; onEv
     processor,
     boardDid: ids.board.did,
     wallet: (to, units) => net.mintTo(mint, to, issuer, units),
-    advance: (seconds) => {
+    advance: async (seconds) => {
       clock.advance(seconds * 1000);
-      net.setNow(BigInt(Math.floor(clock.now() / 1000)));
+      await chain.advanceClock(seconds);
     },
-    stop: () => [landlord, joe, alice, arbiter, processor].forEach((a) => a.stop()),
+    stop: async () => {
+      [landlord, joe, alice, arbiter, processor].forEach((a) => a.stop());
+      await chainServer.close();
+    },
   };
 }
