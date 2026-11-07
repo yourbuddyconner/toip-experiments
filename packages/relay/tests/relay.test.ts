@@ -159,6 +159,33 @@ describe("relay delivery", () => {
     expect(bob.got[0][0]).toBe(5);
   });
 
+  it("tells its operator what it stored: sender, recipient, size and time, not the contents", async () => {
+    const seen: { from: string; to: string; bytes: number; delivery: string; id: number; at: number }[] = [];
+    const r = await startRelay({ port: 0, dbPath: tmpDb(), onStored: (m) => void seen.push(m) });
+    relays.push(r);
+    const alice = client(r.url, id("alice"));
+    const bob = client(r.url, id("bob"));
+    await until(() => alice.t.status === "connected" && bob.t.status === "connected");
+    await alice.t.post(id("alice").did, id("bob").did, new Uint8Array(40).fill(7));
+    await alice.t.post(id("alice").did, id("carol").did, new Uint8Array(12));
+    await until(() => seen.length === 2);
+    expect(seen.map(({ from, to, bytes, delivery }) => ({ from, to, bytes, delivery }))).toEqual([
+      { from: id("alice").did, to: id("bob").did, bytes: 40, delivery: "live" },
+      { from: id("alice").did, to: id("carol").did, bytes: 12, delivery: "queued" },
+    ]);
+    expect(Object.keys(seen[0]).sort()).toEqual(["at", "bytes", "delivery", "from", "id", "to"]);
+  });
+
+  it("keeps working when its observer throws", async () => {
+    const r = await startRelay({ port: 0, dbPath: tmpDb(), onStored: () => { throw new Error("boom"); } });
+    relays.push(r);
+    const alice = client(r.url, id("alice"));
+    const bob = client(r.url, id("bob"));
+    await until(() => alice.t.status === "connected" && bob.t.status === "connected");
+    await alice.t.post(id("alice").did, id("bob").did, new Uint8Array([1]));
+    await until(() => bob.got.length === 1);
+  });
+
   it("refuses a message over the size limit", async () => {
     const r = await relay();
     const c = raw(r.url);

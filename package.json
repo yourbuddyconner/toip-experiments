@@ -14,7 +14,8 @@
     "projects/shared-todo",
     "projects/settle",
     "projects/trail",
-    "projects/agora"
+    "projects/agora",
+    "projects/tipline"
   ],
   "scripts": {
     "test": "npm test --workspaces --if-present",
@@ -22,6 +23,7 @@
     "dev": "node scripts/dev.mjs",
     "settle": "npm run app --workspace @zk-toip/settle",
     "trail": "npm run app --workspace @zk-toip/trail",
-    "agora": "npm run app --workspace @zk-toip/agora"
+    "agora": "npm run app --workspace @zk-toip/agora",
+    "tipline": "npm run app --workspace @zk-toip/tipline"
   }
 }

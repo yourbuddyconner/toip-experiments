@@ -1,6 +1,6 @@
 # Tipline: design
 
-A drop box for whistleblowers. A source proves to a journalist "I am a current member of organization X" without saying which member. The journalist checks the proof, receives the tip, and can reply. The source uses a fresh, unlinkable DID for each tip. Date: 2026-11-06. Status: design written, not built.
+A drop box for whistleblowers. A source proves to a journalist "I am a current member of organization X" without saying which member. The journalist checks the proof, receives the tip, and can reply. The source uses a fresh, unlinkable DID for each tip. Date: 2026-11-06. Status: MVP built; see "Implementation notes" at the end.
 
 Choices marked **(our call)** are the assistant's and open to change. A guess is labeled a guess. Claims about other people's software cite section 17.
 
@@ -788,3 +788,52 @@ The open questions above were settled by the assistant, at the convener's reques
 - **"Designed to be zero-knowledge".** Accepted for the MVP, and stated plainly in the app and the README.
 - **Coercion** (someone forced to prove membership or reveal a tip code) is out of scope for the MVP.
 - **Paying sources through Settle** is deferred. It is not in the MVP.
+
+## Implementation notes
+
+Written after the MVP was built (2026-11-06). The README says how to run it.
+
+### What was built
+
+- **The organization** (`src/agents/issuer.ts`): an HR roster on top of anon-membership's `GroupIssuer`. Enrollment is `anon-membership/enroll` over TSP, admitted only for active roster DIDs. One signed root a day, published on the dev clock. HR can remove a member. `forkRoot` makes the step 12 cheat.
+- **The outlet's mirror** (`src/agents/mirror.ts`): checks the log, the chain and each snapshot's hash before it serves them.
+- **The member wallet** (web `wallet`): a passkey-sealed key (web-vault), enrollment, a leaf check against the newest signed root, and the membership code.
+- **The source app** (web `source`): loads and verifies the descriptor, checks the mirror against the organization's own log, refuses a group below `minSize`, finds the leaf from the membership code, cleans images on a canvas, makes the tip code, proves in a Web Worker, and sends padded messages from the tip DID. An optional random delay of 1 to 12 hours is available. Coming back with the tip code reads replies, answers, and answers proof requests. It stores nothing.
+- **The inbox** (`src/agents/inbox.ts`, web `inbox`): runs in the journalist's browser with a passkey-sealed key. It has a story editor that signs and publishes the descriptor. It checks each submit in the order of §7.5, labels sources by nullifier, reassembles and hashes files, and checks them for metadata. It also sends receipts, replies and proof requests, shows refused messages with their reasons, and alerts on equivocation with both signed roots.
+- **The platform** (`src/platform/`): the relay (labeled as Acme's), Acme's HTTP log and snapshots, the outlet site, the dev clock, a relay panel and a search of everything Acme holds.
+- **Tests:** 48 vitest tests in this project (unit, integration over a real relay with real proofs, HTTP platform), and `web/e2e.ts`, which runs demo steps 1 to 13 in Chromium.
+
+### Where the build differs from this design
+
+- **The library's names and shapes.** `packages/anon-membership` was built for this design and Agora's together. Tipline follows the library. The circuit is `anon-membership/v1/gate-d20`, used with one group, a plain leaf and `limit` 1. "Message" is called `signal`. The commitment includes the group id. A `MembershipProof` carries its whole statement and no `group`, `epoch` or `rootDoc` fields; the inbox finds the root in the log by value. The CRS is bundled in the library and passed to bb.js directly, so nothing is rerouted (§6.10).
+- **One origin per app.** The design puts `/acme`, `/inbox`, `/wallet` and `/tip` on one site (§5.2). Here each app has its own port, so no app can read another's storage, and the source app's origin holds nothing of anyone's.
+- **A Content-Security-Policy on the source app.** It may connect only to its own origin, the relay and the organization's log. `data:` is allowed because bb.js loads its own WebAssembly that way.
+- **Tip codes have a check character.** They are 16 random bytes and one checksum byte: 28 characters in 7 groups of 4, not 26 (§8.4). Without it, typos can't be caught as §12.3 asks.
+- **Sizes.** Every message a source sends is one fixed size, about 200 KiB on the wire: the submit, each chunk, dummy chunks and follow-ups. The design padded the submit to 16 KiB steps, which would tell the relay which message is the submit. Drop box messages are padded to 16 KiB steps. TSP encodes the ciphertext in 3-byte groups, so a size lands up to 2 bytes under its target, the same for every message of a kind. Every tip has at least one chunk, a dummy one if there are no files.
+- **The acceptance window.** Trust Task consumers refuse documents older than 5 minutes by default. Tipline's endpoints accept 31 days, because messages wait on the relay for up to 30.
+- **Coarse time.** The source's and the inbox's endpoints use a new `CoarseClock` in trust-core, so `issuedAt` and proof times are rounded down to the hour (§13.2).
+- **Coming back.** `tipline/thread/request` makes the inbox resend the receipt and the whole thread as `tipline/message`, including the source's own tip, with `from` and `at` fields. `tipline/proof/request` also carries the `story`, since a returning source knows only the tip code.
+- **Receipts.** A file whose hash doesn't match makes the receipt `rejected` with reason `attachment`. Chunks are not resent on request.
+- **Equivocation.** Once the inbox holds two signed roots for one epoch, it refuses every new proof for that group, not only those from that epoch on. Tips already accepted stay.
+- **One group per story in the UI.** The protocol and the inbox take up to 4 groups per story; the story editor offers one.
+- **The root log** is anon-membership's `checkRootLog`, not `packages/eventlog`.
+- **The mirror** refreshes every 2 seconds instead of hourly, so the demo doesn't wait. In the platform it reads Acme's log in-process rather than over HTTP.
+- **The wallet** derives group secrets as `memberSecret(HMAC-SHA256(walletSeed, "wallet/v1/groups"), groupId)`.
+- **Storage in the inbox.** State and files are sealed in `localStorage` through web-vault. A file too big for storage stays readable until the tab closes. The relay outbox is in memory.
+- **`npm run tipline` builds and serves the production bundle.** There is no Vite dev server, because bb.js's workers and WebAssembly are simpler to serve built.
+
+### Measured
+
+- Proving in Chromium (10 threads, Apple M1 Max): 0.3 to 0.5 s per tip in the e2e run (`results/e2e.json`). In Node, about 0.3 s.
+- Every message from a source: 204,798 bytes on the wire. A tip with one photo is 2 messages.
+
+### Not done
+
+- Checking the source app's bundle hash in the browser. The descriptor names it; nothing compares it.
+- Tor, onion services, mixnets, root-log witnesses, relay admission by proof, cleaning PDFs and office files, shared newsroom inboxes, phase 2 credentials, paying sources, phones.
+- Times in the relay panel are the relay's real clock, not the dev clock.
+
+### Changes to shared packages
+
+- `packages/trust-core`: `CoarseClock`, a `Clock` that rounds down to a granularity (default one hour), with tests.
+- `packages/relay`: an `onStored` option that reports each stored message's sender, recipient, size and time, never its contents, with tests. Tipline's relay panel uses it.

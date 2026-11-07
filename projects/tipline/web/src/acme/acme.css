@@ -1,0 +1,211 @@
+/* Acme Chemicals' internal console: an institutional sans-serif tool in slate and teal, deliberately
+   unlike The Ledger. It is the other side's software. */
+:root {
+  --paper: #edf0f3;
+  --surface: #ffffff;
+  --ink: #1e2a36;
+  --graphite: #5b6875;
+  --rule: #d6dce2;
+  --accent: #0f6e73;
+  --body: var(--sans);
+  --radius: 6px;
+}
+
+.loading {
+  padding: 2rem;
+  color: var(--graphite);
+}
+
+.muted {
+  color: var(--graphite);
+}
+
+.small {
+  font-size: 0.8125rem;
+}
+
+.acme-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem clamp(1rem, 4vw, 2.5rem);
+  background: var(--ink);
+  color: #fff;
+  flex-wrap: wrap;
+}
+
+.logo {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 8px;
+  background: var(--accent);
+  display: grid;
+  place-items: center;
+}
+
+.logo span {
+  width: 1rem;
+  height: 1rem;
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+}
+
+.org {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  letter-spacing: 0.01em;
+}
+
+.dept {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #aab6c2;
+}
+
+.devclock {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 0.35rem 0.4rem 0.35rem 0.85rem;
+  border-radius: var(--radius);
+}
+
+.devclock button.secondary {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+  min-height: 2.1rem;
+  padding: 0.3rem 0.8rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0 clamp(1rem, 4vw, 2.5rem);
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+  overflow-x: auto;
+}
+
+.tab {
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  color: var(--graphite);
+  padding: 0.85rem 0.9rem 0.7rem;
+  font-weight: 600;
+}
+
+.tab.current {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+
+.tab:hover {
+  filter: none;
+  color: var(--ink);
+}
+
+.acme-main {
+  padding: 1.5rem clamp(1rem, 4vw, 2.5rem) 3rem;
+  max-width: 76rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.card h1 {
+  font-size: 1.375rem;
+  font-weight: 700;
+}
+
+.card h2 {
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.stat {
+  font-size: 1.0625rem;
+}
+
+.stat strong {
+  font-size: 1.75rem;
+  font-variant-numeric: tabular-nums;
+  margin-right: 0.2rem;
+}
+
+.add-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.add-row .field {
+  flex: 1 1 14rem;
+}
+
+.add-row > button {
+  margin-bottom: 1rem;
+}
+
+.pill {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--graphite);
+}
+
+.pill.in {
+  background: #def0ef;
+  color: var(--accent);
+}
+
+.pill.left {
+  background: var(--bad-wash);
+  color: var(--bad);
+}
+
+td.num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.cheat {
+  border-color: color-mix(in srgb, var(--bad) 35%, var(--rule));
+}
+
+.results th {
+  width: 40%;
+  color: var(--ink);
+}
+
+.results td.found {
+  color: var(--bad);
+  font-weight: 600;
+}
+
+.results td.none {
+  color: var(--good);
+}
