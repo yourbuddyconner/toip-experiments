@@ -1,0 +1,7 @@
+AID: EDKhARiiy2xaTIASYxHuLvkZTkQBOv6Cs0HPDFBeEmPg
+Bundle verifies: true
+  #0 tin (trail opened): valid
+  #1 ten user/role-changed: valid
+  #2 ten export/started: valid
+  #3 ten key/deleted: valid
+After editing an entry: false [ 'bodyMismatch: body of entry 1 does not match its SAID' ]

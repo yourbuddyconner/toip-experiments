@@ -1,0 +1,5 @@
+Delivery: live
+Bob read: The key is under the blue pot. (from Alice)
+On the wire: did:key:z6Mkt2JX… -> did:key:z6MkvSkG…, 1041 bytes
+Plaintext visible on the wire: false
+A tampered copy: refused (tsp: notForThisReceiver: Error: tsp: signature verification failed)
