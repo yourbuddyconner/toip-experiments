@@ -73,6 +73,11 @@ export class Recorder {
     this.links.push([a, b]);
   }
 
+  labelOf(did: string): string {
+    const id = this.nodeOf(did);
+    return this.nodes.find((n) => n.id === id)?.label ?? "someone off the map";
+  }
+
   nodeOf(did: string): string | undefined {
     return this.byDid.get(did)?.node;
   }
@@ -147,10 +152,10 @@ export class Recorder {
                 jsonFrames: estimate(e.bytes + (p.sizes.jsonSealed - p.sizes.compactSealed), { mtu, airtimeMs: airtimeMs ?? (() => 0) }).frames,
               }
             : undefined;
-          const what = sizes?.what ?? "a message";
+          const what = sizes?.what ?? "the same message, from the outbox again,";
           this.say(
             nodeId,
-            `${what} → ${this.nodeOf(e.to) ?? "?"}: ${e.kind.toUpperCase()} packet, ${fmtBytes(e.bytes)} in ${e.frames} frames, pid ${e.pid}${e.route === "gateway" ? ", for the gateway" : e.route === "flood" ? ", flooded" : ""}`,
+            `${what} → ${this.labelOf(e.to)}: ${e.kind.toUpperCase()} packet, ${fmtBytes(e.bytes)} in ${e.frames} frames, pid ${e.pid}${e.route === "gateway" ? ", for the gateway" : e.route === "flood" ? ", flooded" : ""}`,
             "info",
             sizes,
           );
@@ -161,13 +166,13 @@ export class Recorder {
           this.say(nodeId, `resends ${e.missing.length === 1 ? `fragment ${e.missing[0] + 1}` : `fragments ${e.missing.map((m) => m + 1).join(", ")}`} of pid ${e.pid} (round ${e.round + 1})`, "warn");
           return;
         case "custody":
-          this.say(nodeId, `custody receipt for pid ${e.pid}, signed by ${this.nodeOf(e.gateway) ?? "the gateway"}: post() → "queued"`, "ok");
+          this.say(nodeId, `custody receipt for pid ${e.pid}, signed by ${this.labelOf(e.gateway)}: post() → "queued"`, "ok");
           return;
         case "queued":
           if (e.reason === "no-route") {
             const i = this.pending.findIndex((p) => this.byDid.get(p.from)?.node === nodeId);
             const p = i >= 0 ? this.pending.splice(i, 1)[0] : undefined;
-            this.say(nodeId, `${p ? `${p.sizes.what} → ${this.nodeOf(p.to) ?? "?"}: ` : ""}no route (no gateway heard), so it waits in the outbox`, "warn", p?.sizes);
+            this.say(nodeId, `${p ? `${p.sizes.what} → ${this.labelOf(p.to)}: ` : ""}no route (no gateway heard), so it waits in the outbox`, "warn", p?.sizes);
           }
           else if (e.reason === "no-airtime") this.say(nodeId, "waiting for airtime within the budget", "warn");
           else this.say(nodeId, `no answer yet for pid ${e.pid}: kept in the outbox`, "warn");
