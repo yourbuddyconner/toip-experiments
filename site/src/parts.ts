@@ -36,6 +36,6 @@ export function specHref(name: string): string {
 /** An arrow for diagrams and flows (an SVG, so the font doesn't need the glyph). */
 export function arrow(label = "to"): Raw {
   return raw(
-    `<svg width="22" height="12" viewBox="0 0 22 12" role="img" aria-label="${label}"><path d="M1 6h18M14 1.5 19.5 6 14 10.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>`,
+    `<svg width="22" height="12" viewBox="0 0 22 12" role="img" aria-label="${label}" data-md="→"><path d="M1 6h18M14 1.5 19.5 6 14 10.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>`,
   );
 }

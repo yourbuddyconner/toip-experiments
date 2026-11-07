@@ -1,6 +1,6 @@
 # toip.tools
 
-The developer site at https://toip.tools: setup instructions, a quickstart, library guides, a searchable SDK reference, runnable projects, concepts, and an ecosystem guide.
+The developer site at https://toip.tools: setup instructions, a quickstart, task-focused guides, library guides, a searchable SDK reference, runnable projects, concepts, an FAQ, and an ecosystem guide. Every page also exists as Markdown, and the site publishes `llms.txt`, JSON indexes and structured data for search engines and AI agents.
 
 ## Design
 
@@ -14,6 +14,8 @@ The developer site at https://toip.tools: setup instructions, a quickstart, libr
 - **Navigation.** The home page leads to setup, the quickstart, and the SDK reference. Documentation shares a grouped sidebar that becomes a disclosure menu on mobile. The SDK index includes the illustrated library collection and export search.
 - **Concepts.** Implementation notes use separate inset panels with library links, short points, and distinct scope notes.
 - Status badges use a shape and a word. Numbered markers are reserved for the quickstart's steps.
+- **Social images.** Each page's `og.png` (1200 by 630) uses the paper ground, the wordmark's fingerprint, the page's title in Recursive, a vermilion section label, and a dark code strip with an install command or import.
+- **Page tools.** Documentation pages carry a "View as Markdown" link; with JavaScript it gains a "Copy page as Markdown" button. The docs page and `/api/` offer a copyable prompt for coding assistants.
 
 ## Run it
 
@@ -26,11 +28,11 @@ npm run dev            # build, serve at http://localhost:4321/, rebuild on chan
 
 - `npm run build`: build into `dist/`. `SITE_BASE=/ npm run build` builds for the custom domain.
 - `npm run preview`: serve `dist/` as built.
-- `npm run check`: test syntax highlighting and API extraction, typecheck examples and build scripts, run the quickstart and runnable snippets, build strictly, and check every link. CI runs it before each deploy.
+- `npm run check`: test syntax highlighting and API extraction, typecheck examples and build scripts, run the quickstart, the runnable snippets and every guide, build strictly, validate the outputs for crawlers and agents (`build/verify-outputs.ts`), check every link, and check dependency licenses. CI runs it before each deploy.
 - `npm run quickstart`: run the four quickstart steps.
-- `npm run examples:record`: run the examples and save their output to `examples/*/output/`, which the pages show. Run it after changing an example.
+- `npm run examples:record`: run the examples and guides and save their output to `examples/*/output/`, which the pages show. Run it after changing an example.
 - `npm run links -- --external`: also fetch every external link.
-- `npm run screenshots`: screenshots of the main pages at 1440 and 390 px, with JavaScript off, and with keyboard focus, into `screenshots/` (not committed). Needs Playwright's Chromium (`npx playwright install chromium`).
+- `npm run screenshots`: screenshots of the main pages (guides, FAQ and the docs page included) at 1440 and 390 px, with JavaScript off, and with keyboard focus, into `screenshots/` (not committed). Needs Playwright's Chromium (`npx playwright install chromium`).
 - `npm run test:ui`: after building, check ecosystem navigation and layout, homepage scope, and image previews on desktop and mobile. Includes keyboard dismissal, focus restoration, and the JavaScript-free image fallback. Uses Playwright's Chromium.
 
 ## How it's built
@@ -41,6 +43,19 @@ No framework. `build/build.ts` renders TypeScript template functions (`src/pages
 - **Spec pages are generated.** `build/specs.ts` finds every `ourSpec("<name>")` in `packages/*/src` and `projects/*/src`, takes each one's doc comment, and joins it with the hand-checked facts in `src/data/spec-notes.json` (purpose, sender and receiver, kind, design section). Payload shapes are extracted from the TypeScript declarations the notes name, so they show what the code says. A new type in code still gets a page; the strict build fails until it has notes, and if a named declaration or design heading disappears.
 - Library facts are in `src/data/libraries.ts`, projects in `src/data/projects.ts`, external links in `src/data/links.ts`.
 - **SDK pages are generated.** `build/sdk-api.ts` uses the TypeScript compiler to read public source entry points from package exports, including platform subpaths. It extracts signatures, overloads, parameters, option fields, return types, public members, JSDoc, and source locations. `src/data/sdk-guides.ts` supplies task-based guidance and error handling alongside runnable examples.
+
+## Search engines and agents
+
+The build writes, from the same pages as the HTML:
+
+- **A Markdown twin of every page** at `<page>/index.md` (`build/markdown.ts` converts the rendered `<main>`), linked from the page with `<link rel="alternate" type="text/markdown">`. Templates mark interface-only elements with `data-md-skip`, or give replacement text with `data-md`.
+- **`/llms.txt` and `/llms-full.txt`** (https://llmstxt.org), from those twins: an index of the most useful pages, and the documentation, guides, library pages, API export lists and Trust Task reference in one file (`build/agent-files.ts`).
+- **JSON indexes**: `/api/libraries.json` (packages, entry points and exports, from the SDK reference generator), `/api/specs.json` (Trust Task types) and `/api/examples.json` (projects). `/api/` describes them.
+- **`/sitemap.xml`** with each page's lastmod from the last commit to its sources (`Page.sources`, `build/git-dates.ts`), **`/robots.txt`** that allows every crawler and names the AI crawlers, **`/releases.xml`** (Atom, from the packages' `CHANGELOG.md` files; also `/releases/`), and **`/.well-known/security.txt`**.
+- **Per-page metadata**: a search-focused `<title>` (`Page.seoTitle`), description, canonical URL, Open Graph and Twitter tags, and JSON-LD (`WebSite` with a `SearchAction` on `/toolkit/?q=`, `TechArticle`, `CollectionPage`, `SoftwareSourceCode` with its `SoftwareApplication`, `FAQPage`, `BreadcrumbList`), from `build/seo.ts`.
+- **Social images**: `build/og.ts` draws each page's `og.png` from an HTML template with Playwright's Chromium, cached by content in `.cache/og/`. Without Chromium the strict build fails; run `npx playwright install chromium`.
+
+Guides live in `src/data/guides.ts`, each with one program in `examples/guides/<slug>.ts` that the check runs. The FAQ is `src/pages/faq.ts`.
 
 ## Deploying, and switching on toip.tools
 

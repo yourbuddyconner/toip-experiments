@@ -51,6 +51,12 @@ export function examplesPage(): Page {
   return {
     path: "/examples/",
     title: "Examples",
+    seoTitle: "Trust over IP example apps in TypeScript: payments, agents, audit trails, ZK · toip.tools",
+    kind: "collection",
+    eyebrow: "Examples",
+    ogFooter: "git clone https://github.com/yourbuddyconner/toip-tools.git",
+    tools: true,
+    sources: ["site/src/data/projects.ts", "projects"],
     description: "Run Trust over IP examples for payments, collaboration, anonymous speech, agent delegation, and audit trails. Explore the designs and the libraries behind them.",
     section: "examples",
     body,

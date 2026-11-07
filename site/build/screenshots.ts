@@ -8,7 +8,14 @@ import { serve } from "./serve";
 
 const PAGES: [string, string][] = [
   ["home", ""],
+  ["docs", "docs/"],
   ["quickstart", "quickstart/"],
+  ["guides", "guides/"],
+  ["guide-run-tsp-relay", "guides/run-tsp-relay/"],
+  ["guide-delegate-to-ai-agent", "guides/delegate-to-ai-agent/"],
+  ["faq", "faq/"],
+  ["api", "api/"],
+  ["releases", "releases/"],
   ["concepts", "concepts/"],
   ["toolkit", "toolkit/"],
   ["toolkit-trust-core", "toolkit/trust-core/"],
@@ -50,6 +57,8 @@ await p2.goto(root, { waitUntil: "networkidle" });
 await p2.screenshot({ path: join(out, "home-nojs-desktop.png"), fullPage: true });
 await p2.goto(root + "quickstart/", { waitUntil: "networkidle" });
 await p2.screenshot({ path: join(out, "quickstart-nojs-desktop.png") });
+await p2.goto(root + "guides/sign-cose/", { waitUntil: "networkidle" });
+await p2.screenshot({ path: join(out, "guide-nojs-desktop.png") });
 await nojs.close();
 
 // Keyboard focus: tab to the skip link, then into the navigation.

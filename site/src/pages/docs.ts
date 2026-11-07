@@ -6,16 +6,24 @@ import { html } from "../../build/html";
 import { docsNav } from "../docs-nav";
 import type { Page } from "../layout";
 import { pageHead } from "../parts";
+import { guides } from "../data/guides";
+import { assistantBox } from "./agents";
 
 export function docsPage(): Page {
   const version = JSON.parse(readFileSync(join(REPO_DIR, "packages/trust-core/package.json"), "utf8")).version as string;
   return {
     path: "/docs/",
     title: "Documentation",
-    description: "Install the libraries from npm, run your first Trust Task, and find API documentation for the toip.tools TypeScript libraries.",
+    seoTitle: "Documentation: install the @toip-tools TypeScript libraries for Trust over IP · toip.tools",
+    description: "Install the @toip-tools libraries from npm, run your first Trust Task, and find guides and API documentation for DIDs, credentials, TSP and more.",
     section: "docs",
+    kind: "article",
+    eyebrow: "Documentation",
+    ogFooter: "npm install @toip-tools/trust-core",
+    tools: true,
+    sources: ["site/src/pages/docs.ts", "packages/trust-core/package.json"],
     body: html`<div class="wrap docs">
-      ${docsNav("/docs/", [{ label: "Setup", href: "#setup" }, { label: "Work from the source", href: "#workspace" }, { label: "Next steps", href: "#next" }])}
+      ${docsNav("/docs/", [{ label: "Setup", href: "#setup" }, { label: "Ask your AI assistant", href: "#assistant-h" }, { label: "Guides", href: "#guides" }, { label: "Work from the source", href: "#workspace" }, { label: "Next steps", href: "#next" }])}
       <div class="docs__content">
         ${pageHead("Documentation", "Build with TypeScript libraries for identities, private messages, credentials, delegation, and verifiable logs.")}
         <div class="prose">
@@ -35,6 +43,14 @@ export function docsPage(): Page {
           ${code("npm run quickstart --prefix site", "bash", { caption: "Run the Quickstart" })}
         </section>
 
+        ${assistantBox()}
+
+        <section class="prose" aria-labelledby="guides">
+          <h2 id="guides">Guides</h2>
+          <p>Short how-tos, each one complete program you can run:</p>
+          <ul>${guides.map((g) => html`<li><a href="${u(`/guides/${g.slug}/`)}">${g.title}</a></li>`)}</ul>
+        </section>
+
         <section class="prose" aria-labelledby="workspace">
           <h2 id="workspace">Work from the source</h2>
           <p>The root <a href="${gh("package.json")}"><code>package.json</code></a> lists the libraries in <code>packages/</code> and applications in <code>projects/</code> as npm workspaces. Installing at the root links local package names such as <code>@toip-tools/trust-core</code>, <code>@toip-tools/mandates</code>, and <code>@toip-tools/mesh-transport</code>.</p>
@@ -46,6 +62,8 @@ export function docsPage(): Page {
           <h2 id="next">Next steps</h2>
           <ul>
             <li><a href="${u("/quickstart/")}">Quickstart</a>: create identities, exchange Trust Tasks, and verify credentials.</li>
+            <li><a href="${u("/guides/")}">Guides</a>: one task each, such as signing with a did:key or running a relay.</li>
+            <li><a href="${u("/faq/")}">FAQ</a>: Trust over IP, TSP, runtimes, and how this project relates to the ToIP Foundation.</li>
             <li><a href="${u("/toolkit/")}">SDK reference</a>: choose a library and look up its public API.</li>
             <li><a href="${u("/spec/")}">Trust Task reference</a>: inspect the message types used by the applications.</li>
             <li><a href="${u("/examples/")}">Examples</a>: run complete applications and read their designs.</li>

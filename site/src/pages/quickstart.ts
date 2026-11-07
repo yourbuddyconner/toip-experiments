@@ -115,8 +115,14 @@ export function quickstartPage(): Page {
   return {
     path: "/quickstart/",
     title: "Quickstart",
+    seoTitle: "Quickstart: DIDs, encrypted TSP messages and verifiable credentials in TypeScript · toip.tools",
     description: "Make two did:key identities, send a signed, encrypted Trust Task over a relay, and issue, verify and revoke a credential, in about ten minutes.",
     section: "quickstart",
+    kind: "article",
+    eyebrow: "Quickstart",
+    ogFooter: "npm install @toip-tools/trust-core @toip-tools/relay",
+    tools: true,
+    sources: ["site/src/pages/quickstart.ts", "site/examples/quickstart"],
     body,
   };
 }

@@ -29,6 +29,42 @@ for (const fig of document.querySelectorAll("figure.code:not(.code--output)")) {
   fig.append(btn, status);
 }
 
+// "Copy page as Markdown" next to each documentation page's Markdown link. The link works on its own.
+for (const link of document.querySelectorAll("[data-copy-markdown]")) {
+  if (!navigator.clipboard || !window.fetch) continue;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "page-tools__copy";
+  btn.textContent = "Copy page as Markdown";
+  const status = document.createElement("span");
+  status.className = "sr-only";
+  status.setAttribute("role", "status");
+  btn.addEventListener("click", async () => {
+    try {
+      // Safari needs the clipboard write to start inside the click, so hand it a promise of the text.
+      const text = fetch(link.href).then((r) => {
+        if (!r.ok) throw new Error(String(r.status));
+        return r.text();
+      });
+      if (typeof ClipboardItem !== "undefined" && ClipboardItem.supports?.("text/plain")) {
+        await navigator.clipboard.write([new ClipboardItem({ "text/plain": text.then((t) => new Blob([t], { type: "text/plain" })) })]);
+      } else {
+        await navigator.clipboard.writeText(await text);
+      }
+      btn.textContent = "Copied";
+      status.textContent = "Page copied to the clipboard as Markdown";
+    } catch {
+      btn.textContent = "Couldn't copy: open the Markdown";
+    }
+    setTimeout(() => {
+      btn.textContent = "Copy page as Markdown";
+      status.textContent = "";
+    }, 2200);
+  });
+  link.before(btn);
+  link.after(status);
+}
+
 // The landing page's one moment: the wire fills in, then Bob opens it.
 const wire = document.querySelector(".wire");
 if (wire) requestAnimationFrame(() => requestAnimationFrame(() => wire.classList.add("play")));
@@ -39,7 +75,7 @@ if (apiSearch) {
   const catalog = JSON.parse(document.querySelector("#sdk-search-data").textContent);
   const results = document.querySelector("#api-results");
   const status = document.querySelector("#api-search-status");
-  apiSearch.addEventListener("input", () => {
+  const run = () => {
     const query = apiSearch.value.trim().toLowerCase();
     results.replaceChildren();
     results.hidden = !query;
@@ -60,7 +96,21 @@ if (apiSearch) {
       item.append(link, module, summary);
       results.append(item);
     }
+  };
+  apiSearch.addEventListener("input", () => {
+    run();
+    // Keep the query in the address (?q=), so a search can be shared and linked to.
+    const url = new URL(location.href);
+    if (apiSearch.value.trim()) url.searchParams.set("q", apiSearch.value.trim());
+    else url.searchParams.delete("q");
+    history.replaceState(null, "", url);
   });
+  apiSearch.form?.addEventListener("submit", (event) => event.preventDefault());
+  const initial = new URLSearchParams(location.search).get("q");
+  if (initial) {
+    apiSearch.value = initial;
+    run();
+  }
 }
 
 // Image links stay usable without JavaScript; enhance them with a native modal.
