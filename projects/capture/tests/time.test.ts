@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { MandateEngine, StatusRegistry } from "@zk-toip/mandates";
-import { embedStore, fromHex, makeCapture, QUICKNET, randomnessOf, roundAt, roundTime, verifyAsset, verifyBeaconClaim, verifyRound } from "../src/core";
+import { embedStore, fromHex, makeCapture, QUICKNET, randomnessOf, roundAt, roundTime, verifyAsset, verifyBeaconClaim, verifyRound, verifyRounds } from "../src/core";
 import { cameraMandate, mandateChecker } from "../src/core/mandate";
 import { codes, jpegPhoto, testWorld } from "./helpers";
 
@@ -21,6 +21,13 @@ describe("time: drand for not-before", () => {
     expect(verifyBeaconClaim(QUICKNET, r0.round, new Uint8Array(8), fromHex(r0.signature))).toBe(false);
     // round time: genesis + (round − 1) × 3 s, and back
     expect(roundAt(QUICKNET, roundTime(QUICKNET, r0.round))).toBe(r0.round);
+  });
+
+  it("rounds verify in a batch, and a bad one in the batch is still caught", () => {
+    const good = fixture.rounds.map((r) => ({ round: r.round, signature: fromHex(r.signature) }));
+    expect(verifyRounds(QUICKNET, good)).toEqual(good.map(() => true));
+    const swapped = good.map((r, i) => (i === 2 ? { ...r, round: r.round + 100 } : r));
+    expect(verifyRounds({ ...QUICKNET, hash: "fresh-cache" }, swapped)).toEqual(good.map((_, i) => i !== 2));
   });
 
   it("a capture with a real quicknet beacon gets that round as its lower bound; a forged prefix fails", async () => {

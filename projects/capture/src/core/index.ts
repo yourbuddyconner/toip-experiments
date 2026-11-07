@@ -13,3 +13,6 @@ export * from "./readings";
 export * from "./verify";
 export * from "./capture";
 export * from "./owner";
+export * from "./fetcher";
+export * from "./camera";
+export * from "./sensorView";

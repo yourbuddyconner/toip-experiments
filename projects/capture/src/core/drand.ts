@@ -66,6 +66,35 @@ export function verifyRound(c: DrandChain, round: number, signature: Uint8Array)
   return ok;
 }
 
+/**
+ * Checks many rounds of one chain at once: e(Σ kᵢ·sigᵢ, g₂) = e(Σ kᵢ·H(mᵢ), pk), with random 64-bit kᵢ,
+ * so a bad signature can't hide behind a good one. Two pairings instead of two per round. When the batch
+ * fails, each round is checked on its own to find the bad ones.
+ */
+export function verifyRounds(c: DrandChain, rounds: { round: number; signature: Uint8Array }[]): boolean[] {
+  const todo = rounds.map((r, i) => ({ ...r, i, key: `${c.hash}:${r.round}:${hex(r.signature)}` })).filter((r) => !cache.has(r.key));
+  if (todo.length > 1) {
+    try {
+      const bls = bls12_381.shortSignatures;
+      let S = bls12_381.G1.Point.ZERO;
+      let H = bls12_381.G1.Point.ZERO;
+      const rnd = new Uint8Array(8 * todo.length);
+      crypto.getRandomValues(rnd);
+      todo.forEach((r, j) => {
+        const k = new DataView(rnd.buffer).getBigUint64(j * 8) | 1n;
+        S = S.add(bls.Signature.fromBytes(r.signature).multiply(k));
+        H = H.add(bls.hash(roundMessage(r.round), DST).multiply(k));
+      });
+      const lhs = bls12_381.pairing(S, bls12_381.G2.Point.BASE);
+      const rhs = bls12_381.pairing(H, bls12_381.G2.Point.fromBytes(c.publicKey));
+      if (bls12_381.fields.Fp12.eql(lhs, rhs)) for (const r of todo) cache.set(r.key, true);
+    } catch {
+      // fall through to one at a time
+    }
+  }
+  return rounds.map((r) => verifyRound(c, r.round, r.signature));
+}
+
 /** A signed beacon claim (round, prefix) checks out against the round's signature. */
 export function verifyBeaconClaim(c: DrandChain, round: number, prefix: Uint8Array, signature: Uint8Array): boolean {
   return prefix.length >= 2 && equal(randomnessOf(signature).subarray(0, prefix.length), prefix) && verifyRound(c, round, signature);

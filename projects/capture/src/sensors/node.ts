@@ -67,6 +67,8 @@ export class SensorNode {
       sealEvery: number;
       /** Added to the scheduler's time to give the device's own clock (a wrong clock, for the demo). */
       clockSkewMs?: number;
+      /** When the first reading is taken; stagger sensors so they don't talk over each other. */
+      startDelayMs?: number;
       /** Called after each change, so the caller can persist the chain. */
       onChange?: (chain: ReadingChain) => void;
       log?: (line: string) => void;
@@ -86,7 +88,7 @@ export class SensorNode {
       void this.takeReading();
       this.timer = this.o.scheduler.setTimeout(tick, this.o.intervalMs);
     };
-    this.timer = this.o.scheduler.setTimeout(tick, Math.min(1000, this.o.intervalMs));
+    this.timer = this.o.scheduler.setTimeout(tick, this.o.startDelayMs ?? Math.min(1000, this.o.intervalMs));
   }
 
   stop(): void {
@@ -113,6 +115,9 @@ export class SensorNode {
     this.stats.seals++;
     this.o.onChange?.(this.chain);
     await this.queue.send(seal);
+    // a lost seal leaves a whole batch pending, so send it again a little later, at a random moment (a
+    // repeat is a duplicate, which verifiers ignore)
+    this.o.scheduler.setTimeout(() => void this.queue.send(seal), Math.round(this.o.intervalMs * (0.3 + 0.4 * Math.random())));
   }
 
   private heard(bytes: Uint8Array): void {
