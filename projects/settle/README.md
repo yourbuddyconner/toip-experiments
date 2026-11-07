@@ -3,6 +3,7 @@
 An open payments layer for the Trust over IP world. Settle handles conditional payments between parties who don't trust each other. The money is stablecoins, held in an escrow that nobody controls alone, not even the processor.
 
 - Design: `docs/design.md`.
+- Arbiter rules for payments made by agents: `docs/arbiter-rules.md`. For agents, a party also has payee gates (`party.gates`), checkout attachments, and `sendFromWallet` (see `tests/hooks.test.ts`).
 - Status: a working app. It runs on its own local Solana cluster, which survives restarts, or on a real cluster. The program is deployed on devnet at `2g4BZEbPaSuLwY7QM9vvkZUiLNWvzAtuRkcXfuK4MwFy`. Paid, disputed and refunded payments pass end to end on devnet and on `solana-test-validator`.
 
 ## Run the app
