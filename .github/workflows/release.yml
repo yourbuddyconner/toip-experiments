@@ -121,5 +121,8 @@ jobs:
         with:
           pack-dir-artifact-id: ${{ needs.pack.outputs.pack-dir-artifact-id }}
         env:
+          # Every publish from CI carries a provenance attestation. (It is not in publishConfig,
+          # because provenance only works in CI, and the first release is published from a laptop.)
+          NPM_CONFIG_PROVENANCE: "true"
           # Empty unless the secret exists. npm tries trusted publishing first either way.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
