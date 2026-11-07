@@ -2,14 +2,17 @@
 // Every export and bin target must be in the tarball, nothing from src/ or tests/ may be, and the
 // libraries must share one version and depend on each other at that version.
 import { execFileSync } from "node:child_process";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const root = join(import.meta.dirname, "..");
 const SOURCE = "@toip-tools/source";
 const problems = [];
 const rows = [];
-const pkgs = readdirSync(join(root, "packages")).map((dir) => ({ dir: join(root, "packages", dir), json: JSON.parse(readFileSync(join(root, "packages", dir, "package.json"), "utf8")) }));
+// A folder without a package.json (a library still being designed) isn't a package yet.
+const pkgs = readdirSync(join(root, "packages"))
+  .filter((dir) => existsSync(join(root, "packages", dir, "package.json")))
+  .map((dir) => ({ dir: join(root, "packages", dir), json: JSON.parse(readFileSync(join(root, "packages", dir, "package.json"), "utf8")) }));
 const names = new Set(pkgs.map((p) => p.json.name));
 const versions = new Set(pkgs.map((p) => p.json.version));
 if (versions.size !== 1) problems.push(`the libraries have different versions: ${[...versions].join(", ")}`);
