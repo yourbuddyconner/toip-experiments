@@ -58,42 +58,58 @@ export const projects: Project[] = [
   {
     slug: "tipline",
     name: "Tipline",
-    status: "being built",
+    status: "working",
     pitch:
       "A drop box for whistleblowers. A source proves to a journalist \"I am a current member of organization X\" without saying which member, sends a tip with documents, and can carry on a conversation. Each tip uses a fresh, unlinkable DID, and the source keeps nothing on their device but a code written on paper.",
     demonstrates: ["Zero-knowledge group membership in the browser.", "Counting distinct sources by nullifier without knowing any of them."],
     libraries: ["anon-membership", "trust-core", "relay", "web-vault"],
-    coming: "The MVP is being built now.",
+    run: [
+      { what: "The organization, the source app, the journalist's inbox and the relay, each on its own localhost origin", cmd: "npm run tipline" },
+      { what: "The whole story, narrated in the terminal", cmd: "npm run demo --workspace projects/tipline" },
+      { what: "The demo in a real browser, checking the source leaves nothing behind", cmd: "npm run e2e --workspace projects/tipline" },
+    ],
   },
   {
     slug: "agora",
     name: "Agora",
-    status: "being built",
+    status: "working",
     pitch:
       "Forums where every post is anonymous but posting needs a credential: \"only licensed RNs post here\", \"only residents of district 7 vote in this poll\". Each person has one pseudonym per forum, so there are no sockpuppets, and their pseudonyms in different forums can't be linked.",
     demonstrates: ["Credential-gated anonymity with attribute predicates.", "One vote per person with secret ballots.", "A signed, append-only feed the host can't quietly rewrite."],
     libraries: ["anon-membership", "eventlog", "trust-core", "relay", "web-vault"],
-    coming: "The MVP is being built now.",
+    run: [
+      { what: "Issuers, the forum host and the web app on http://localhost:4320", cmd: "npm run agora" },
+      { what: "The twelve demo steps, narrated in the terminal", cmd: "npm run demo --workspace projects/agora" },
+      { what: "Members, a non-member and a reader, in a real browser", cmd: "npm run e2e --workspace projects/agora" },
+    ],
   },
   {
     slug: "agents",
     name: "Agents",
-    status: "being built",
+    status: "working",
     pitch:
       "Passports and mandates for AI agents. An agent gets its own identity and a bounded, revocable authority to act for a person or a company. It hires people and other agents on Settle; deterministic code between the model and the keys checks every payment and message against the mandate chain; and everything it does goes into a signed log its principal can check.",
     demonstrates: ["Delegation that only narrows, checked by both the agent's guard and its counterparties.", "Escalation to a human for one exact action.", "Audit trails an agent can't quietly rewrite."],
     libraries: ["mandates", "eventlog", "trust-core", "relay"],
-    coming: "The MVP is being built now. The demo runs without an API key, using scripted models.",
+    run: [
+      { what: "The principal's console and the courier's view on http://localhost:4330", cmd: "npm run agents" },
+      { what: "The whole story in the terminal, with scripted models", cmd: "npm run demo --workspace projects/agents" },
+      { what: "The same story with Claude, if ANTHROPIC_API_KEY is set", cmd: "npm run demo --workspace projects/agents -- --live" },
+    ],
   },
   {
     slug: "trail",
     name: "Trail",
-    status: "being built",
+    status: "working",
     pitch:
       "Verifiable audit trails for agents, devices and services: a small service with three witnesses, a watcher and a web explorer, on top of the event-log library. It catches a forged edit, a fork shown to one party, a witness that signs two versions, and a stolen key rotated away.",
     demonstrates: ["KERI key event logs with pre-rotation and witnesses, verified by KERIpy.", "Duplicity detection by watchers."],
     libraries: ["eventlog", "trust-core"],
-    coming: "The service and explorer are being built now. The library is ready.",
+    run: [
+      { what: "Four witnesses, two watchers and the explorer on http://localhost:4340", cmd: "npm run trail" },
+      { what: "The ten steps, attacks included, narrated in the terminal", cmd: "npm run demo --workspace projects/trail" },
+      { what: "The explorer through all ten steps in a real browser", cmd: "npm run e2e --workspace projects/trail" },
+    ],
   },
   {
     slug: "capture",

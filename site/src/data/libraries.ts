@@ -242,25 +242,26 @@ Witnesses receipt the first version they see at each position, watchers compare 
     slug: "mesh-transport",
     name: "@toip-tools/mesh-transport",
     dir: "packages/mesh-transport",
-    status: "in progress",
-    does: "TSP and Trust Tasks over LoRa radio, Bluetooth LE and files carried by hand.",
+    status: "ready",
+    does: "TSP and Trust Tasks over LoRa radio and files carried by hand, without the internet.",
     about: `
-Being built now, from the Mesh design. It will implement trust-core's \`Transport\` over radio links: a compact form of Trust Task documents that keeps every proof valid, the TSP envelope replaced on the air by random-looking address tags and rebuilt byte for byte on arrival, fragmentation and retries for lossy links, routes through gateways to the internet relay, and airtime budgets that keep to each region's rules. Every test runs on a simulated radio.
+\`MeshTransport\` implements trust-core's \`Transport\` over radio links, so an \`Endpoint\` on it works as it does on the relay. The TSP envelope never goes on the air: each packet carries a fresh 4-byte address tag instead, and the receiver rebuilds the exact bytes the sender sealed. Trust Task bodies travel in CTT1, a compact CBOR form that decodes to the identical document, so every proof still verifies. A guest-pass presentation shrinks from about 1.8 KB to about 500 bytes. Packets are cut into frames with selective acknowledgements and retries for lossy, half-duplex links, and a scheduler keeps each link within its region's airtime rules (the 400 ms dwell limit in the US). A gateway hands messages to the internet relay unchanged. When there's no link at all, a bundle file carries them.
 
-The API below is the design's (section 19.1), not code you can import yet.
+Every test runs on a simulated radio. Adapters exist for a LoRaWAN gateway's packet forwarder (GWMP) and a RAK3172 module's AT commands; real-radio bring-up is described in the Mesh project.
 `,
-    reachFor: ["Trust interactions where there is no internet: a door, a cabin, a field sensor."],
-    notFor: ["Hiding where you are. A transmitting radio can be located."],
-    runsIn: "Planned: browsers and Node, with Node-only adapters for serial radios.",
+    reachFor: ["Trust interactions where there is no internet: a door, a cabin, a field sensor.", "Carrying sealed messages by hand until a gateway is back."],
+    notFor: ["Hiding where you are. A transmitting radio can be located.", "Large payloads: a radio frame holds about 250 bytes."],
+    runsIn: "Browsers and Node. The `/gwmp`, `/detect` and `/node` entry points are Node only.",
     api: [
-      { area: "Transport (planned)", names: ["MeshTransport", "MeshOptions", "MeshEvent"] },
-      { area: "Time (planned)", names: ["Scheduler", "realScheduler", "VirtualScheduler"] },
-      { area: "Radio (planned)", names: ["Link", "LoRaSetting", "ChannelPlan", "loraAirtimeMs", "plans", "regions"] },
-      { area: "Stores (planned)", names: ["Contact", "ContactStore", "MeshOutboxStore", "memoryContacts", "memoryOutbox"] },
+      { area: "Transport and gateway", names: ["MeshTransport", "MeshGateway", "ChallengeBeacon"] },
+      { area: "Simulation (`/sim`)", names: ["SimMedium", "SimLink", "VirtualScheduler"] },
+      { area: "Radios", names: ["GwmpServer", "GwmpLink", "RakP2PLink", "detectRadios"] },
+      { area: "Off-line", names: ["exportBundle", "openBundle", "postBundle"] },
+      { area: "Wire", names: ["splitTsp", "joinTsp", "encodePacket", "decodePacket", "fragment"] },
     ],
     usedBy: ["mesh", "capture"],
     concepts: ["tsp"],
-    builtOn: "Planned: trust-core, `cborg`, `@noble/*` and `@openvtc/vti-tsp-js`.",
+    builtOn: "trust-core, `cborg`, `serialport` (Node only) and `@openvtc/vti-tsp-js`.",
   },
 ];
 
