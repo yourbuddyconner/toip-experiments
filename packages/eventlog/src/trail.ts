@@ -216,6 +216,9 @@ export class TrailProcessor {
 
     const trailId = m.t === "tin" ? m.logId : this.trailId!;
     const c = cutStatus(this.kel, trailId, est, m.s);
+    const prevRec = this.trunk[m.s - 1];
+    if ("cut" in c && c.cut && m.s === this.trunk.length && prevRec?.est && m.body.p === prevRec.msg.d && prevRec.est.estSn > est.estSn)
+      return this.fail(m, problem("staleKeyState", "signed by an older key state than the prior entry", m.logId, m.s), est);
     if ("cut" in c && c.cut) {
       this.cut.push({ msg: m, est, status: "cut", cutBy: c.by, receipts: new Map(), receiptMsgs: new Map(), endorsements: new Map() });
       return { result: "cut", cutBy: c.by };
@@ -277,8 +280,8 @@ export class TrailProcessor {
     for (const c of trc.couples ?? []) {
       if (!verifyCouple(c.signer, raw, c.sig)) continue;
       // witness duplicity: one witness, two versions at one location
-      for (const other of [...this.trunk, ...this.cut]) {
-        if (other.msg.s !== trc.s || other.msg.d === trc.d) continue;
+      for (const other of this.trunk) {
+        if (other.msg.s !== trc.s || other.msg.d === trc.d || !rec || rec.status === "cut") continue;
         const prior = other.receiptMsgs.get(c.signer);
         if (prior) {
           this.evidence.push({

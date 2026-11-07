@@ -179,7 +179,8 @@ export class LogKeeper {
     for (const { by, one } of signed) {
       // witness duplicity: the same signer on another version at this location
       for (const v of versions) {
-        if (v.d === r.d) continue;
+        // a cut entry and its replacement, or a superseded ixn and its rot, are recovery, not duplicity
+        if (v.d === r.d || v.cutBy !== undefined || v.superseded || target?.cutBy !== undefined || target?.superseded) continue;
         const prior = (await this.store.receipts(r.logId, r.s, v.d)).find((x) => x.by === by);
         if (!prior) continue;
         const a = receiptMessage(prior)!;
