@@ -2,15 +2,15 @@
   "name": "@toip-tools/agora",
   "version": "0.0.0",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit && tsc --noEmit -p web",
-    "app": "tsx src/platform/main.ts",
-    "demo": "tsx src/demo.ts",
+    "app": "tsx --conditions=@toip-tools/source src/platform/main.ts",
+    "demo": "tsx --conditions=@toip-tools/source src/demo.ts",
     "build:web": "vite build --config web/vite.config.ts",
-    "e2e": "tsx web/e2e.ts"
+    "e2e": "tsx --conditions=@toip-tools/source web/e2e.ts"
   },
   "dependencies": {
     "@fontsource/atkinson-hyperlegible-next": "5.3.0",

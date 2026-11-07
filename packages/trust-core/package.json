@@ -1,14 +1,55 @@
 {
   "name": "@toip-tools/trust-core",
   "version": "0.0.0",
-  "private": true,
+  "description": "Identities, signed and encrypted Trust Tasks over TSP, credentials, status lists and local policy.",
+  "keywords": [
+    "toip",
+    "trust-tasks",
+    "tsp",
+    "did",
+    "did-key",
+    "verifiable-credentials",
+    "status-list",
+    "opa"
+  ],
+  "homepage": "https://toip.tools/toolkit/trust-core/",
+  "bugs": {
+    "url": "https://github.com/yourbuddyconner/toip-experiments/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourbuddyconner/toip-experiments.git",
+    "directory": "packages/trust-core"
+  },
+  "license": "Apache-2.0",
+  "author": "Conner Swann",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "@toip-tools/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "fixtures": "opa build -t wasm -e fixture/decision -o tests/fixtures/bundle.tar.gz tests/fixtures/fixture.rego && tar -xzf tests/fixtures/bundle.tar.gz -C tests/fixtures /policy.wasm && rm tests/fixtures/bundle.tar.gz"
@@ -27,6 +68,5 @@
     "@types/node": "26.6.6",
     "typescript": "7.0.2",
     "vitest": "5.1.0"
-  },
-  "license": "UNLICENSED"
+  }
 }

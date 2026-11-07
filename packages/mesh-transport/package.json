@@ -1,21 +1,84 @@
 {
   "name": "@toip-tools/mesh-transport",
   "version": "0.0.0",
-  "private": true,
-  "license": "UNLICENSED",
+  "description": "Deliver TSP messages over LoRa radio or portable files when the internet is unavailable.",
+  "keywords": [
+    "toip",
+    "tsp",
+    "lora",
+    "mesh",
+    "offline",
+    "delay-tolerant",
+    "lorawan"
+  ],
+  "homepage": "https://toip.tools/toolkit/mesh-transport/",
+  "bugs": {
+    "url": "https://github.com/yourbuddyconner/toip-experiments/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourbuddyconner/toip-experiments.git",
+    "directory": "packages/mesh-transport"
+  },
+  "license": "Apache-2.0",
+  "author": "Conner Swann",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./sim": "./src/sim.ts",
-    "./serial": "./src/serial.ts",
-    "./rak": "./src/rak.ts",
-    "./gwmp": "./src/gwmp.ts",
-    "./detect": "./src/detect.ts",
-    "./node": "./src/node.ts"
+    ".": {
+      "@toip-tools/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./sim": {
+      "@toip-tools/source": "./src/sim.ts",
+      "types": "./dist/sim.d.ts",
+      "default": "./dist/sim.js"
+    },
+    "./serial": {
+      "@toip-tools/source": "./src/serial.ts",
+      "types": "./dist/serial.d.ts",
+      "default": "./dist/serial.js"
+    },
+    "./rak": {
+      "@toip-tools/source": "./src/rak.ts",
+      "types": "./dist/rak.d.ts",
+      "default": "./dist/rak.js"
+    },
+    "./gwmp": {
+      "@toip-tools/source": "./src/gwmp.ts",
+      "types": "./dist/gwmp.d.ts",
+      "default": "./dist/gwmp.js"
+    },
+    "./detect": {
+      "@toip-tools/source": "./src/detect.ts",
+      "types": "./dist/detect.d.ts",
+      "default": "./dist/detect.js"
+    },
+    "./node": {
+      "@toip-tools/source": "./src/node.ts",
+      "types": "./dist/node.d.ts",
+      "default": "./dist/node.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
@@ -29,8 +92,8 @@
     "serialport": "13.0.0"
   },
   "devDependencies": {
-    "@types/node": "26.6.6",
     "@toip-tools/relay": "0.0.0",
+    "@types/node": "26.6.6",
     "typescript": "7.0.2",
     "vitest": "5.1.0"
   }

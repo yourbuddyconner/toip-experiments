@@ -1,26 +1,69 @@
 {
   "name": "@toip-tools/relay",
   "version": "0.0.0",
-  "private": true,
-  "license": "UNLICENSED",
+  "description": "A WebSocket mailbox that stores and delivers encrypted TSP messages.",
+  "keywords": [
+    "toip",
+    "tsp",
+    "relay",
+    "mailbox",
+    "websocket",
+    "did"
+  ],
+  "homepage": "https://toip.tools/toolkit/relay/",
+  "bugs": {
+    "url": "https://github.com/yourbuddyconner/toip-experiments/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourbuddyconner/toip-experiments.git",
+    "directory": "packages/relay"
+  },
+  "license": "Apache-2.0",
+  "author": "Conner Swann",
   "type": "module",
-  "main": "./src/server.ts",
+  "sideEffects": false,
+  "main": "./dist/server.js",
+  "types": "./dist/server.d.ts",
   "exports": {
-    ".": "./src/server.ts"
+    ".": {
+      "@toip-tools/source": "./src/server.ts",
+      "types": "./dist/server.d.ts",
+      "default": "./dist/server.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "toip-relay": "./dist/bin.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22.13"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "start": "tsx src/bin.ts"
+    "start": "tsx --conditions=@toip-tools/source src/bin.ts"
   },
   "dependencies": {
     "@noble/curves": "2.4.0",
     "@toip-tools/trust-core": "0.0.0",
-    "tsx": "4.23.15"
+    "ws": "8.22.1"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
     "@types/ws": "8.18.2",
+    "tsx": "4.23.15",
     "typescript": "7.0.2",
     "vitest": "5.1.0"
   }

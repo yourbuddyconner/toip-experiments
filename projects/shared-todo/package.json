@@ -2,7 +2,7 @@
   "name": "@toip-tools/shared-todo",
   "version": "0.0.0",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "test": "vitest run",

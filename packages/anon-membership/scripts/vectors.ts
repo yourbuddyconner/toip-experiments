@@ -1,6 +1,6 @@
 // Hash test vectors, shared by vitest (tests/vectors.json) and nargo test (circuits/lib/src/vectors.nr).
 //
-//   npx tsx scripts/vectors.ts          writes both files from the TypeScript hashes
+//   npm run vectors                     writes both files from the TypeScript hashes
 //
 // The vectors are made once with bb.js and committed. Both test suites then check the same values,
 // so a disagreement between the TypeScript and Noir hashes fails one of them.

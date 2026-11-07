@@ -4,6 +4,12 @@ Delegation credentials. A principal (a person, an organization, a device owner) 
 
 The design is `projects/agents/docs/design.md`, §7 to §10 and §16. The library knows nothing about Settle or cameras. Their action vocabularies are data: the `settle/1` and `capture/1` profiles.
 
+## Install
+
+```sh
+npm install @toip-tools/mandates
+```
+
 ## The pieces
 
 - A **mandate** is a W3C VC-shaped credential (type `Mandate`), signed by its issuer with trust-core's `eddsa-jcs-2022` proof. It names its delegate, a profile, its parent (`{ id, hash }`, or `null` at the root), constraints, how many more links may follow, what may be approved, and how fresh a revocation list must be. `validUntil` and `credentialStatus` are required.

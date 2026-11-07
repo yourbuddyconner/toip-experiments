@@ -1,20 +1,66 @@
 {
   "name": "@toip-tools/anon-membership",
   "version": "0.0.0",
-  "private": true,
+  "description": "Prove group membership and attribute requirements without revealing which member you are.",
+  "keywords": [
+    "toip",
+    "zero-knowledge",
+    "zk",
+    "noir",
+    "ultrahonk",
+    "membership",
+    "nullifier",
+    "privacy"
+  ],
+  "homepage": "https://toip.tools/toolkit/anon-membership/",
+  "bugs": {
+    "url": "https://github.com/yourbuddyconner/toip-experiments/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourbuddyconner/toip-experiments.git",
+    "directory": "packages/anon-membership"
+  },
+  "license": "Apache-2.0",
+  "author": "Conner Swann",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./worker": "./src/worker.ts"
+    ".": {
+      "@toip-tools/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./worker": {
+      "@toip-tools/source": "./src/worker.ts",
+      "types": "./dist/worker.d.ts",
+      "default": "./dist/worker.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "artifacts",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "build:circuits": "tsx scripts/build-circuits.ts",
-    "vectors": "tsx scripts/vectors.ts",
-    "bench": "tsx scripts/bench.ts"
+    "build:circuits": "tsx --conditions=@toip-tools/source scripts/build-circuits.ts",
+    "vectors": "tsx --conditions=@toip-tools/source scripts/vectors.ts",
+    "bench": "tsx --conditions=@toip-tools/source scripts/bench.ts"
   },
   "dependencies": {
     "@aztec/bb.js": "npm:@aztec-foundation/bb.js@6.0.0",
@@ -29,6 +75,5 @@
     "typescript": "7.0.2",
     "vite": "8.3.6",
     "vitest": "5.1.0"
-  },
-  "license": "UNLICENSED"
+  }
 }

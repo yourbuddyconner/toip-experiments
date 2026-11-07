@@ -6,6 +6,12 @@ Trust Tasks and TSP over LoRa radio and by hand, without the internet.
 
 The design is in `projects/mesh/docs/design.md`. This package is section 19.1 of it.
 
+## Install
+
+```sh
+npm install @toip-tools/mesh-transport
+```
+
 ## Layers
 
 ```

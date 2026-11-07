@@ -1,14 +1,55 @@
 {
   "name": "@toip-tools/cose",
   "version": "0.0.0",
-  "private": true,
+  "description": "Deterministic CBOR and COSE_Sign1, with Ed25519, P-256, WebCrypto and passkey signers.",
+  "keywords": [
+    "toip",
+    "cose",
+    "cose-sign1",
+    "cbor",
+    "webauthn",
+    "passkey",
+    "ed25519",
+    "p-256"
+  ],
+  "homepage": "https://toip.tools/toolkit/cose/",
+  "bugs": {
+    "url": "https://github.com/yourbuddyconner/toip-experiments/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourbuddyconner/toip-experiments.git",
+    "directory": "packages/cose"
+  },
+  "license": "Apache-2.0",
+  "author": "Conner Swann",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "@toip-tools/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
@@ -21,6 +62,5 @@
     "@types/node": "26.6.6",
     "typescript": "7.0.2",
     "vitest": "5.1.0"
-  },
-  "license": "UNLICENSED"
+  }
 }

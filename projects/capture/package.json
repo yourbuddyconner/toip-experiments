@@ -2,17 +2,17 @@
   "name": "@toip-tools/capture",
   "version": "0.0.0",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit && tsc --noEmit -p web",
-    "app": "tsx src/world/main.ts",
-    "sensor": "tsx src/sensor/main.ts",
+    "app": "tsx --conditions=@toip-tools/source src/world/main.ts",
+    "sensor": "tsx --conditions=@toip-tools/source src/sensor/main.ts",
     "build:web": "vite build --config web/vite.config.ts",
-    "e2e": "tsx web/e2e.ts",
-    "fixtures:drand": "tsx tests/tools/record-drand.ts",
-    "strip": "tsx tests/tools/strip.ts"
+    "e2e": "tsx --conditions=@toip-tools/source web/e2e.ts",
+    "fixtures:drand": "tsx --conditions=@toip-tools/source tests/tools/record-drand.ts",
+    "strip": "tsx --conditions=@toip-tools/source tests/tools/strip.ts"
   },
   "dependencies": {
     "@contentauth/c2pa-web": "0.16.0",

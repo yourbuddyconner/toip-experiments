@@ -1,15 +1,56 @@
 {
   "name": "@toip-tools/mandates",
   "version": "0.0.0",
-  "private": true,
+  "description": "Revocable delegation with spending limits, policy checks, and approvals.",
+  "keywords": [
+    "toip",
+    "mandates",
+    "delegation",
+    "authorization",
+    "verifiable-credentials",
+    "opa",
+    "rego"
+  ],
+  "homepage": "https://toip.tools/toolkit/mandates/",
+  "bugs": {
+    "url": "https://github.com/yourbuddyconner/toip-experiments/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourbuddyconner/toip-experiments.git",
+    "directory": "packages/mandates"
+  },
+  "license": "Apache-2.0",
+  "author": "Conner Swann",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./policy.wasm": "./policy/policy.wasm"
+    ".": {
+      "@toip-tools/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./policy.wasm": "./policy/policy.wasm",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "policy/policy.wasm",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "policy": "opa build -t wasm -e mandates/check/decision -e mandates/check/narrowing -o policy/bundle.tar.gz policy/check.rego && tar -xzf policy/bundle.tar.gz -C policy /policy.wasm && rm policy/bundle.tar.gz && node scripts/policy-hash.mjs",
@@ -23,6 +64,5 @@
     "@types/node": "26.6.6",
     "typescript": "7.0.2",
     "vitest": "5.1.0"
-  },
-  "license": "UNLICENSED"
+  }
 }
