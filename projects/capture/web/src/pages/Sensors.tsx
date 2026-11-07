@@ -141,7 +141,7 @@ function MiniMap({ checks }: { checks: SensorCheck[] }) {
           return (
             <g key={c.sensor.did}>
               <circle cx={X(l.lon)} cy={Y(l.lat)} r="5" fill="var(--ink)" />
-              <text x={X(l.lon) + 8} y={Y(l.lat) + 4} fontSize="11" fill="var(--ink)">
+              <text x={X(l.lon) > 120 ? X(l.lon) - 8 : X(l.lon) + 8} y={Y(l.lat) + 4} fontSize="11" fill="var(--ink)" textAnchor={X(l.lon) > 120 ? "end" : "start"}>
                 {c.sensor.label}
               </text>
             </g>

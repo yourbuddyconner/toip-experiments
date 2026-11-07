@@ -183,7 +183,7 @@ function sentence(r: Report): string {
   }
   if (r.verdict === "untrustedIssuer") parts.push("Everything checks, but you don't trust whoever vouches for this camera.");
   const warns = r.findings.filter((f) => f.level === "warn");
-  if (r.verdict === "verifiedWithWarnings" && warns.length) parts.push(warns.length === 1 ? `One warning: ${warns[0].text}` : `${warns.length} warnings, listed below.`);
+  if (r.verdict === "verifiedWithWarnings" && warns.length) parts.push(warns.length === 1 ? `One warning: ${warns[0].text[0].toLowerCase()}${warns[0].text.slice(1)}` : `${warns.length} warnings, listed below.`);
   return parts.join(" ");
 }
 

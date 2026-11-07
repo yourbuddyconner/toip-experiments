@@ -107,7 +107,7 @@ const MAX_DEPTH = 32;
 const CLOCK_SLACK_MS = 2 * 60_000;
 
 const fixedClock = (ms: number): Clock => ({ now: () => ms, iso: () => new Date(ms).toISOString(), date: () => new Date(ms) });
-const fmt = (ms: number) => new Date(ms).toISOString().replace(".000Z", "Z").replace("T", " ").replace("Z", " UTC");
+const fmt = (ms: number) => `${new Date(ms).toISOString().slice(0, 19).replace("T", " ")} UTC`;
 
 interface Ctx {
   store: Store;

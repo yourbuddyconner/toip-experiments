@@ -1045,3 +1045,49 @@ The open questions above were settled by the assistant, at the convener's reques
 - **Sensors.** A sensor runs as a Node process with simulated readings (temperature and air quality), and can send them over the mesh transport's simulator, and over the user's LoRa radio once that's set up. A Raspberry Pi with a real sensor comes later.
 - **Location.** No GPS: location is a claim made by the owner's installation credential, not something the device proves.
 - **Anchoring time.** drand for "not before", and trail witness receipts for "not after". The Solana anchor is optional and off by default.
+
+## Implementation notes (2026-11-06)
+
+What the MVP built, and where it differs from the sections above. The README says how to run it.
+
+**Where the code is.**
+- The provenance code is in `src/core`, not in `packages/provenance` (decision 0006). It runs in browsers and in Node.
+- `src/world` starts the whole network in one process. `src/sensors` has the sensor, the gateway and the radio link. `src/sensor/main.ts` is a sensor in its own process. `web` is the React app.
+- It uses the shared packages as they are: `@zk-toip/cose`, `@zk-toip/eventlog`, `@zk-toip/mandates`, `@zk-toip/web-vault`, `@zk-toip/mesh-transport` and `@zk-toip/trust-core`. None of them was changed.
+
+**Identifiers and keys.**
+- A device's identifier is `did:keri:<AID>`, as eventlog names it, not `did:trail:`.
+- The camera's key is a non-exportable ECDSA P-256 WebCrypto key (ESP256, alg −9), kept in IndexedDB by `web-vault`. Sensors use Ed25519 key files.
+- The owner's recovery key comes from `coldKeysFromSeed(ownerSeed, "capture/recovery/v1|<nonce>")`. The design asked for HKDF with that info string; this is HKDF too, through eventlog.
+- To retire a lost device's key, the owner rotates with the recovery key, and the recovery key becomes current. To move the identifier to a new device, the owner's rotation commits to the new device's key, and the new device then rotates itself in. Both are tested.
+- The camera's inception has no messaging DID: enrollment is over HTTP, not TSP.
+
+**Stores and manifests.**
+- Store map keys are text: manifest ids as `cm1_…`, device ids as DIDs. The design showed byte keys.
+- Key logs in a store are eventlog's compact CBOR logs, with the witnesses' timed receipts.
+- A store may also carry the owner's `capture/1` mandate. The verifier decides the capture as a `capture/sign-media` action at the time of capture, and reports the result. It never changes the verdict to "broken" on its own.
+- An `EditorCredential` is new: the owner vouches for a person who edits for them. An edit by someone nobody you trust vouches for is a warning.
+
+**The verifier.**
+- "Not after" for a capture is the time by which the witness threshold (2 of 3) had receipted the anchoring event: the 2nd-earliest timed receipt.
+- A capture signed with a retired key fails when its beacon is later than the rotation's receipts. It is fine when it was anchored before the rotation. Otherwise it is a warning.
+- The verifier asks the registry for a fresher key log. Without one (offline), a rotation the file doesn't know about can't be seen.
+- A camera input whose name looks virtual (OBS, "fake", "virtual") is a warning.
+- Partly covered edge tiles of a crop must be inside a declared redaction, or the check fails. So the editor snaps both corners of a crop to the grid or the image's edge.
+- drand rounds are checked in batches: one pairing check for many rounds, with random weights, and one at a time only when the batch fails.
+
+**Time.**
+- The world polls the public drand quicknet chain and caches the rounds it sees. Without network it uses a "dev" beacon of its own, with the same scheme. The verifier says which one gave "not before". The quicknet round-time formula was checked against `/info` and recorded rounds.
+
+**Sensors.**
+- Frames go on the radio as they are, on a `SimMedium` link from `@zk-toip/mesh-transport`, with no TSP envelope (design §12.1). The frame sizes match §12.4 exactly in the worst case. With small sequence numbers, a reading is 38 bytes, or 42 with a beacon tag.
+- Each reading is one radio frame, and each batch has one signature, its seal. A seal is sent twice, the second time at a random moment, because one lost seal leaves a whole batch pending. Verifiers ignore the duplicate.
+- A sensor answers a backfill request 1.5 s later, since the gateway can't hear while it is still sending. It also resends the seals over the range.
+- The gateway is in the world process and signs a receipt for each frame. That receipt is the readings' "not after". There is no relay hop, and seals are not anchored in the sensor's key log yet.
+- A sensor in its own process joins the world's medium through an HTTP bridge (`/api/air/<name>`). The world transmits for it, with the medium's loss, airtime and collisions.
+- Two sensors that transmit at the same moment collide, as on a real channel. The built-in sensors start at different offsets.
+- A reading taken before the sensor heard any beacon has no "not before", so a slow clock can't be shown for that reading.
+
+**C2PA.** `@contentauth/c2pa-web` 0.16.0 reads C2PA in the verifier, in a Web Worker with its WebAssembly binary (about 9 MB, loaded only when a file is checked). It was tested on `C.jpg` from the c2pa-rs test fixtures. It showed "Present, signed by C2PA Signer, not on your trust list", with no change to Capture's verdict.
+
+**Not built.** Passkey evidence mode, enrollment over TSP, the relay path for sensor batches, the Solana anchor, C2PA export, multi-level tile proofs, and the real radio.
