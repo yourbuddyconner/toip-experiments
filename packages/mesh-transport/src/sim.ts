@@ -83,6 +83,8 @@ export class SimMedium {
   private readonly log: SimRecord[] = [];
   private readonly listeners = new Set<() => void>();
   private txs: Tx[] = [];
+  /** Nodes whose transmission has not finished (a flag, so real timers that fire early can't confuse it). */
+  private readonly onAir = new Set<string>();
 
   constructor(opts: { scheduler: Scheduler; seed: number; captureDb?: number }) {
     this.scheduler = opts.scheduler;
@@ -140,8 +142,7 @@ export class SimMedium {
   }
 
   transmitting(name: string): boolean {
-    const now = this.scheduler.now();
-    return this.txs.some((t) => t.from === name && t.end > now);
+    return this.onAir.has(name);
   }
 
   /** Called by SimLink.send once the frame passed the link's own checks. Resolves at the end of transmission. */
@@ -149,11 +150,13 @@ export class SimMedium {
     const start = this.scheduler.now() + latencyMs;
     const tx: Tx = { from: from.name, start, end: start + airtimeMs, setting: from.txSetting };
     this.txs.push(tx);
+    this.onAir.add(tx.from);
     const cutoff = this.scheduler.now() - 120_000;
     this.txs = this.txs.filter((t) => t.end > cutoff);
     const bytes = frame.slice();
     return new Promise<void>((resolve) => {
       this.scheduler.setTimeout(() => {
+        this.onAir.delete(tx.from);
         this.finish(tx, bytes, airtimeMs);
         resolve();
       }, latencyMs + airtimeMs);

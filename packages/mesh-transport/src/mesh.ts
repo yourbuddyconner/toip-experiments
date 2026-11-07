@@ -139,6 +139,8 @@ interface QueuedFrame {
   cls: TrafficClass;
   ms: number;
   tries: number;
+  /** The packet this frame belongs to: its frames are dropped from the queue when it is done. */
+  owner?: Outgoing;
   /** Runs right after the frame is sent, before the next one is picked. */
   after?: () => void;
   done: (sent: boolean) => void;
@@ -221,6 +223,8 @@ interface Seen {
   /** Kept for relays, so a later attempt can be repeated. */
   packet?: Uint8Array;
   receipt?: { packet: Uint8Array; ttl: number; slot: Slot; attempt: number };
+  /** A VIA packet for our gateway: a resend (a new attempt) goes to the gateway again, which answers from its record. */
+  via?: { arrival: ViaArrival; vid: string; attempt: number };
 }
 
 const isDirect = (f: { ttl: number; hops: number }) => f.ttl === 0 && f.hops === 0;
@@ -260,6 +264,11 @@ export class MeshTransport implements Transport {
     this.sched = opts.scheduler ?? realScheduler;
     this.rnd = opts.random ?? Math.random;
     for (const identity of opts.identities) this.locals.set(identity.did, { identity });
+  }
+
+  /** The clock and timers this transport runs on. */
+  get scheduler(): Scheduler {
+    return this.sched;
   }
 
   private get maxTtl(): number {
@@ -626,7 +635,7 @@ export class MeshTransport implements Transport {
       order.forEach((i, n) => {
         const last = n === order.length - 1;
         sends.push(
-          this.enqueue(slot, frames[i], retry ? PRIO.retry : PRIO.own, "normal", last && direct ? () => (slot.listening = o) : undefined),
+          this.enqueue(slot, frames[i], retry ? PRIO.retry : PRIO.own, "normal", last && direct ? () => (slot.listening = o) : undefined, o),
         );
       });
     }
@@ -683,6 +692,13 @@ export class MeshTransport implements Transport {
     this.active.delete(o.pidHex);
     this.activeByItem.delete(o.item);
     this.byReceiptTag.delete(o.rtagHex);
+    // Frames of this packet still waiting for airtime are no longer needed.
+    for (const s of o.route.slots) {
+      const stale = s.queue.filter((q) => q.owner === o);
+      if (!stale.length) continue;
+      s.queue = s.queue.filter((q) => q.owner !== o);
+      for (const q of stale) q.done(false);
+    }
   }
 
   private async backoff(o: Outgoing): Promise<void> {
@@ -793,9 +809,9 @@ export class MeshTransport implements Transport {
 
   // ---------------------------------------------------------------- the link queue
 
-  private enqueue(slot: Slot, frame: Uint8Array, prio: number, cls: TrafficClass, after?: () => void): Promise<boolean> {
+  private enqueue(slot: Slot, frame: Uint8Array, prio: number, cls: TrafficClass, after?: () => void, owner?: Outgoing): Promise<boolean> {
     return new Promise<boolean>((done) => {
-      slot.queue.push({ frame, prio, cls, ms: slot.link.info.airtimeMs(frame.length), tries: 0, after, done });
+      slot.queue.push({ frame, prio, cls, ms: slot.link.info.airtimeMs(frame.length), tries: 0, after, done, owner });
       this.pump(slot);
     });
   }
@@ -952,6 +968,10 @@ export class MeshTransport implements Transport {
       }
     } else if (!r && this.relayOn && d.ttl > 0 && s.packet && !s.mine && d.index === 0) {
       this.scheduleRelay(s.packet, d.pid, d.ttl - 1, d.hops + 1, d.attempt, slot);
+    }
+    if (s.via && d.index === 0 && d.attempt !== s.via.attempt) {
+      s.via.attempt = d.attempt;
+      this.viaHandlers.get(s.via.vid)?.(s.via.arrival).catch(() => this.drop("gateway-failed"));
     }
     if (s.receipt && d.index === 0 && d.attempt !== s.receipt.attempt) {
       s.receipt.attempt = d.attempt;
@@ -1139,7 +1159,9 @@ export class MeshTransport implements Transport {
         const handler = this.viaHandlers.get(f.local.did);
         if (!handler) return false;
         const packet = encodePacket(p);
-        handler({ packet, pid: b.pid, via: p, hops: b.minHops, link: b.slot.label }).catch(() => this.drop("gateway-failed"));
+        const arrival: ViaArrival = { packet, pid: b.pid, via: p, hops: b.minHops, link: b.slot.label };
+        seen.via = { arrival, vid: f.local.did, attempt: b.attempt };
+        handler(arrival).catch(() => this.drop("gateway-failed"));
         return true;
       }
       case "receipt": {
