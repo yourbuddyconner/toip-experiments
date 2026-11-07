@@ -1,0 +1,32 @@
+{
+  "name": "@zk-toip/trail",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p web",
+    "app": "tsx src/main.ts",
+    "demo": "tsx src/demo.ts",
+    "build:web": "vite build --config web/vite.config.ts",
+    "e2e": "tsx web/e2e.ts"
+  },
+  "dependencies": {
+    "@zk-toip/eventlog": "0.0.0",
+    "@zk-toip/trust-core": "0.0.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.2.1",
+    "playwright": "1.65.0",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.6",
+    "vitest": "5.1.0"
+  }
+}

@@ -48,7 +48,7 @@ Also refused, as malformed (`badFields`): more than one `-F` group on a message,
 
 These use KERI's SAID rules and CESR primitives. A KEL with only Ed25519 or plain P-256 signatures is pure KERI. To give KERIpy a KEL, send `toStream(kel.messages)`. A bundle's KEL stream also holds timed receipts, which KERIpy does not read.
 
-**What the tests prove.** `tests/interop.test.ts` hands our KELs to KERIpy 1.3.6. It covers inception, interaction with seals and a data field, full and partial rotation, 2-of-3 multisig, witness add and remove with receipts, a superseding recovery, and P-256 keys. `tests/kel.test.ts` verifies three KELs that KERIpy made (`tests/fixtures/keripy-kels.json`). Known answers for SAIDs and next-key digests come from the CESR specification and from KERIpy.
+**What the tests prove.** `tests/interop.test.ts` hands our KELs to KERIpy 1.3.6. It covers inception, interaction with seals and a data field, full and partial rotation (including a principal rotating alone with `extraKeys`), 2-of-3 multisig, witness add and remove with receipts, a superseding recovery, and P-256 keys. `tests/kel.test.ts` verifies three KELs that KERIpy made (`tests/fixtures/keripy-kels.json`). Known answers for SAIDs and next-key digests come from the CESR specification and from KERIpy.
 
 ## Quick start
 
@@ -177,7 +177,7 @@ Additive, or where a consumer needed more than section 13:
 - **Signers.** `Signer.sign` is async and may return a WebAuthn-wrapped signature. `Signer.curve` is `"ed25519"` (default) or `"p256"`. Added `p256Signer`, `webCryptoSigner`, `webAuthnSigner`. `coldKeysFromSeed` takes `{ curve }`.
 - **P-256** keys (`1AAJ`) and signature codes `E`, `F`, `2E`, `2F`, for capture. KERIpy 1.3.6 accepts them. Section 5.4 listed Ed25519 only.
 - **Pluggable verification.** `VerifyOptions.verifySig` (tried first) and `VerifyOptions.webauthn`.
-- **Another party's next key.** `InceptOptions.extraNext` and `next`; `RotateOptions.extraNext` and `next`. `exposed` signers become the new current keys.
+- **Another party's next key.** `InceptOptions.extraNext` and `next`; `RotateOptions.extraNext` and `next`. `exposed` signers become the new current keys. `RotateOptions.extraKeys` adds current keys that don't sign the rotation, so a principal can rotate alone and name the agent's new key.
 - **Inception data.** `InceptOptions.data` puts a small object in the inception's `a`. KERIpy accepts it.
 - **DID binding at inception.** A binding names the AID, and the AID is the inception's SAID, so the binding can't be sealed in the inception itself. `InceptOptions.bind` seals it in an `ixn` right after. (Section 7.6 says "normally in the inception event".)
 - **Timed receipts on KEL events.** KERI's `rct` has no time. Witnesses also return a `trc` over each KEL event they receipt. `KelEvent.receiptTimes` and `earliestReceipt` report them. They don't count toward `bt`. `StoredReceipt.kind` gains `"timed"`, and `addReceipt` is idempotent per (by, d, kind).
@@ -197,7 +197,8 @@ Behavior worth knowing:
 - An entry under a retired key that directly follows an entry under a newer key fails `staleKeyState`. Other entries past a rotation's seal are `cut`.
 - A rotation seals every open trail, and every closed trail whose last message is in the outgoing epoch.
 - An identical copy of a message in a stream is merged, not reported.
-- A witness refuses an entry that a rotation it holds has cut.
+- A witness refuses an entry that a rotation it holds has cut. Its head skips cut entries, so after a recovery the head is the entry that replaced them.
+- A watcher's poll fetches from the last place it holds. So a version handed to it directly shows as duplicity when the witnesses hold another.
 - Bundles carry the whole KEL, including superseded events, so a recovery is visible.
 
 Not done yet:
