@@ -1,6 +1,6 @@
 {
   "name": "@toip-tools/cose",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Deterministic CBOR and COSE_Sign1, with Ed25519, P-256, WebCrypto and passkey signers.",
   "keywords": [
     "toip",

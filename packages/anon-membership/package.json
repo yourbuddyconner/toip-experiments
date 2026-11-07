@@ -1,6 +1,6 @@
 {
   "name": "@toip-tools/anon-membership",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Prove group membership and attribute requirements without revealing which member you are.",
   "keywords": [
     "toip",
@@ -66,7 +66,7 @@
     "@aztec/bb.js": "npm:@aztec-foundation/bb.js@6.0.0",
     "@noble/hashes": "2.4.0",
     "@noir-lang/noir_js": "1.0.0",
-    "@toip-tools/trust-core": "0.0.0"
+    "@toip-tools/trust-core": "0.1.0"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

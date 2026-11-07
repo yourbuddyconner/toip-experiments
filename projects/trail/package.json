@@ -13,8 +13,8 @@
     "e2e": "tsx --conditions=@toip-tools/source web/e2e.ts"
   },
   "dependencies": {
-    "@toip-tools/eventlog": "0.0.0",
-    "@toip-tools/trust-core": "0.0.0",
+    "@toip-tools/eventlog": "0.1.0",
+    "@toip-tools/trust-core": "0.1.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },

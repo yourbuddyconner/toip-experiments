@@ -1,6 +1,6 @@
 {
   "name": "@toip-tools/trust-core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Identities, signed and encrypted Trust Tasks over TSP, credentials, status lists and local policy.",
   "keywords": [
     "toip",

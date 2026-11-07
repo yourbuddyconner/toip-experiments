@@ -1,6 +1,6 @@
 {
   "name": "@toip-tools/eventlog",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "KERI key histories and witnessed audit trails that make tampering detectable.",
   "keywords": [
     "toip",
@@ -60,7 +60,7 @@
   "dependencies": {
     "@noble/curves": "2.4.0",
     "@noble/hashes": "2.4.0",
-    "@toip-tools/trust-core": "0.0.0",
+    "@toip-tools/trust-core": "0.1.0",
     "cborg": "6.2.1"
   },
   "devDependencies": {

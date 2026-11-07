@@ -1,6 +1,6 @@
 {
   "name": "@toip-tools/mesh-transport",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Deliver TSP messages over LoRa radio or portable files when the internet is unavailable.",
   "keywords": [
     "toip",
@@ -87,12 +87,12 @@
     "@noble/hashes": "2.4.0",
     "@openvtc/trust-tasks-proof": "0.1.6",
     "@openvtc/vti-tsp-js": "0.2.0",
-    "@toip-tools/trust-core": "0.0.0",
+    "@toip-tools/trust-core": "0.1.0",
     "cborg": "6.2.1",
     "serialport": "13.0.0"
   },
   "devDependencies": {
-    "@toip-tools/relay": "0.0.0",
+    "@toip-tools/relay": "0.1.0",
     "@types/node": "26.6.6",
     "typescript": "7.0.2",
     "vitest": "5.1.0"

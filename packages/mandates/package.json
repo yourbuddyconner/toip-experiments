@@ -1,6 +1,6 @@
 {
   "name": "@toip-tools/mandates",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Revocable delegation with spending limits, policy checks, and approvals.",
   "keywords": [
     "toip",
@@ -58,7 +58,7 @@
   },
   "dependencies": {
     "@noble/hashes": "2.4.0",
-    "@toip-tools/trust-core": "0.0.0"
+    "@toip-tools/trust-core": "0.1.0"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
