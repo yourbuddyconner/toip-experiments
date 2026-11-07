@@ -104,7 +104,7 @@ Other calls:
 | `src/agents/roles.ts` | The network's services: the processor (sponsors transactions, collects signatures, keeps the log) and the arbiter (holds disputed escrows, rules). |
 | `src/platform/` | The platform: the whole network in one process.<br>• `platform.ts`: a REST API (config, faucet, gas station, verify, directory, operator sign-in and views, public log, dev clock) that also serves the web app.<br>• `cluster.ts`: the local cluster or a real one.<br>• `state.ts`: the data directory.<br>• `operators.ts`: operator sign-in.<br>• `deploy.ts`: deploys the program to a real cluster. |
 | `src/client/client.ts` | `SettleApi`: connects a party to a platform. Used by the web app and the tests alike. |
-| `web/` | The web app (React):<br>• a dashboard, payment links and a hosted checkout at `/pay/:link`;<br>• payment pages with the three seals;<br>• a wallet, verification, and the operator view at `/console`;<br>• `src/vault.ts` seals each account's key with a passkey (WebAuthn PRF) or a passphrase;<br>• `web/e2e.ts` drives all of it in a real browser, with virtual passkeys. |
+| `web/` | The web app (React):<br>• a dashboard, payment links and a hosted checkout at `/pay/:link`;<br>• payment pages with the three seals;<br>• a wallet, verification, and the operator view at `/console`;<br>• `src/vault.ts` sets up `@zk-toip/web-vault`, which seals each account's key with a passkey (WebAuthn PRF) or a passphrase;<br>• `web/e2e.ts` drives all of it in a real browser, with virtual passkeys. |
 | `src/world.ts`, `src/demo.ts` | The repair job's cast, and the narrated terminal demo (`npm run demo`). |
 
 ## How it fits together
