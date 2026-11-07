@@ -129,6 +129,8 @@ const HEARD_FRESH_MS = 10 * 60_000;
 const SEEN_MS = 3600_000;
 const RELAY_MEMORY_MS = 10 * 60_000;
 const BACKOFF_START_MS = 30_000;
+/** How long a beacon counts as already heard: longer than relays take to repeat it, shorter than a beacon period. */
+const BEACON_SEEN_MS = 30_000;
 const BACKOFF_MAX_MS = 30 * 60_000;
 const MAX_BUFFERS = 64;
 const BEACON_LABEL = utf8("zk-toip/mesh/beacon/v1");
@@ -1220,7 +1222,10 @@ export class MeshTransport implements Transport {
   private onBeaconFrame(slot: Slot, f: Extract<Frame, { type: "beacon" }>, rx: ReceivedFrame): void {
     const signed = beaconSigned(f.role, f.keyHint, f.body);
     const key = hex(concat(signed, f.signature));
-    if (this.beaconsSeen.has(key)) return;
+    // Relayed copies of one beacon arrive within seconds. A gateway's beacon is the same bytes every
+    // minute (same body, deterministic signature), so "seen" must expire, or it is heard only once ever.
+    const seenAt = this.beaconsSeen.peek(key);
+    if (seenAt !== undefined && this.sched.now() - seenAt < BEACON_SEEN_MS) return;
     const vids = this.hints().get(hex(f.keyHint)) ?? [];
     const vid = vids.find((v) => {
       const c = this.contacts.get(v)!;

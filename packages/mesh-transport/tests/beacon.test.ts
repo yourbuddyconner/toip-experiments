@@ -104,4 +104,25 @@ describe("act 2 on the simulator: an attestation from the cabin through a relay 
     expect(w.medium.records().some((r) => r.from === "ridge" && decodeFrame(r.bytes)?.type === "beacon" && r.bytes.length === 83)).toBe(true);
     await gateway.stop();
   });
+
+  it("repeats every one of a gateway's beacons, though they are the same bytes, so the route outlives 10 minutes", async () => {
+    const relay = { url: "wss://relay.example/v1", post: async (): Promise<Delivery> => "queued" };
+    const lodgeId = ident("lodge");
+    const w = await meshWorld({
+      names: ["alice", "ridge", "lodge"],
+      links: [["alice", "ridge"], ["ridge", "lodge"]],
+      mesh: (n) => (n === "ridge" ? { relay: true, gateways: [{ vid: lodgeId.did }] } : n === "alice" ? { gateways: [{ vid: lodgeId.did }] } : {}),
+    });
+    const heard: BeaconInfo[] = [];
+    w.nodes.alice.mesh.onBeacon((b) => heard.push(b));
+    const gateway = new MeshGateway({ identity: w.nodes.lodge.id, mesh: w.nodes.lodge.mesh, relay, beaconEveryMs: 60_000 });
+    await gateway.start();
+    await w.sched.advance(20 * 60_000 + 2000);
+    const beacons = w.medium.records().filter((r) => decodeFrame(r.bytes)?.type === "beacon");
+    expect(beacons.filter((r) => r.from === "lodge")).toHaveLength(21);
+    expect(beacons.filter((r) => r.from === "ridge")).toHaveLength(21);
+    expect(heard).toHaveLength(21);
+    expect(w.nodes.alice.mesh.estimate(ident("someone").did, 600).route).toBe("gateway");
+    await gateway.stop();
+  });
 });
