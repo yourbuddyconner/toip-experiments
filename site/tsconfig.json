@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"],
+    "noEmit": true,
+    "paths": {
+      "@toip-tools/relay": ["../packages/relay/src/server.ts"],
+      "@toip-tools/eventlog/node": ["../packages/eventlog/src/node/index.ts"],
+      "@toip-tools/anon-membership/worker": ["../packages/anon-membership/src/worker.ts"],
+      "@toip-tools/*": ["../packages/*/src/index.ts"]
+    }
+  },
+  "include": ["examples", "build", "src"]
+}

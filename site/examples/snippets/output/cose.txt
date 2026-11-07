@@ -1,0 +1,1 @@
+verified { v: 1, at: 1762416000, kind: 'temp', milliC: 21375 } 138 bytes

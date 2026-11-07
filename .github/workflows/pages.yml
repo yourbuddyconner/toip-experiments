@@ -1,0 +1,88 @@
+name: Site
+
+# Builds site/ and publishes it with GitHub Pages. Without site/public/CNAME the site is served at
+# https://<owner>.github.io/<repo>/; with one, at the domain it names, from "/". See site/README.md.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "packages/**"
+      - "projects/*/src/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            site/package-lock.json
+
+      # The site imports the repository's packages (the landing page seals a real Trust Task at build time,
+      # and the check runs every example), so the root workspace is installed too.
+      - name: Install the repository
+        run: npm ci
+
+      - name: Install the site
+        run: npm ci
+        working-directory: site
+
+      - name: Choose the base path
+        id: base
+        run: |
+          if [ -f site/public/CNAME ]; then
+            domain="$(tr -d '[:space:]' < site/public/CNAME)"
+            echo "base=/" >> "$GITHUB_OUTPUT"
+            echo "origin=https://${domain}" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=/${GITHUB_REPOSITORY#*/}/" >> "$GITHUB_OUTPUT"
+            echo "origin=https://${GITHUB_REPOSITORY_OWNER}.github.io" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check (typecheck and run every example, strict build, links)
+        run: npm run check
+        working-directory: site
+        env:
+          SITE_BASE: ${{ steps.base.outputs.base }}
+          SITE_ORIGIN: ${{ steps.base.outputs.origin }}
+
+      - uses: actions/configure-pages@v6
+
+      - name: Build
+        run: npm run build
+        working-directory: site
+        env:
+          SITE_BASE: ${{ steps.base.outputs.base }}
+          SITE_ORIGIN: ${{ steps.base.outputs.origin }}
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
