@@ -1,0 +1,31 @@
+{
+  "chain": "52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971",
+  "recordedAt": "2026-11-07T02:29:51.319Z",
+  "rounds": [
+    {
+      "round": 33738404,
+      "randomness": "b5b45c29d55f4968a0a6406e5b43d0ee26d9ee57064dff827432068d43cd7452",
+      "signature": "8d3318b76c45a444d6fc4b32105a1a48507c2a4a913f418c72886f34cdfab77dc8c3019d993923fdc7ee7747d821b0d1"
+    },
+    {
+      "round": 33738405,
+      "randomness": "fc05ba98e754d77f1731cf9f0a2d794e02a587b0b93d40a5bba705a0889380d8",
+      "signature": "ad51e4ea7a4f9b00f54375a54498ee9d5e83669a34cd00ad2806b9f9e9ec7a39e0bf53b9da6dd318c340a3a09d1398b1"
+    },
+    {
+      "round": 33738406,
+      "randomness": "681cf8a35da5a4b4c73f12f212b9f9cb02fc7262dd146c5d26e12122e784dfca",
+      "signature": "8332960e8fafb963593e3ca096651376d16038de3d6f642977c5b12dcb7e3e8007a683c20188b4f4e586865c6e60febd"
+    },
+    {
+      "round": 33738407,
+      "randomness": "3b6416a8d31938759b2e3cff6e5dd34eba6a1170dadc3b678f2ce5b0084d0990",
+      "signature": "a8be0208b4484b09421cf24dc6c5eb369ee8df25f6ad601136af404ee22a37d9234e4eca8c1f03a4d64f06ed0fa2a49c"
+    },
+    {
+      "round": 33738408,
+      "randomness": "e34a8866c28c375c3c9d2e34c13443dbdfbca7fce60e7107f7c48395219b06a8",
+      "signature": "a0c4db6e6434551ee3fc8e308d637a57a39fe8d2a0844e5fbd05b762ecfcf57eee475711a14a27b417e33e8c8b1ccebd"
+    }
+  ]
+}
