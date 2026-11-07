@@ -12,10 +12,10 @@ export function docsPage(): Page {
   return {
     path: "/docs/",
     title: "Documentation",
-    description: "Set up the source workspace, run your first Trust Task, and find API documentation for the toip.tools TypeScript libraries.",
+    description: "Install the libraries from npm, run your first Trust Task, and find API documentation for the toip.tools TypeScript libraries.",
     section: "docs",
     body: html`<div class="wrap docs">
-      ${docsNav("/docs/", [{ label: "Setup", href: "#setup" }, { label: "Use the libraries", href: "#workspace" }, { label: "Next steps", href: "#next" }])}
+      ${docsNav("/docs/", [{ label: "Setup", href: "#setup" }, { label: "Work from the source", href: "#workspace" }, { label: "Next steps", href: "#next" }])}
       <div class="docs__content">
         ${pageHead("Documentation", "Build with TypeScript libraries for identities, private messages, credentials, delegation, and verifiable logs.")}
         <div class="prose">
@@ -24,8 +24,11 @@ export function docsPage(): Page {
 
         <section class="prose" aria-labelledby="setup">
           <h2 id="setup">Setup</h2>
-          <p>You'll need Git and Node 22.5 or later. Clone the repository, install its workspace dependencies and the site's separate tools, then build the packages:</p>
-          ${code(`git clone ${CLONE}\ncd toip-tools\nnpm install\nnpm install --prefix site\nnpm run build`, "bash", { caption: "Terminal" })}
+          <p>You'll need Node 22.13 or later. Install the libraries you use from npm. Each is a separate package under <code>@toip-tools</code>; start with trust-core, which every other library builds on:</p>
+          ${code("npm install @toip-tools/trust-core", "bash", { caption: "Terminal" })}
+          <p>Add others as you need them, for example <code>@toip-tools/relay</code> for a message relay, <code>@toip-tools/mandates</code> for delegation, or <code>@toip-tools/eventlog</code> for verifiable logs. The <a href="${u("/toolkit/")}">SDK reference</a> lists all of them. The packages are ES modules with TypeScript declarations, and work in Node and, through a bundler, in browsers.</p>
+          <p>To run this site's examples, or to change the libraries, clone the repository instead. Build the packages after installing:</p>
+          ${code(`git clone ${CLONE}\ncd toip-tools\nnpm install\nnpm install --prefix site\nnpm run build`, "bash", { caption: "Work from the source" })}
           <p>From the repository root, run a signed, encrypted request and response over an in-memory transport:</p>
           ${code("npx tsx --tsconfig site/tsconfig.json site/examples/snippets/trust-core.ts", "bash", { caption: "Run the trust-core example" })}
           <p>Run all four Quickstart steps, including a local relay and credential revocation:</p>
@@ -33,10 +36,10 @@ export function docsPage(): Page {
         </section>
 
         <section class="prose" aria-labelledby="workspace">
-          <h2 id="workspace">Use the libraries in a workspace</h2>
+          <h2 id="workspace">Work from the source</h2>
           <p>The root <a href="${gh("package.json")}"><code>package.json</code></a> lists the libraries in <code>packages/</code> and applications in <code>projects/</code> as npm workspaces. Installing at the root links local package names such as <code>@toip-tools/trust-core</code>, <code>@toip-tools/mandates</code>, and <code>@toip-tools/mesh-transport</code>.</p>
           <p>To build an application in this repository, add it to the root workspace list and declare each library it uses as a dependency matching its package manifest. The current <a href="${gh("packages/trust-core/package.json")}">trust-core version</a> is <code>${version}</code>. Run <code>npm install</code> from the root after changing those manifests, then <code>npm run build</code> to create the packages' <code>dist/</code> JavaScript and type declarations. Standard package imports use those build outputs; the <code>@toip-tools/source</code> export condition selects TypeScript source for development.</p>
-          <p>The standalone site examples instead resolve package names through <a href="${gh("site/tsconfig.json")}"><code>site/tsconfig.json</code></a>. Its <code>paths</code> map public imports to local source; pass that configuration to <code>tsx</code> as shown above. Subpath imports, such as <code>@toip-tools/mesh-transport/sim</code>, have explicit mappings. These paths describe this checkout and are not registry installation instructions.</p>
+          <p>The standalone site examples instead resolve package names through <a href="${gh("site/tsconfig.json")}"><code>site/tsconfig.json</code></a>. Its <code>paths</code> map public imports to local source; pass that configuration to <code>tsx</code> as shown above. Subpath imports, such as <code>@toip-tools/mesh-transport/sim</code>, have explicit mappings. These paths apply to this checkout only; in your own project, install the packages from npm.</p>
         </section>
 
         <section class="prose" aria-labelledby="next">

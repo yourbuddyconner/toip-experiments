@@ -79,7 +79,7 @@ The relay can see sender and recipient identifiers, timing, and message sizes. C
       "You want a transport you can run anywhere with Node and point clients at with one URL.",
     ],
     notFor: ["Hiding who talks to whom. The relay learns which DIDs connect, who messages whom, when and how much."],
-    runsIn: "Node 22.5 or later (it uses `node:sqlite`). Clients use `RelayTransport` from trust-core, in browsers or Node.",
+    runsIn: "Node 22.13 or later (it uses `node:sqlite`). Clients use `RelayTransport` from trust-core, in browsers or Node.",
     snippet: { file: "relay.ts", caption: "Start a relay and connect to it", runs: true },
     api: [
       { area: "Server", names: ["startRelay", "Relay", "RelayOptions", "RelayLimits"] },

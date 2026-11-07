@@ -36,9 +36,12 @@ export function quickstartPage(): Page {
 
   <section class="prose" aria-labelledby="before">
     <h2 id="before">Before you start</h2>
-    <p>You'll need Node 22.5 or later and Git. Every part of this tutorial runs on your machine, including the relay, so you can start without creating an account or setting up a remote server.</p>
-    ${code(`git clone ${CLONE}\ncd toip-tools\nnpm install\nnpm install --prefix site`, "bash", { caption: "Get the code" })}
-    <p>Run the commands below from the repository root. The examples import libraries from <a href="${REPO}/tree/main/packages"><code>packages/</code></a> using names such as <code>@toip-tools/trust-core</code>. The <code>--tsconfig</code> option points to <a href="${gh("site/tsconfig.json")}">the configuration</a> that resolves those names to the local source.</p>
+    <p>You'll need Node 22.13 or later. Every part of this tutorial runs on your machine, including the relay, so you can start without creating an account or setting up a remote server.</p>
+    <p>In a new project, install the two libraries the tutorial uses and a TypeScript runner. Save each step's code as a <code>.ts</code> file and run it with <code>npx tsx</code>:</p>
+    ${code(`mkdir hello-toip && cd hello-toip\nnpm init -y && npm pkg set type=module\nnpm install @toip-tools/trust-core @toip-tools/relay tsx\nnpx tsx 01-identities.ts`, "bash", { caption: "A new project" })}
+    <p>Or clone the repository, where the four steps are already written:</p>
+    ${code(`git clone ${CLONE}\ncd toip-tools\nnpm install\nnpm install --prefix site`, "bash", { caption: "From the source" })}
+    <p>If you cloned, run the commands below from the repository root. The examples import libraries from <a href="${REPO}/tree/main/packages"><code>packages/</code></a> using names such as <code>@toip-tools/trust-core</code>. The <code>--tsconfig</code> option points to <a href="${gh("site/tsconfig.json")}">the configuration</a> that resolves those names to the local source.</p>
   </section>
 
   ${step(

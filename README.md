@@ -4,13 +4,27 @@ A monorepo of ideas and working builds for the Trust over IP (ToIP) model and th
 
 The developer site is https://toip.tools: a quickstart, concepts, a page per library and per project, and a page for every Trust Task type defined here.
 
-## Get started
+## Use the libraries
+
+Every library is on npm under `@toip-tools`. Install the ones you need (Node 22.13 or later):
 
 ```bash
+npm install @toip-tools/trust-core
+```
+
+The docs and a quickstart are at https://toip.tools.
+
+## Work from the source
+
+```bash
+git clone https://github.com/yourbuddyconner/toip-tools.git
+cd toip-tools
 npm install
 npm test          # every package and project
 npm run settle    # or agents, agora, capture, mesh, tipline, trail: each prints its URLs
 ```
+
+Releases use Changesets: see `RELEASING.md`.
 
 ## Projects
 

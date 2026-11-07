@@ -40,7 +40,8 @@ function libraryPage(library: Library, all: ApiModule[]): Page {
     <div class="sdk-source"><code>${library.name}</code><span>v${pkg.version}</span><a href="${gh(main.file)}">Source</a></div>
 
     <section class="prose" aria-labelledby="setup"><h2 id="setup">Setup</h2>
-      <p>Complete <a href="${u("/docs/#setup")}">Setup</a> to build and use the workspace, then import this package's public entry point.</p>
+      <p>Install the package from npm. It needs Node 22.13 or later, or a bundler for browser entry points.</p>
+      ${code(`npm install ${library.name}`, "bash", { caption: "Install" })}
       <p><strong>Runtime:</strong> ${library.runsIn}</p>
     </section>
     ${code(`import { ${library.api[0].names.filter(name => main.symbols.some(s => s.name === name)).slice(0, 3).map(name => {
@@ -92,7 +93,7 @@ function indexPage(modules: ApiModule[]): Page {
         <ul id="api-results" class="sdk-search__results" hidden></ul>
       </div>
       <script type="application/json" id="sdk-search-data">${raw(JSON.stringify(catalog).replaceAll("<", "\\u003c"))}</script>
-      <div id="use" class="sdk-note"><p>Packages are currently available from the source repository. <a href="${u("/docs/#workspace")}">Workspace setup instructions</a>.</p></div>
+      <div id="use" class="sdk-note"><p>Every library is on npm as <code>@toip-tools/&lt;name&gt;</code>, for example <code>npm install @toip-tools/trust-core</code>. To change the libraries themselves, <a href="${u("/docs/#workspace")}">work from the source</a>.</p></div>
       ${toolkitShowcase()}
     </div></div>`,
   };
