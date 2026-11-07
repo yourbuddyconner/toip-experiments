@@ -1243,3 +1243,34 @@ The open questions above were settled by the assistant, at the convener's reques
 - **Where the gateway program runs.** On a laptop, talking to the miner's packet forwarder over the LAN. It can move to the Pi later.
 - **The MVP runs entirely on the simulator.** Real-radio bring-up follows when the hardware is ready, with the same code.
 - **Bluetooth** is deferred until after LoRa.
+
+## Implementation notes
+
+Written after the MVP was built (2026-11-06). The library's own differences from this design are in `packages/mesh-transport/README.md`, "Differences from the design". These notes cover `projects/mesh` and what building it changed.
+
+**What runs.** The three acts of section 17 run on the simulator (`src/acts.ts`), narrated in the terminal (`npm run demo`) and played back in a web visualizer (`npm run mesh`). The CLI has `demo`, `door`, `guest`, `gateway`, `attest`, `receive`, `doctor` and `bundle export/import`. The real-link roles use the library's GWMP and RUI3 adapters unchanged. `HARDWARE.md` is the bring-up plan; nothing has run on radios yet.
+
+**Measured** (simulator, US915, SF8 at 500 kHz, seed 1):
+- Act 1: 818 ms of airtime in 8 frames, 857 ms from beacon to answer. The presentation is 2,106 B as JSON TSP and 672 B as an INTRO packet: 3 frames instead of 9. The answer is 306 B, 2 frames. Our pass carries more claims than section 5's (the door, the days and hours, the household), so it is larger than the 559 B measured there. It still fits in 3 frames.
+- Act 1 at 20% loss: the door opened in every run, 0.9 to 5.2 s from beacon to answer.
+- Act 2: the attestation is 1,653 B as JSON TSP and 593 B as VIA: 3 frames instead of 7. The custody receipt arrives 2.4 s after sending, with 989 ms of airtime over two hops.
+- Act 2 at 20% loss: always delivered, but custody took 13 to 108 s. On a flooded or gateway route, a whole round fails if any of 3 frames is lost on either hop, or the 1-frame receipt is lost on either hop. That's about 1 round in 6 succeeding. After 4 rounds the packet waits in the outbox's backoff. Hop-by-hop acknowledgements, or custody at the relay node, would help. Section 15's figures assume one hop.
+- Act 3: a 741 B sealed bundle; no frames.
+
+**Three library bugs, found by the acts, fixed in `packages/mesh-transport` with tests:**
+1. Hearing a door's beacon marked the door as "introduced", so the guest sent PAIR, which the door, never having heard of the guest, couldn't read. A beacon now gives a route but not an introduction, so the first message is an INTRO (section 8.4).
+2. A gateway's beacon is the same bytes every minute: same body, and Ed25519 is deterministic. The mesh remembered beacons it had seen with no time limit, so a relay repeated only the gateway's first beacon ever, and the gateway's route went stale after 10 minutes. A beacon now counts as seen for 30 seconds.
+3. Not a bug, but needed: `VirtualScheduler.hold(promise)` freezes virtual time while real I/O is out. Without it, a gateway posting to a real relay inside the simulator saw its sender time out in virtual seconds that took real milliseconds. Also new: a `packet-out` mesh event (kind, route, size, frames), which the narration uses.
+
+**Choices made while building:**
+- **Freshness.** trust-core's runtime refuses a consequential task without an age limit on its replay record. The door and the guest accept requests up to 10 minutes old, with 10 minutes of clock skew (section 6). The Settle party accepts documents up to 3 days old, because an attestation can arrive hours later by gateway or by hand. Settle's own agents use the default 5 minutes. A Settle party that should accept carried attestations needs the same change.
+- **Replay at the door.** The design's "refused after a restart because the challenge is stale" became three layers, all shown in act 1: the mesh's seen list; the door's replay record, kept on disk (`PersistentReplayGuard`); and the challenge, which a rebooted door no longer accepts.
+- **The guest pass** follows Commons' section 5.1, cut down: the Building issues it (no household rosters), to a fresh pass key, for one door, with a weekly window and a revocation index. The door checks the issuer, the signature, the holder (the request is signed by the pass key), the door, the cached revocation list and its age (24 hours), the window, and the challenge.
+- **The Settle attestation** is built by Settle's `attest()` from Settle's `Terms`, and sent under `settle/escrow/attest`. The landlord's agent accepts it as Settle's `Party.onAttest` does: the terms are its own, the issuer is the terms' attester, the signature verifies. No chain runs. The demo's terms are fixed (agreed on a fixed date), so separate processes agree on their hash.
+- **Plans.** Act 1 uses `us915-b`, as on the hardware: the door transmits on 923.3 MHz and listens on 904.6 MHz. Acts 2 and 3 use `us915-a` (one frequency), because the Ridge must hear both Alice and the Lodge. On hardware the Ridge is skipped.
+- **The listener in act 1** has a lossless link, so the replay attack plays the same way at any loss.
+- **Phones don't flood.** Rosa's and Alice's devices never flood. Alice's waits in the outbox for a gateway (`flood.unknown: "off"`).
+- **Keys** come from fixed seeds (`src/cast.ts`), so the door and the guest agree across processes. That is demo-only.
+- **CLI names.** `mesh detect` became `doctor`, which also checks the forwarder's downlink, can ask for a test transmission, and can try the RAK3172's P2P settings. `courier` became `bundle export` and `bundle import`. `node` and `ping` weren't built. `attest` and `receive` were added, so acts 2 and 3 can run on radios.
+
+**Not built:** act 4 (the EU duty cycle at SF12), Bluetooth, RNode, downstream through gateways, carriers, QR bundles, and real key management.

@@ -16,7 +16,8 @@
     "projects/trail",
     "projects/agora",
     "projects/tipline",
-    "projects/agents"
+    "projects/agents",
+    "projects/mesh"
   ],
   "scripts": {
     "test": "npm test --workspaces --if-present",
@@ -26,6 +27,7 @@
     "trail": "npm run app --workspace @zk-toip/trail",
     "agora": "npm run app --workspace @zk-toip/agora",
     "tipline": "npm run app --workspace @zk-toip/tipline",
-    "agents": "npm run app --workspace @zk-toip/agents"
+    "agents": "npm run app --workspace @zk-toip/agents",
+    "mesh": "npm run app --workspace @zk-toip/mesh"
   }
 }

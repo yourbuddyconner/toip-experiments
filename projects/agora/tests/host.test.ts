@@ -113,7 +113,9 @@ describe("the host", () => {
     const { proof: _p, ...rest } = old.pass;
     const long = signDocument<NymPass>({ ...rest, issuer: session.did, policy: docHash(next), validUntil: new Date(w.clock.now() + 2 * DAY).toISOString() }, session, w.clock);
     expect(await code(ana.host.pass(f.forum.id, long))).toBe("passExpired");
-    expect(await code(ana.host.pass(f.forum.id, { ...long, nym: long.nym.replace(/.$/, "0") }))).toBe("signatureInvalid");
+    // Change the nym's last character to a different one (replacing it with a fixed "0" is no change one time in 16).
+    const tampered = long.nym.slice(0, -1) + (long.nym.endsWith("0") ? "1" : "0");
+    expect(await code(ana.host.pass(f.forum.id, { ...long, nym: tampered }))).toBe("signatureInvalid");
   });
 
   it("accepts a vote proved yesterday, and refuses one proved two days ago", async () => {

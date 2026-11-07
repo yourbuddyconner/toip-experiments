@@ -88,6 +88,8 @@ export type MeshEvent =
   | { type: "frame-out"; link: string; bytes: number; airtimeMs: number; summary: string }
   | { type: "frame-in"; link: string; bytes: number; rssi?: number; snr?: number; summary: string }
   | { type: "packet-in"; pid: string; kind: PacketKind; forMe: boolean }
+  /** A packet built from a posted TSP message, before its first frame goes out. `wireBytes` is the TSP message's size. */
+  | { type: "packet-out"; pid: string; kind: PacketKind; from: string; to: string; route: "direct" | "flood" | "gateway"; bytes: number; frames: number; wireBytes: number }
   | { type: "retry"; pid: string; round: number; missing: number[] }
   | { type: "delivered"; pid: string; to: string; route: "direct" | "flood" | "gateway" }
   | { type: "custody"; pid: string; gateway: string }
@@ -127,6 +129,8 @@ const HEARD_FRESH_MS = 10 * 60_000;
 const SEEN_MS = 3600_000;
 const RELAY_MEMORY_MS = 10 * 60_000;
 const BACKOFF_START_MS = 30_000;
+/** How long a beacon counts as already heard: longer than relays take to repeat it, shorter than a beacon period. */
+const BEACON_SEEN_MS = 30_000;
 const BACKOFF_MAX_MS = 30 * 60_000;
 const MAX_BUFFERS = 64;
 const BEACON_LABEL = utf8("zk-toip/mesh/beacon/v1");
@@ -434,10 +438,11 @@ export class MeshTransport implements Transport {
     void this.opts.contacts?.save([...this.contacts.values()]);
   }
 
-  private heard(c: Contact, hops: number, slot: Slot, rssi?: number): void {
+  /** `knowsUs`: what we heard shows they know us (an ACK, a receipt, a message), so PAIR works. A beacon doesn't. */
+  private heard(c: Contact, hops: number, slot: Slot, rssi?: number, knowsUs = true): void {
     const wasFresh = c.heard && this.sched.now() - c.heard.atMs < HEARD_FRESH_MS;
-    const changed = !c.introduced;
-    c.introduced = true;
+    const changed = knowsUs && !c.introduced;
+    if (knowsUs) c.introduced = true;
     c.heard = { atMs: this.sched.now(), hops, link: slot.label, ...(rssi !== undefined ? { rssi } : {}) };
     if (changed) this.contactsChanged();
     if (!wasFresh) this.retryWaiting(c.vid);
@@ -577,6 +582,7 @@ export class MeshTransport implements Transport {
       waiters: [],
     };
     item.pid = o.pidHex;
+    this.emit({ type: "packet-out", pid: o.pidHex, kind: packet.kind, from: local.did, to: item.to, route: route.route, bytes: bytes.length, frames: count, wireBytes: item.wire.length });
     this.active.set(o.pidHex, o);
     this.activeByItem.set(item, o);
     this.byReceiptTag.set(o.rtagHex, o);
@@ -1216,7 +1222,10 @@ export class MeshTransport implements Transport {
   private onBeaconFrame(slot: Slot, f: Extract<Frame, { type: "beacon" }>, rx: ReceivedFrame): void {
     const signed = beaconSigned(f.role, f.keyHint, f.body);
     const key = hex(concat(signed, f.signature));
-    if (this.beaconsSeen.has(key)) return;
+    // Relayed copies of one beacon arrive within seconds. A gateway's beacon is the same bytes every
+    // minute (same body, deterministic signature), so "seen" must expire, or it is heard only once ever.
+    const seenAt = this.beaconsSeen.peek(key);
+    if (seenAt !== undefined && this.sched.now() - seenAt < BEACON_SEEN_MS) return;
     const vids = this.hints().get(hex(f.keyHint)) ?? [];
     const vid = vids.find((v) => {
       const c = this.contacts.get(v)!;
@@ -1229,7 +1238,8 @@ export class MeshTransport implements Transport {
     if (!vid) return this.drop("unknown-beacon");
     this.beaconsSeen.set(key, this.sched.now());
     const c = this.contacts.get(vid)!;
-    this.heard(c, f.hops, slot, rx.rssi);
+    // A beacon is a broadcast: it gives a route, not an introduction. The door may never have heard of us.
+    this.heard(c, f.hops, slot, rx.rssi, false);
     const info: BeaconInfo = { role: f.role, vid, atMs: this.sched.now(), ...(f.role === "verifier" ? { nonce: f.body } : {}), ...(rx.rssi !== undefined ? { rssi: rx.rssi } : {}) };
     for (const fn of [...this.beaconListeners]) fn(info);
     if (this.relayOn && f.role === "gateway" && f.hops + 1 <= this.maxTtl) {
