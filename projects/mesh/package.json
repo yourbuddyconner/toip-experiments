@@ -1,0 +1,37 @@
+{
+  "name": "@zk-toip/mesh",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p web",
+    "mesh": "tsx src/cli.ts",
+    "demo": "tsx src/cli.ts demo",
+    "app": "tsx src/main.ts",
+    "build:web": "vite build --config web/vite.config.ts",
+    "e2e": "tsx web/e2e.ts"
+  },
+  "dependencies": {
+    "@noble/hashes": "2.4.0",
+    "@openvtc/vti-tsp-js": "0.2.0",
+    "@zk-toip/mesh-transport": "0.0.0",
+    "@zk-toip/relay": "0.0.0",
+    "@zk-toip/settle": "0.0.0",
+    "@zk-toip/trust-core": "0.0.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.2.1",
+    "playwright": "1.65.0",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.6",
+    "vitest": "5.1.0"
+  }
+}
