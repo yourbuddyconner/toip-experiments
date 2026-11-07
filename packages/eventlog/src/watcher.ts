@@ -74,7 +74,8 @@ export class Watcher extends LogKeeper {
         const mine = await this.store.head(logId);
         const held = head ? (await this.store.versions(logId, head.s)).some((v) => v.d === head!.d) : true;
         if (head && held && (await this.store.receipts(logId, head.s, head.d)).some((r) => r.by === src.aid)) continue;
-        const from = !mine ? 0 : head && head.s <= mine.s ? head.s : mine.s + 1;
+        // from the last location both hold, so a different version there shows as duplicity, not just a broken chain
+        const from = !mine ? 0 : head ? Math.min(head.s, mine.s) : mine.s + 1;
         try {
           const kelId = this.watched.get(logId)!;
           if (kelId !== logId && !(await this.kel(kelId))) await this.ingest(await src.query({ logId: kelId }), src.aid);
@@ -118,7 +119,8 @@ export class Watcher extends LogKeeper {
       head: async (logId) => {
         const msgs = await this.store.range(logId);
         for (let i = msgs.length - 1; i >= 0; i--) {
-          const r = (await this.store.receipts(logId, msgs[i].s, msgs[i].d)).find((x) => x.kind === "witness");
+          if (msgs[i].cutBy !== undefined || msgs[i].superseded) continue;
+          const r =(await this.store.receipts(logId, msgs[i].s, msgs[i].d)).find((x) => x.kind === "witness");
           if (r) return receiptMessage(r);
         }
         return undefined;

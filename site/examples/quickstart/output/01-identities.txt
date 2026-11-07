@@ -1,0 +1,8 @@
+Alice: did:key:z6MkfkozPjJQsb11Szt73tYJ4Aei2YtVxWTfXFYx7EK5WuZc
+Bob:   did:key:z6MkoY1PFBAyArzd3VNEApZP3FVuMeydxTym4435r5zJ1aCu
+
+From Bob's DID alone:
+  signing key (Ed25519)    86f0824c87e296419f0fa86874a1b043fe48b9524bb7f38e91cd525b4206fa86
+  encryption key (X25519)  f22e3a495e5a442377a9525865cef77d1dd6e84b8b3e99ab87aad85d8e045c34
+
+Bob's own copy matches: true

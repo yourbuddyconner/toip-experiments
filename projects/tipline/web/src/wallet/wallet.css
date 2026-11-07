@@ -1,0 +1,76 @@
+/* A generic personal wallet: plain, soft, a phone-width column. Not branded for Tipline or for Acme. */
+:root {
+  --paper: #f2f2f6;
+  --surface: #ffffff;
+  --ink: #202128;
+  --graphite: #62646f;
+  --rule: #dcdce4;
+  --accent: #4a4fa3;
+  --body: var(--sans);
+  --radius: 10px;
+}
+
+.muted {
+  color: var(--graphite);
+}
+
+.wallet-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.25rem;
+  font-weight: 700;
+  font-size: 1.0625rem;
+}
+
+.mark {
+  width: 1.5rem;
+  height: 1.1rem;
+  border-radius: 4px;
+  background: var(--accent);
+  box-shadow: inset 0 -0.35rem 0 color-mix(in srgb, #000 18%, var(--accent));
+}
+
+.wallet-main {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 0.5rem 1rem 3rem;
+}
+
+.sheet {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.4rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--rule);
+}
+
+.sheet h1 {
+  font-size: 1.5rem;
+}
+
+.sheet h2 {
+  font-size: 1.125rem;
+}
+
+.status {
+  font-weight: 600;
+}
+
+.status.good {
+  color: var(--good);
+}
+
+.code-box {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--paper);
+  border-radius: var(--radius);
+  font-size: 0.9375rem;
+}
+
+.copyable.big code {
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  line-height: 1.7;
+}

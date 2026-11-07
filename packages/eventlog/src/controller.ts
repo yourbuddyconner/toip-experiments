@@ -59,6 +59,11 @@ export interface RotateOptions {
   supersede?: number;
   /** Signers of prior next keys held elsewhere (custody patterns). They become the new current keys. */
   exposed?: Signer[];
+  /**
+   * More current keys, after the signers, that don't sign this rotation. A principal rotating alone names the agent's new key here,
+   * so the agent keeps signing. The signers must still meet the new kt. (Additive.)
+   */
+  extraKeys?: Qb64[];
 }
 
 export interface PublishReport {
@@ -316,7 +321,8 @@ export class Controller {
       if (!own) throw new Error("the cold keys don't match the committed next keys");
       signers = this.cold.release(estCount, own);
     }
-    const keys = signers.map(keyQb64);
+    const keys = [...signers.map(keyQb64), ...(opts.extraKeys ?? [])];
+    if (new Set(keys).size !== keys.length) throw new Error("a key is named twice in the new current keys");
     let next: Qb64[];
     if (opts.next) next = opts.next;
     else {

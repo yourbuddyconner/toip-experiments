@@ -1,0 +1,1 @@
+accepted: { label: 'Source A', first: true }

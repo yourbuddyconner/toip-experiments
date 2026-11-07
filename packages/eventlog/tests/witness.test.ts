@@ -220,6 +220,29 @@ describe("fork and duplicity", () => {
     void store;
   });
 
+  it("watcher: a version handed to it is caught as duplicity when the witnesses are further ahead", async () => {
+    const { c, clients } = await world();
+    const t = await c.openTrail("agent/actions");
+    for (let i = 0; i < 3; i++) await t.append({ kind: "agent/tool-call", body: { i } });
+    await c.publish(clients);
+    // the controller hands a payee its own version of entry 2, then keeps writing to the witnesses
+    const src = c.store as MemoryStore;
+    const copy = new MemoryStore();
+    for (const m of await src.all(c.aid)) await copy.put(m);
+    for (const m of await src.range(t.id, 0, 1)) await copy.put(m);
+    const f = await Controller.load(c.aid, { hot: c.signers(), store: copy, clock: c.clock });
+    const { entry: b2 } = await f.trail(t.id).append({ kind: "agent/tool-call", body: { other: 2 } });
+    await t.append({ kind: "agent/tool-call", body: { i: 4 } });
+    await c.publish(clients);
+    const payee = new Watcher({ id: "payee", store: new MemoryStore(), sources: clients, clock: c.clock });
+    payee.watch(t.id, c.aid);
+    const handed = (await copy.all(c.aid)).concat(await copy.range(t.id)).map((m) => m.raw + m.attachments).join("");
+    expect((await payee.ingest(handed, "controller")).evidence).toEqual([]);
+    expect((await payee.store.head(t.id))?.d).toBe(b2.d);
+    const ev = await payee.poll();
+    expect(ev.some((e) => e.kind === "controller" && e.s === 2)).toBe(true);
+  });
+
   it("watcher gossip: two watchers each seeing one version detect duplicity after exchanging heads", async () => {
     const { c, clients } = await world(2, 1);
     const t = await c.openTrail("agent/actions");
@@ -271,6 +294,15 @@ describe("fork and duplicity", () => {
     expect(v.trails[0].evidence).toEqual([]);
     expect(v.trails[0].entries.filter((e) => e.status === "cut").map((e) => e.s)).toEqual([4, 5]);
     expect(v.trails[0].head?.d).toBe(new4.d);
+    // the witnesses' heads are the new entry, not the last cut one, so a watcher fetches it and a bundle isn't "truncated"
+    for (const cl of clients) expect((await cl.head(t.id))?.d).toBe(new4.d);
+    const watcher = new Watcher({ id: "ada", store: new MemoryStore(), sources: clients, clock: c.clock });
+    watcher.watch(t.id, c.aid);
+    await watcher.poll();
+    expect((await watcher.store.versions(t.id, 4)).map((m) => m.d)).toContain(new4.d);
+    const own = await verifyBundle(await exportBundle(c.store, c.aid), { witnesses: clients });
+    expect(own.problems).toEqual([]);
+    expect(own.witnessChecked).toBe(true);
   });
 });
 

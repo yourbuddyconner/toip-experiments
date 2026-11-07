@@ -44,6 +44,29 @@ describe("VirtualScheduler", () => {
     expect(await s.run(p)).toBe(3_600_000);
     await expect(s.run(new Promise(() => {}), { realIdleMs: 20 })).rejects.toThrow(/idle/);
   });
+
+  it("freezes virtual time while held real I/O is out", async () => {
+    const s = new VirtualScheduler(0);
+    const seen: string[] = [];
+    // A sender's timeout, 5 virtual seconds away.
+    s.setTimeout(() => seen.push(`timeout@${s.now()}`), 5000);
+    // Real I/O (30 real ms) that answers 10 virtual ms after it returns.
+    const io = s.hold(new Promise<void>((r) => setTimeout(r, 30))).then(() => s.setTimeout(() => seen.push(`answer@${s.now()}`), 10));
+    expect(s.holding()).toBe(true);
+    await s.runUntilIdle();
+    await io;
+    expect(seen).toEqual(["answer@10", "timeout@5000"]);
+    expect(s.holding()).toBe(false);
+
+    // The same under run() and advance().
+    const t = new VirtualScheduler(0);
+    const order: string[] = [];
+    t.setTimeout(() => order.push("late"), 1000);
+    const answer = t.hold(new Promise<string>((r) => setTimeout(() => r("io"), 20))).then((v) => (order.push(v), v));
+    expect(await t.run(answer)).toBe("io");
+    await t.advance(2000);
+    expect(order).toEqual(["io", "late"]);
+  });
 });
 
 describe("SimMedium", () => {

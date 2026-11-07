@@ -79,6 +79,15 @@ run("keripy accepts ours (KERIpy 1.3.x)", () => {
     await same(p.kelMessages());
   });
 
+  it("icp + rot (partial, extraKeys): the principal rotates alone and names the agent's new key", async () => {
+    const { clock, store, cold, hot } = setup("i4b");
+    const principal = signer("principal/next");
+    const c = await Controller.incept({ hot, cold, extraNext: [nextKeyDigest(keyQb64(principal))], nt: 1, store, clock });
+    const p = await Controller.load(c.aid, { hot: [], store, clock });
+    await p.rotate({ exposed: [principal], extraKeys: [keyQb64(cold.release(1, 1)[0])], next: [...cold.commit(2, 1), nextKeyDigest(keyQb64(signer("principal/next2")))], nt: 1 });
+    await same(p.kelMessages());
+  });
+
   it("witness add and remove, with witness receipts", async () => {
     const { clock, store, cold, hot } = setup("i5");
     const ws = [0, 1, 2, 3].map((i) => new Witness({ signer: signer(`iw/${i}`), store: new MemoryStore(), clock }));

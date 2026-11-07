@@ -13,6 +13,11 @@
     "packages/mesh-transport",
     "projects/shared-todo",
     "projects/settle",
+    "projects/trail",
+    "projects/agora",
+    "projects/tipline",
+    "projects/agents",
+    "projects/mesh",
     "projects/capture"
   ],
   "scripts": {
@@ -20,6 +25,11 @@
     "licenses": "node scripts/check-licenses.mjs",
     "dev": "node scripts/dev.mjs",
     "settle": "npm run app --workspace @zk-toip/settle",
+    "trail": "npm run app --workspace @zk-toip/trail",
+    "agora": "npm run app --workspace @zk-toip/agora",
+    "tipline": "npm run app --workspace @zk-toip/tipline",
+    "agents": "npm run app --workspace @zk-toip/agents",
+    "mesh": "npm run app --workspace @zk-toip/mesh",
     "capture": "npm run app --workspace @zk-toip/capture"
   }
 }

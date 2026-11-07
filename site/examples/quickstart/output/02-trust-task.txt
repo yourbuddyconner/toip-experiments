@@ -1,0 +1,11 @@
+Bob opened https://example.org/spec/quickstart/hello/0.1
+  from did:key:z6Mkfk…WuZc, signed with eddsa-jcs-2022
+  says: "Hello Bob, it's Alice."
+Alice got a reply of type quickstart/hello/0.1#response
+  "Hi Alice. Your signature checks out."
+
+On the wire:
+  #1 did:key:z6Mkfk…WuZc -> did:key:z6MkoY…1aCu  1038 bytes  …f7585c230a80430f
+  #2 did:key:z6MkoY…1aCu -> did:key:z6Mkfk…WuZc  1122 bytes  …15a9315e8fec9b0d
+
+A copy with one bit flipped: refused (tsp: notForThisReceiver: Error: tsp: signature verification failed)

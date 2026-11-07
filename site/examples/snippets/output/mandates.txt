@@ -1,0 +1,2 @@
+geo:us/ca/sf allow This photo is within every limit of the chain from Daily Planet photo desk to Dana's camera.
+geo:us/ny/nyc escalate The location “geo:us/ny/nyc” is outside what Daily Planet photo desk allowed Dana's camera (where). Daily Planet photo desk can approve this photo.

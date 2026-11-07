@@ -1,0 +1,871 @@
+{
+ "$comment": "Hand-checked facts for each Trust Task type. The build finds the types themselves by scanning the code for ourSpec(\"...\"); a type found in code without an entry here still gets a page, built from its doc comment, and the build prints a warning. payloadType/responseType name a declaration the build extracts from payloadFile/responseFile, so the shape shown is the code's.",
+ "settle/payment/request": {
+  "purpose": "The payee sends an invoice to the payer. It carries the price, the purpose, a new payment key bound to the payee's DID, and the payee's credentials. The payer checks the key binding and the credentials and records the invoice. If the invoice answers one of its own checkouts, the payer then proposes terms without a click.",
+  "from": "payee's party",
+  "to": "payer's party",
+  "kind": "one-way",
+  "payloadType": "OfferPayload",
+  "payloadFile": "projects/settle/src/agents/messages.ts",
+  "design": "projects/settle/docs/design.md",
+  "designSection": "7. The Trust Tasks",
+  "handledIn": [
+   "projects/settle/src/agents/party.ts"
+  ],
+  "note": "The payee also sends it in reply to settle/checkout/start. Then the payload has link, checkout and conditions set."
+ },
+ "settle/payment/terms/propose": {
+  "purpose": "The payer sends the full terms document with its own signed acceptance. The payee checks the terms against its invoice and its limits: price, purpose, token, arbiter, fee, threshold, reclaim deadline, payment-link conditions and the payer's key binding. If everything checks out, it accepts.",
+  "from": "payer's party",
+  "to": "payee's party",
+  "kind": "one-way",
+  "payloadInline": "{ terms: Terms; acceptance: Acceptance }",
+  "payloadFile": "projects/settle/src/agents/party.ts",
+  "related": [
+   {
+    "type": "Terms",
+    "file": "projects/settle/src/protocol/documents.ts"
+   },
+   {
+    "type": "Acceptance",
+    "file": "projects/settle/src/protocol/documents.ts"
+   }
+  ],
+  "design": "projects/settle/docs/design.md",
+  "designSection": "7. The Trust Tasks",
+  "handledIn": [
+   "projects/settle/src/agents/party.ts"
+  ],
+  "note": "The design says either side may propose. In the code only the payer does."
+ },
+ "settle/payment/terms/accept": {
+  "purpose": "The payee returns the agreed terms with its own signed acceptance. The payer checks that the terms are the ones it proposed and that the payee signed them. It then opens the escrow through the processor.",
+  "from": "payee's party",
+  "to": "payer's party",
+  "kind": "one-way",
+  "payloadInline": "{ terms: Terms; acceptance: Acceptance }",
+  "payloadFile": "projects/settle/src/agents/party.ts",
+  "related": [
+   {
+    "type": "Terms",
+    "file": "projects/settle/src/protocol/documents.ts"
+   },
+   {
+    "type": "Acceptance",
+    "file": "projects/settle/src/protocol/documents.ts"
+   }
+  ],
+  "design": "projects/settle/docs/design.md",
+  "designSection": "7. The Trust Tasks",
+  "handledIn": [
+   "projects/settle/src/agents/party.ts"
+  ],
+  "note": "The design says the payload is the terms with both proofs. The code sends the terms and the payee's acceptance only."
+ },
+ "settle/escrow/opened": {
+  "purpose": "After the escrow opens on-chain, the payer announces it with the terms, both acceptances, the escrow address and the opening transaction signature. The payee checks the escrow on-chain, field by field. The attester and the arbiter accept it only if it comes from the payer, carries both acceptances and matches the chain. The processor records it in its transparency log.",
+  "from": "payer's party",
+  "to": "payee's party, attester, arbiter and processor",
+  "kind": "one-way",
+  "payloadType": "OpenedPayload",
+  "payloadFile": "projects/settle/src/agents/messages.ts",
+  "design": "projects/settle/docs/design.md",
+  "designSection": "7. The Trust Tasks",
+  "handledIn": [
+   "projects/settle/src/agents/party.ts",
+   "projects/settle/src/agents/roles.ts"
+  ],
+  "note": "The design says the payer or the processor sends it. In the code only the payer does."
+ },
+ "settle/escrow/attest": {
+  "purpose": "The attester named in the terms sends a signed claim that the work is complete or not complete, with an optional note. The payer, the payee and the arbiter verify it and record it as input to their release policies.",
+  "from": "attester",
+  "to": "payer's party, payee's party and arbiter",
+  "kind": "one-way",
+  "payloadType": "Attestation",
+  "payloadFile": "projects/settle/src/protocol/documents.ts",
+  "design": "projects/settle/docs/design.md",
+  "designSection": "7. The Trust Tasks",
+  "handledIn": [
+   "projects/settle/src/agents/party.ts",
+   "projects/settle/src/agents/roles.ts"
+  ],
+  "note": "The attester can be the payer, with the link option payer-confirms. The design mentions photos sealed to the parties; the code carries only an optional note."
+ },
+ "settle/escrow/sign": {
+  "purpose": "A party sends its signature over an escrow outcome (how much of the price goes to the payee), with the evidence the outcome rests on. The processor collects these and submits the on-chain resolve once enough distinct allowed keys sign the same outcome. When the payee sends one to the payer, it asks for a release or a refund, which the payer checks against its policy.",
+  "from": "payer's or payee's party",
+  "to": "processor, and the payer's party when the payee asks for a release or refund",
+  "kind": "one-way",
+  "payloadType": "OutcomeSignature",
+  "payloadFile": "projects/settle/src/agents/base.ts",
+  "design": "projects/settle/docs/design.md",
+  "designSection": "7. The Trust Tasks",
+  "handledIn": [
+   "projects/settle/src/agents/roles.ts",
+   "projects/settle/src/agents/party.ts"
+  ],
+  "note": "The arbiter's outcome signature travels inside settle/arbiter/ruling instead. The design's escrow/release/request type is not separate in the code: the payee's escrow/sign to the payer takes its place."
+ },
+ "settle/escrow/dispute": {
+  "purpose": "The payer or the payee sends a signed dispute with a reason. The arbiter records it and signs a hold, so the payer can't reclaim before a ruling. The other party records it, and the processor logs it by role and hash.",
+  "from": "payer's or payee's party",
+  "to": "arbiter, the other party and processor",
+  "kind": "one-way",
+  "payloadType": "Dispute",
+  "payloadFile": "projects/settle/src/protocol/documents.ts",
+  "design": "projects/settle/docs/design.md",
+  "designSection": "7. The Trust Tasks",
+  "handledIn": [
+   "projects/settle/src/agents/roles.ts",
+   "projects/settle/src/agents/party.ts"
+  ],
+  "note": "The design lists the arbiter and the other party. The code also sends it to the processor."
+ },
+ "settle/arbiter/ruling": {
+  "purpose": "The arbiter sends its signed ruling on a disputed payment, with the evidence it relied on and its own outcome signature. Each party runs its policy on the ruling and, if the policy allows, signs the same outcome. The processor logs the ruling and counts the arbiter's signature toward the threshold.",
+  "from": "arbiter",
+  "to": "payer's party, payee's party and processor",
+  "kind": "one-way",
+  "payloadType": "RulingPayload",
+  "payloadFile": "projects/settle/src/agents/messages.ts",
+  "design": "projects/settle/docs/design.md",
+  "designSection": "7. The Trust Tasks",
+  "handledIn": [
+   "projects/settle/src/agents/party.ts",
+   "projects/settle/src/agents/roles.ts"
+  ]
+ },
+ "settle/escrow/settled": {
+  "purpose": "After it submits the resolve transaction, the processor tells everyone the escrow settled, with the transaction signature, the payee's share and the evidence hash. Each party confirms the settlement against the chain. The payee then sends the payer a receipt.",
+  "from": "processor",
+  "to": "payer's party, payee's party and arbiter",
+  "kind": "one-way",
+  "payloadType": "SettledPayload",
+  "payloadFile": "projects/settle/src/agents/messages.ts",
+  "design": "projects/settle/docs/design.md",
+  "designSection": "7. The Trust Tasks",
+  "handledIn": [
+   "projects/settle/src/agents/party.ts"
+  ]
+ },
+ "settle/escrow/hold": {
+  "purpose": "On a dispute, the arbiter signs a hold that pushes back the escrow's reclaim deadline, so the payer can't wait out the deadline before a ruling. The processor checks the arbiter's signature against the escrow's arbiter key and submits the hold on-chain.",
+  "from": "arbiter",
+  "to": "processor",
+  "kind": "one-way",
+  "payloadType": "HoldPayload",
+  "payloadFile": "projects/settle/src/agents/messages.ts",
+  "design": "projects/settle/docs/design.md",
+  "designSection": "16. Security review and escrow program v2 (2026-11-06)",
+  "handledIn": [
+   "projects/settle/src/agents/roles.ts"
+  ],
+  "note": "Added by the security review. The table in design section 7 doesn't list it."
+ },
+ "settle/payment/receipt": {
+  "purpose": "After settlement, the payee sends the payer a signed receipt credential (SettlePaymentReceipt). It ties together the terms hash, the escrow address, the settlement transaction, the amount paid and the purpose. The payer verifies it and keeps it.",
+  "from": "payee's party",
+  "to": "payer's party",
+  "kind": "one-way",
+  "payloadType": "Credential",
+  "payloadFile": "packages/trust-core/src/credentials.ts",
+  "design": "projects/settle/docs/design.md",
+  "designSection": "7. The Trust Tasks",
+  "handledIn": [
+   "projects/settle/src/agents/party.ts"
+  ]
+ },
+ "settle/processor/submit": {
+  "purpose": "A party sends the processor a partly signed transaction: an escrow open, reclaim or claim. The processor checks that it holds one Settle instruction that uses the processor's key only for fees and rent, and, for an open, that it matches terms both parties signed. Then it co-signs as fee payer and submits it.",
+  "from": "payer's or payee's party",
+  "to": "processor",
+  "kind": "request/response",
+  "payloadType": "SubmitPayload",
+  "payloadFile": "projects/settle/src/agents/messages.ts",
+  "responseType": "SubmitResult",
+  "responseFile": "projects/settle/src/agents/messages.ts",
+  "design": "projects/settle/docs/design.md",
+  "designSection": "15. Implementation notes (2026-11-06)",
+  "handledIn": [
+   "projects/settle/src/agents/roles.ts"
+  ],
+  "note": "Design section 7 says every Settle task is one-way. This one is request/response. A refusal comes back as { ok: false, error }."
+ },
+ "settle/processor/log": {
+  "purpose": "Anyone can ask the processor for its transparency log. The reply holds every entry (openings, signatures, disputes, rulings, holds and settlements, recorded as roles and hashes) and the processor's signed head.",
+  "from": "anyone",
+  "to": "processor",
+  "kind": "request/response",
+  "payloadInline": "Record<string, never>",
+  "payloadFile": "projects/settle/src/agents/roles.ts",
+  "responseInline": "{ entries: LogEntry[]; head: LogHead }",
+  "responseFile": "projects/settle/src/agents/roles.ts",
+  "related": [
+   {
+    "type": "LogEntry",
+    "file": "projects/settle/src/protocol/log.ts"
+   },
+   {
+    "type": "LogHead",
+    "file": "projects/settle/src/protocol/log.ts"
+   }
+  ],
+  "design": "projects/settle/docs/design.md",
+  "designSection": "9. Arbitration, transparency, privacy",
+  "handledIn": [
+   "projects/settle/src/agents/roles.ts"
+  ],
+  "note": "The demo and tests send it. The web app reads the same log over HTTP at /api/log."
+ },
+ "settle/checkout/start": {
+  "purpose": "A payer who opens a payment link sends the link back to its issuer and asks for an invoice under the link's conditions. The payee checks that the link is its own, unchanged and not archived, then sends a settle/payment/request with those conditions.",
+  "from": "payer's party",
+  "to": "payee's party (the link's issuer)",
+  "kind": "one-way",
+  "payloadInline": "{ link: PaymentLink; checkout: string; name?: string }",
+  "payloadFile": "projects/settle/src/agents/party.ts",
+  "related": [
+   {
+    "type": "PaymentLink",
+    "file": "projects/settle/src/agents/party.ts"
+   }
+  ],
+  "design": "projects/settle/docs/design.md",
+  "designSection": "17. The app: platform, parties, payment links (2026-11-06)",
+  "handledIn": [
+   "projects/settle/src/agents/party.ts"
+  ]
+ },
+ "todo/join": {
+  "purpose": "A device holding an invitation asks the inviting admin to join the list, with the invitation code, the list's DID and a display name. The admin checks the code, adds the member to a newly signed roster and issues a membership credential, or refuses.",
+  "from": "joining device",
+  "to": "inviting admin's device",
+  "kind": "one-way",
+  "payloadInline": "{ code: string; list: string; name: string }",
+  "payloadFile": "projects/shared-todo/src/todo/device.ts",
+  "design": "projects/shared-todo/docs/design.md",
+  "designSection": "4.3 Messages",
+  "handledIn": [
+   "projects/shared-todo/src/todo/device.ts"
+  ]
+ },
+ "todo/welcome": {
+  "purpose": "The admin admits a joiner. It sends the list's name, the joiner's membership credential and the current signed roster. The joiner verifies all three and replies with todo/ack. The list's history follows as todo/sync pages.",
+  "from": "admin's device",
+  "to": "joining device",
+  "kind": "one-way",
+  "payloadInline": "{ listName: string; membership: Credential; roster: RosterDoc }",
+  "payloadFile": "projects/shared-todo/src/todo/device.ts",
+  "related": [
+   {
+    "type": "RosterDoc",
+    "file": "projects/shared-todo/src/todo/roster.ts"
+   },
+   {
+    "type": "Credential",
+    "file": "packages/trust-core/src/credentials.ts"
+   }
+  ],
+  "design": "projects/shared-todo/docs/design.md",
+  "designSection": "4.3 Messages",
+  "handledIn": [
+   "projects/shared-todo/src/todo/device.ts"
+  ]
+ },
+ "todo/join-refused": {
+  "purpose": "The admin tells a joiner why it won't admit them: the invitation is unknown, used or expired, the joiner is already a member, or this device doesn't run the list. The joiner records the reason against its pending join.",
+  "from": "admin's device",
+  "to": "joining device",
+  "kind": "one-way",
+  "payloadInline": "{ list: string; reason: string }",
+  "payloadFile": "projects/shared-todo/src/todo/device.ts",
+  "design": "projects/shared-todo/docs/design.md",
+  "designSection": "4.3 Messages",
+  "handledIn": [
+   "projects/shared-todo/src/todo/device.ts"
+  ]
+ },
+ "todo/ack": {
+  "purpose": "A new member sends the admin a signed acknowledgement credential (TodoListMembershipAcknowledgement) after accepting the welcome. The admin verifies it and records that the member acknowledged.",
+  "from": "new member's device",
+  "to": "admin's device",
+  "kind": "one-way",
+  "payloadInline": "{ acknowledgement: Credential }",
+  "payloadFile": "projects/shared-todo/src/todo/device.ts",
+  "related": [
+   {
+    "type": "Credential",
+    "file": "packages/trust-core/src/credentials.ts"
+   }
+  ],
+  "design": "projects/shared-todo/docs/design.md",
+  "designSection": "4.3 Messages",
+  "handledIn": [
+   "projects/shared-todo/src/todo/device.ts"
+  ]
+ },
+ "todo/op": {
+  "purpose": "A member who adds, edits, checks, unchecks or deletes an item sends the signed operation, with their membership credential, to every other current member. Each device checks it against the roster, the credential and the policy before applying it.",
+  "from": "author's device",
+  "to": "every other current member's device",
+  "kind": "one-way",
+  "payloadType": "OpMessage",
+  "payloadFile": "projects/shared-todo/src/todo/device.ts",
+  "related": [
+   {
+    "type": "Op",
+    "file": "projects/shared-todo/src/todo/ops.ts"
+   }
+  ],
+  "design": "projects/shared-todo/docs/design.md",
+  "designSection": "4.3 Messages",
+  "handledIn": [
+   "projects/shared-todo/src/todo/device.ts"
+  ]
+ },
+ "todo/roster": {
+  "purpose": "The admin sends the list's newly signed roster after someone joins or is removed. A device adopts a roster only if the list's key signed it, its version is higher, and it keeps every earlier removal.",
+  "from": "admin's device",
+  "to": "every current member's device, and once to a member just removed",
+  "kind": "one-way",
+  "payloadInline": "{ roster: RosterDoc }",
+  "payloadFile": "projects/shared-todo/src/todo/device.ts",
+  "related": [
+   {
+    "type": "RosterDoc",
+    "file": "projects/shared-todo/src/todo/roster.ts"
+   }
+  ],
+  "design": "projects/shared-todo/docs/design.md",
+  "designSection": "4.3 Messages",
+  "handledIn": [
+   "projects/shared-todo/src/todo/device.ts"
+  ]
+ },
+ "todo/sync-request": {
+  "purpose": "On start and on reconnect, a device asks one other current member (a different one each time) for everything it holds for a list. The receiver answers with todo/sync pages if the requester is a current member.",
+  "from": "member's device",
+  "to": "one other current member's device",
+  "kind": "one-way",
+  "payloadInline": "{ list: string }",
+  "payloadFile": "projects/shared-todo/src/todo/device.ts",
+  "design": "projects/shared-todo/docs/design.md",
+  "designSection": "4.9 Catching up",
+  "handledIn": [
+   "projects/shared-todo/src/todo/device.ts"
+  ],
+  "note": "The answer is a separate one-way todo/sync, not a response."
+ },
+ "todo/sync": {
+  "purpose": "A device sends one page of a list's history: the current signed roster, up to 100 operations, and the membership credentials those operations need. The receiver adopts the roster as it would any roster and checks each operation as if it had arrived on its own.",
+  "from": "member's device",
+  "to": "member's device",
+  "kind": "one-way",
+  "payloadType": "HistoryPage",
+  "payloadFile": "projects/shared-todo/src/todo/device.ts",
+  "design": "projects/shared-todo/docs/design.md",
+  "designSection": "4.3 Messages",
+  "handledIn": [
+   "projects/shared-todo/src/todo/device.ts"
+  ]
+ },
+ "todo/leave": {
+  "purpose": "A member who isn't the admin tells the list's admins they are leaving. The admin's device removes them and sends a newly signed roster.",
+  "from": "member's device",
+  "to": "every admin's device",
+  "kind": "one-way",
+  "payloadInline": "{ list: string }",
+  "payloadFile": "projects/shared-todo/src/todo/device.ts",
+  "design": "projects/shared-todo/docs/design.md",
+  "designSection": "4.3 Messages",
+  "handledIn": [
+   "projects/shared-todo/src/todo/device.ts"
+  ]
+ },
+ "mandates/issue": {
+  "purpose": "A delegator sends its delegate a new mandate, with the chain of mandates above it. The receiver checks that the sender issued the mandate and that the whole chain verifies and only narrows. With a status resolver, it checks the chain's status lists too.",
+  "from": "delegator (a principal, or an agent delegating to a sub-agent)",
+  "to": "delegate",
+  "kind": "one-way",
+  "payloadType": "IssuePayload",
+  "payloadFile": "packages/mandates/src/tasks.ts",
+  "design": "projects/agents/docs/design.md",
+  "designSection": "10.1 Types",
+  "handledIn": [
+   "packages/mandates/src/tasks.ts"
+  ]
+ },
+ "mandates/revoked": {
+  "purpose": "A delegator tells its delegate that a mandate was revoked, with the mandate's id and the delegator's newly signed status list. The receiver checks the sender signed the list, then checks its own mandate against it.",
+  "from": "delegator",
+  "to": "delegate",
+  "kind": "one-way",
+  "payloadType": "RevokedPayload",
+  "payloadFile": "packages/mandates/src/tasks.ts",
+  "related": [
+   {
+    "type": "StatusListDoc",
+    "file": "packages/trust-core/src/statusList.ts"
+   }
+  ],
+  "design": "projects/agents/docs/design.md",
+  "designSection": "10.1 Types",
+  "handledIn": [
+   "packages/mandates/src/tasks.ts"
+  ]
+ },
+ "mandates/approval/request": {
+  "purpose": "A delegate asks an approver to allow one action its mandate chain doesn't allow by itself. The request carries the action, its hash, the chain, the decision and, optionally, the delegate's own justification. The receiver checks that the action matches its hash and that the chain verifies for the sender.",
+  "from": "delegate (an agent)",
+  "to": "approver (its principal)",
+  "kind": "one-way",
+  "payloadType": "ApprovalRequestPayload",
+  "payloadFile": "packages/mandates/src/tasks.ts",
+  "design": "projects/agents/docs/design.md",
+  "designSection": "9.3 The exchange",
+  "handledIn": [
+   "packages/mandates/src/tasks.ts"
+  ],
+  "note": "The answer is a separate one-way mandates/approval/grant or mandates/approval/deny."
+ },
+ "mandates/approval/grant": {
+  "purpose": "The approver returns a signed approval for a pending request. The receiver checks that the sender signed it over the action's hash, then passes it to the decision.",
+  "from": "approver (a principal)",
+  "to": "delegate (an agent)",
+  "kind": "one-way",
+  "payloadType": "ApprovalGrantPayload",
+  "payloadFile": "packages/mandates/src/tasks.ts",
+  "design": "projects/agents/docs/design.md",
+  "designSection": "9.3 The exchange",
+  "handledIn": [
+   "packages/mandates/src/tasks.ts"
+  ]
+ },
+ "mandates/approval/deny": {
+  "purpose": "The approver tells the delegate it refused a pending request, with an optional reason.",
+  "from": "approver (a principal)",
+  "to": "delegate (an agent)",
+  "kind": "one-way",
+  "payloadType": "ApprovalDenyPayload",
+  "payloadFile": "packages/mandates/src/tasks.ts",
+  "design": "projects/agents/docs/design.md",
+  "designSection": "9.3 The exchange",
+  "handledIn": [
+   "packages/mandates/src/tasks.ts"
+  ]
+ },
+ "trail/witness/submit": {
+  "purpose": "A log's controller sends a witness KEL events or trail messages to witness. The witness verifies each one, keeps the first version it sees at each position, and returns receipts. If it refuses, it says why, and on duplicity it returns the version it saw first.",
+  "from": "log controller",
+  "to": "witness",
+  "kind": "request/response",
+  "payloadInline": "{ stream: string }",
+  "payloadFile": "packages/eventlog/src/tasks.ts",
+  "responseType": "SubmitResult",
+  "responseFile": "packages/eventlog/src/client.ts",
+  "design": "projects/trail/docs/design.md",
+  "designSection": "9.2 What it does",
+  "handledIn": [
+   "packages/eventlog/src/tasks.ts"
+  ],
+  "note": "The same operation is also served over HTTP (witnessHttpHandler)."
+ },
+ "trail/witness/receipts": {
+  "purpose": "A log's controller passes each witness the receipts the other witnesses signed, so every witness ends up holding every receipt. The witness stores them and replies with an empty object.",
+  "from": "log controller",
+  "to": "witness",
+  "kind": "request/response",
+  "payloadInline": "{ stream: string }",
+  "payloadFile": "packages/eventlog/src/tasks.ts",
+  "responseInline": "Record<string, never>",
+  "responseFile": "packages/eventlog/src/tasks.ts",
+  "design": "projects/trail/docs/design.md",
+  "designSection": "9.3 Getting receipts around",
+  "handledIn": [
+   "packages/eventlog/src/tasks.ts"
+  ]
+ },
+ "trail/query": {
+  "purpose": "A watcher or verifier asks a witness for a log's messages and receipts, optionally for a range of sequence numbers. The witness returns them as a CESR text stream.",
+  "from": "watcher or verifier",
+  "to": "witness",
+  "kind": "request/response",
+  "payloadInline": "{ logId: Qb64; from?: number; to?: number }",
+  "payloadFile": "packages/eventlog/src/tasks.ts",
+  "responseInline": "{ stream: string }",
+  "responseFile": "packages/eventlog/src/tasks.ts",
+  "design": "projects/trail/docs/design.md",
+  "designSection": "10.3 Watchers",
+  "handledIn": [
+   "packages/eventlog/src/tasks.ts"
+  ],
+  "note": "Qb64 is a string: a CESR primitive in its text form."
+ },
+ "trail/head": {
+  "purpose": "A watcher or verifier asks a witness for the head of a log: the latest receipt that witness signed. Watchers compare heads to catch forks and truncated bundles.",
+  "from": "watcher or verifier",
+  "to": "witness",
+  "kind": "request/response",
+  "payloadInline": "{ logId: Qb64 }",
+  "payloadFile": "packages/eventlog/src/tasks.ts",
+  "responseInline": "{ receipt: string | null }",
+  "responseFile": "packages/eventlog/src/tasks.ts",
+  "design": "projects/trail/docs/design.md",
+  "designSection": "10.3 Watchers",
+  "handledIn": [
+   "packages/eventlog/src/tasks.ts"
+  ]
+ },
+ "trail/disclose": {
+  "purpose": "A log's controller sends a reader a bundle: the KEL, the chosen trails with the bodies picked for this reader, and the DID bindings. The reader verifies the bundle and reviews the entries, and replies with an empty object.",
+  "from": "log controller (for example an agent)",
+  "to": "reader (for example the agent's principal)",
+  "kind": "request/response",
+  "payloadInline": "{ bundle: Bundle }",
+  "payloadFile": "packages/eventlog/src/tasks.ts",
+  "responseInline": "Record<string, never>",
+  "responseFile": "packages/eventlog/src/tasks.ts",
+  "related": [
+   {
+    "type": "Bundle",
+    "file": "packages/eventlog/src/verify.ts"
+   }
+  ],
+  "design": "projects/trail/docs/design.md",
+  "designSection": "12.1 `projects/agents` (the main consumer)",
+  "handledIn": [
+   "packages/eventlog/src/tasks.ts"
+  ]
+ },
+ "trail/duplicity": {
+  "purpose": "Whoever catches duplicity sends the evidence to someone who relies on the log: two conflicting signed versions at the same position, from the controller or from a witness. The evidence proves itself against the controller's KEL. The receiver replies with an empty object.",
+  "from": "whoever caught it (a watcher, controller or verifier)",
+  "to": "a party that relies on the log",
+  "kind": "request/response",
+  "payloadInline": "{ evidence: StoredEvidence }",
+  "payloadFile": "packages/eventlog/src/tasks.ts",
+  "responseInline": "Record<string, never>",
+  "responseFile": "packages/eventlog/src/tasks.ts",
+  "related": [
+   {
+    "type": "StoredEvidence",
+    "file": "packages/eventlog/src/store.ts"
+   }
+  ],
+  "design": "projects/trail/docs/design.md",
+  "designSection": "10.2 Evidence",
+  "handledIn": [
+   "packages/eventlog/src/tasks.ts"
+  ]
+ },
+ "anon-membership/enroll": {
+  "purpose": "A member's wallet, from the member's own DID, sends a group's issuer a commitment to its secret for that group, optionally with a credential. The issuer's admit() decides whether that DID may join; if so, the issuer appends the commitment as a leaf in the group's tree. It answers with the leaf's index, the first epoch whose root will hold it, and the leaf, which the wallet checks.",
+  "from": "member's wallet",
+  "to": "group issuer",
+  "kind": "request/response",
+  "payloadType": "EnrollRequest",
+  "payloadFile": "packages/anon-membership/src/issuer.ts",
+  "responseType": "EnrollResponse",
+  "responseFile": "packages/anon-membership/src/issuer.ts",
+  "related": [
+   {
+    "type": "LeafJson",
+    "file": "packages/anon-membership/src/issuer.ts"
+   }
+  ],
+  "design": "projects/tipline/docs/design.md",
+  "designSection": "7.1 Message types",
+  "handledIn": [
+   "packages/anon-membership/src/issuer.ts"
+  ],
+  "note": "Refusals: unknownGroup, badRequest (the commitment isn't a field element) and notAdmitted. The design's table leaves out the optional credential and the leaf in the response."
+ },
+ "agents/job/offer": {
+  "purpose": "A hiring agent offers a job: what to do, the category, the most it will pay, how the payment is released (by an attester such as CI, or by the hirer), the dispute window, the deadline, and the hirer's passport. With a mandate presentation attached, the worker can check the hirer is allowed to spend that much on that category before it quotes.",
+  "from": "hiring agent",
+  "to": "worker (a person's party or another agent)",
+  "kind": "one-way",
+  "payloadType": "JobOffer",
+  "payloadFile": "projects/agents/src/protocol/tasks.ts",
+  "design": "projects/agents/docs/design.md",
+  "designSection": "10.1 Types",
+  "handledIn": [
+   "projects/agents/src/guard/guard.ts",
+   "projects/agents/src/roles/principal.ts",
+   "projects/agents/src/roles/courier.ts"
+  ]
+ },
+ "agents/job/quote": {
+  "purpose": "The worker answers an offer with a signed Settle payment link for the job, under the job's conditions. The hirer's guard checks the quote matches the offer before anything is paid.",
+  "from": "worker",
+  "to": "hiring agent",
+  "kind": "one-way",
+  "payloadType": "JobQuote",
+  "payloadFile": "projects/agents/src/protocol/tasks.ts",
+  "design": "projects/agents/docs/design.md",
+  "designSection": "10.1 Types",
+  "handledIn": [
+   "projects/agents/src/guard/guard.ts",
+   "projects/agents/src/roles/principal.ts"
+  ],
+  "note": "A quote that doesn't match its job (a higher price, another release rule) is refused with a quote.mismatch reason that no approval can override. That is how the demo's prompt-injected quote is stopped."
+ },
+ "agents/job/decline": {
+  "purpose": "The worker turns a job down, with a reason in words.",
+  "from": "worker",
+  "to": "hiring agent",
+  "kind": "one-way",
+  "payloadType": "JobDecline",
+  "payloadFile": "projects/agents/src/protocol/tasks.ts",
+  "design": "projects/agents/docs/design.md",
+  "designSection": "10.1 Types",
+  "handledIn": [
+   "projects/agents/src/guard/guard.ts",
+   "projects/agents/src/roles/principal.ts"
+  ]
+ },
+ "agents/job/refused": {
+  "purpose": "The worker's check of the hirer's mandate failed, so it won't take the job. The payload lists the decision's reasons.",
+  "from": "worker",
+  "to": "hiring agent",
+  "kind": "one-way",
+  "payloadType": "JobRefused",
+  "payloadFile": "projects/agents/src/protocol/tasks.ts",
+  "design": "projects/agents/docs/design.md",
+  "designSection": "10.1 Types",
+  "handledIn": [
+   "projects/agents/src/guard/guard.ts",
+   "projects/agents/src/roles/principal.ts"
+  ]
+ },
+ "agents/job/watch": {
+  "purpose": "The hirer tells the attester what to check before it attests the work complete: for a code job, the repository and the test command to run.",
+  "from": "hiring agent",
+  "to": "attester (CI in the demo)",
+  "kind": "one-way",
+  "payloadType": "JobWatch",
+  "payloadFile": "projects/agents/src/protocol/tasks.ts",
+  "design": "projects/agents/docs/design.md",
+  "designSection": "10.1 Types",
+  "handledIn": [
+   "projects/agents/src/roles/ci.ts",
+   "projects/agents/src/guard/guard.ts"
+  ]
+ },
+ "agents/job/deliver": {
+  "purpose": "The worker hands over the work: a git commit, or a note for a physical task. The attester checks it and attests on Settle.",
+  "from": "worker",
+  "to": "hiring agent and attester",
+  "kind": "one-way",
+  "payloadType": "JobDeliver",
+  "payloadFile": "projects/agents/src/protocol/tasks.ts",
+  "design": "projects/agents/docs/design.md",
+  "designSection": "10.1 Types",
+  "handledIn": [
+   "projects/agents/src/roles/ci.ts",
+   "projects/agents/src/guard/guard.ts",
+   "projects/agents/src/roles/courier.ts"
+  ]
+ },
+ "agents/control": {
+  "purpose": "The principal controls an agent: pause, resume or stop it, ask it to disclose its audit trail, or revoke a mandate the agent issued to a sub-agent.",
+  "from": "principal",
+  "to": "agent",
+  "kind": "one-way",
+  "payloadType": "Control",
+  "payloadFile": "projects/agents/src/protocol/tasks.ts",
+  "design": "projects/agents/docs/design.md",
+  "designSection": "10.1 Types",
+  "handledIn": [
+   "projects/agents/src/guard/guard.ts",
+   "projects/agents/src/roles/principal.ts"
+  ],
+  "note": "revoke is our addition to the design's table: only the agent that issued a mandate signs its status list, so the principal asks that agent to revoke it."
+ },
+ "agents/report": {
+  "purpose": "An agent tells its principal something in words, with optional references to jobs, payments or trail entries.",
+  "from": "agent",
+  "to": "principal",
+  "kind": "one-way",
+  "payloadType": "Report",
+  "payloadFile": "projects/agents/src/protocol/tasks.ts",
+  "design": "projects/agents/docs/design.md",
+  "designSection": "10.1 Types",
+  "handledIn": [
+   "projects/agents/src/guard/guard.ts",
+   "projects/agents/src/roles/principal.ts"
+  ]
+ },
+ "agents/task": {
+  "purpose": "A principal or a delegating agent gives an agent work in words. It becomes the first message of the agent's model loop.",
+  "from": "principal or delegating agent",
+  "to": "agent",
+  "kind": "one-way",
+  "payloadType": "TaskMessage",
+  "payloadFile": "projects/agents/src/protocol/tasks.ts",
+  "design": "projects/agents/docs/design.md",
+  "designSection": "10.1 Types",
+  "handledIn": [
+   "projects/agents/src/guard/guard.ts",
+   "projects/agents/src/roles/principal.ts"
+  ],
+  "note": "Our addition: the design passes the task as the model's first user message without a Trust Task."
+ },
+ "agora/demo/issue": {
+  "purpose": "In the demo only, a member asks a demo issuer (a nursing board, a city) for the credential that later gates their forums, such as a registered-nurse license with its claims.",
+  "from": "member",
+  "to": "demo issuer",
+  "kind": "request/response",
+  "payloadType": "DemoIssueRequest",
+  "payloadFile": "projects/agora/src/protocol/specs.ts",
+  "design": "projects/agora/docs/design.md",
+  "designSection": "7.6 Trust Task types",
+  "handledIn": [
+   "projects/agora/src/issuers/issuers.ts"
+  ],
+  "note": "A real issuer issues credentials its own way. Agora only needs the credential afterwards, to enroll."
+ },
+ "agora/group/receipt": {
+  "purpose": "A member asks a registrar for a signed receipt that they are in a group, to restore their membership on a new device from a backup code.",
+  "from": "member",
+  "to": "registrar",
+  "kind": "request/response",
+  "responseType": "GroupReceipt",
+  "responseFile": "projects/agora/src/protocol/documents.ts",
+  "design": "projects/agora/docs/design.md",
+  "designSection": "7.6 Trust Task types",
+  "handledIn": [
+   "projects/agora/src/registrar/registrar.ts"
+  ],
+  "note": "The request carries { group }. The registrar answers only if the sender is a member. Joining and rotating use anon-membership/enroll instead."
+ },
+ "agora/group/leave": {
+  "purpose": "A member asks a registrar to take their leaf out of a group.",
+  "from": "member",
+  "to": "registrar",
+  "kind": "request/response",
+  "design": "projects/agora/docs/design.md",
+  "designSection": "7.6 Trust Task types",
+  "handledIn": [
+   "projects/agora/src/registrar/registrar.ts"
+  ],
+  "note": "The request carries { group }; the answer is { removed: true }. The leaf is gone from the next published root."
+ },
+ "tipline/tip/submit": {
+  "purpose": "A source sends a tip from a fresh DID made from their tip code: the story it's for, the text, a list of attachments, and a zero-knowledge proof that they belong to the organization's group. The proof is bound to this drop box, story and tip, and its nullifier lets the inbox recognize the same source again without knowing who they are.",
+  "from": "source's tip DID",
+  "to": "drop box (the journalist's inbox)",
+  "kind": "one-way",
+  "payloadType": "SubmitPayload",
+  "payloadFile": "projects/tipline/src/protocol/messages.ts",
+  "design": "projects/tipline/docs/design.md",
+  "designSection": "7.1 Message types",
+  "handledIn": [
+   "projects/tipline/src/agents/inbox.ts",
+   "projects/tipline/src/agents/source.ts"
+  ],
+  "note": "Every source message is padded to one fixed size, so its length says nothing about its content."
+ },
+ "tipline/tip/chunk": {
+  "purpose": "One piece of one attachment, sent after the submit. Dummy chunks pad the count, so the number of messages doesn't reveal the files' sizes.",
+  "from": "source's tip DID",
+  "to": "drop box",
+  "kind": "one-way",
+  "payloadType": "ChunkPayload",
+  "payloadFile": "projects/tipline/src/protocol/messages.ts",
+  "design": "projects/tipline/docs/design.md",
+  "designSection": "7.1 Message types",
+  "handledIn": [
+   "projects/tipline/src/agents/inbox.ts",
+   "projects/tipline/src/agents/source.ts"
+  ]
+ },
+ "tipline/tip/receipt": {
+  "purpose": "The drop box tells the source whether the tip was verified or rejected, and why, and asks again for any chunks that didn't arrive.",
+  "from": "drop box",
+  "to": "source's tip DID",
+  "kind": "one-way",
+  "payloadType": "ReceiptPayload",
+  "payloadFile": "projects/tipline/src/protocol/messages.ts",
+  "design": "projects/tipline/docs/design.md",
+  "designSection": "7.1 Message types",
+  "handledIn": [
+   "projects/tipline/src/agents/inbox.ts",
+   "projects/tipline/src/agents/source.ts"
+  ]
+ },
+ "tipline/message": {
+  "purpose": "A reply or a follow-up in a tip's conversation, in either direction.",
+  "from": "source or drop box",
+  "to": "the other",
+  "kind": "one-way",
+  "payloadType": "MessagePayload",
+  "payloadFile": "projects/tipline/src/protocol/messages.ts",
+  "design": "projects/tipline/docs/design.md",
+  "designSection": "7.1 Message types",
+  "handledIn": [
+   "projects/tipline/src/agents/inbox.ts",
+   "projects/tipline/src/agents/source.ts"
+  ],
+  "note": "When the drop box resends a thread, each message says who first wrote it and when, to the hour."
+ },
+ "tipline/thread/request": {
+  "purpose": "A source who kept nothing comes back with their tip code and asks the drop box to resend the conversation.",
+  "from": "source's tip DID",
+  "to": "drop box",
+  "kind": "one-way",
+  "payloadType": "ThreadRequestPayload",
+  "payloadFile": "projects/tipline/src/protocol/messages.ts",
+  "design": "projects/tipline/docs/design.md",
+  "designSection": "7.1 Message types",
+  "handledIn": [
+   "projects/tipline/src/agents/inbox.ts",
+   "projects/tipline/src/agents/source.ts"
+  ]
+ },
+ "tipline/proof/request": {
+  "purpose": "The drop box asks a source for a fresh membership proof, for example against a newer group root, with a challenge to bind it to.",
+  "from": "drop box",
+  "to": "source's tip DID",
+  "kind": "one-way",
+  "payloadType": "ProofRequestPayload",
+  "payloadFile": "projects/tipline/src/protocol/messages.ts",
+  "design": "projects/tipline/docs/design.md",
+  "designSection": "7.1 Message types",
+  "handledIn": [
+   "projects/tipline/src/agents/inbox.ts",
+   "projects/tipline/src/agents/source.ts"
+  ]
+ },
+ "tipline/proof/present": {
+  "purpose": "The source answers a proof request with a fresh membership proof bound to the challenge.",
+  "from": "source's tip DID",
+  "to": "drop box",
+  "kind": "one-way",
+  "payloadType": "ProofPresentPayload",
+  "payloadFile": "projects/tipline/src/protocol/messages.ts",
+  "design": "projects/tipline/docs/design.md",
+  "designSection": "7.1 Message types",
+  "handledIn": [
+   "projects/tipline/src/agents/inbox.ts",
+   "projects/tipline/src/agents/source.ts"
+  ]
+ },
+ "mesh-demo/door/open": {
+  "purpose": "A guest asks a door to open, with no internet. The request carries a guest pass (a credential the building issued) and the nonce from the door's signed challenge beacon, so the signed request can't be replayed later. The door checks the pass offline: its signature, that the sender holds it, that it's for this door, the cached revocation list and its age, and the time window. It answers open or refused, with a reason.",
+  "from": "guest",
+  "to": "door",
+  "kind": "request/response",
+  "payloadType": "DoorRequest",
+  "payloadFile": "projects/mesh/src/door.ts",
+  "responseType": "DoorAnswer",
+  "responseFile": "projects/mesh/src/door.ts",
+  "design": "projects/mesh/docs/design.md",
+  "designSection": "4.2 The MVP demo",
+  "handledIn": [
+   "projects/mesh/src/door.ts"
+  ],
+  "note": "It travels over LoRa in the CTT1 compact form: about 670 bytes on the air in 3 frames, against about 2.1 KB as JSON. The mesh-demo/ prefix marks it as the demo's own type."
+ }
+}

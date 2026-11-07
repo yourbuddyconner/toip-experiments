@@ -49,3 +49,29 @@ export class DemoClock implements Clock {
     return () => this.listeners.delete(fn);
   }
 }
+
+/**
+ * A clock that rounds every reading down to `granularityMs` (default one hour), so documents and
+ * proofs made with it carry only a coarse time. Tipline's source app and Agora's posts use it.
+ */
+export class CoarseClock implements Clock {
+  constructor(
+    private readonly inner: Clock,
+    private readonly granularityMs = 3_600_000,
+  ) {
+    if (!Number.isInteger(granularityMs) || granularityMs < 1) throw new Error("granularity must be a positive number of milliseconds");
+  }
+
+  now(): number {
+    const t = this.inner.now();
+    return t - (((t % this.granularityMs) + this.granularityMs) % this.granularityMs);
+  }
+
+  iso(): string {
+    return new Date(this.now()).toISOString();
+  }
+
+  date(): Date {
+    return new Date(this.now());
+  }
+}

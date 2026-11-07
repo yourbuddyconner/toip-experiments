@@ -5,6 +5,7 @@ import { utf8 } from "../src/bytes";
 import { decodeFrame } from "../src/frame";
 import { decodePacket } from "../src/packet";
 import { RegulatoryViolation } from "../src/sim";
+import type { MeshEvent } from "../src/mesh";
 import { contains, meshWorld, setting, wireOf, type Node } from "./helpers";
 
 type World = Awaited<ReturnType<typeof meshWorld>>;
@@ -248,6 +249,22 @@ describe("addressing", () => {
     expect(door.inbox).toHaveLength(0);
     const first = dataFrames(w, "guest")[0].f;
     expect(first?.type === "data" && decodePacket(first.chunk)?.kind).toBe("intro");
+  });
+
+  it("reports each packet it builds: kind, route, size and frames, before the first frame", async () => {
+    const w = await meshWorld({ names: ["guest", "door"], links: [["guest", "door"]] });
+    const { guest, door } = w.nodes;
+    const wire = await wireOf(guest.id, door.id.did, 450);
+    expect(await w.sched.run(guest.mesh.post(guest.id.did, door.id.did, wire))).toBe("live");
+    const out = guest.events.filter((e) => e.type === "packet-out");
+    expect(out).toHaveLength(1);
+    const e = out[0] as Extract<MeshEvent, { type: "packet-out" }>;
+    // Never heard from, so flooded (the default for unknown recipients).
+    expect(e).toMatchObject({ kind: "intro", from: guest.id.did, to: door.id.did, route: "flood", wireBytes: wire.length });
+    const frames = dataFrames(w, "guest").filter((x) => x.f?.type === "data" && Buffer.from(x.f.pid).toString("hex") === e.pid);
+    expect(new Set(frames.map((x) => x.f?.type === "data" && x.f.index)).size).toBe(e.frames);
+    expect(frames.reduce((n, x, i, all) => (all.findIndex((y) => y.r.bytes.length === x.r.bytes.length && y.f?.type === "data" && x.f?.type === "data" && y.f.index === x.f.index) === i ? n + x.r.bytes.length - 8 : n), 0)).toBe(e.bytes);
+    expect(guest.events.findIndex((x) => x.type === "packet-out")).toBeLessThan(guest.events.findIndex((x) => x.type === "frame-out"));
   });
 
   it("keeps a message in the outbox while nobody answers, and delivers it on a later try", async () => {

@@ -1,0 +1,457 @@
+/* The Ledger's tip page: a newspaper's quiet back page. Serif prose, one ink rule under the masthead,
+   steps numbered in the margin because they are a sequence, and the tip code as a claim ticket. */
+:root {
+  --body: var(--serif);
+  --paper: #f6f7f5;
+  --accent: #2d53a0;
+}
+
+body {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+.ledger {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.masthead {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 1.25rem clamp(1rem, 6vw, 5rem) 0.9rem;
+  border-bottom: 3px solid var(--ink);
+  background: var(--paper);
+}
+
+.wordmark {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+  font-variation-settings: "opsz" 72;
+}
+
+.section-name {
+  font-family: var(--sans);
+  font-size: 0.9375rem;
+  color: var(--graphite);
+}
+
+main {
+  flex: 1;
+  padding: 2rem clamp(1rem, 6vw, 5rem) 3rem;
+}
+
+.column {
+  max-width: 41rem;
+}
+
+.headline {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(2rem, 5vw, 3rem);
+  letter-spacing: -0.015em;
+  line-height: 1.08;
+  margin-bottom: 0.4em;
+  font-variation-settings: "opsz" 60;
+}
+
+.dek {
+  font-size: 1.1875rem;
+  color: var(--graphite);
+  max-width: 36rem;
+  margin-bottom: 1.5rem;
+}
+
+.loading {
+  color: var(--graphite);
+  font-style: italic;
+}
+
+.colophon {
+  padding: 1rem clamp(1rem, 6vw, 5rem) 2rem;
+  font-family: var(--sans);
+  font-size: 0.8125rem;
+  color: var(--graphite);
+}
+
+.choices {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 1.5rem 0;
+}
+
+.boxes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.boxes a {
+  display: block;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--rule);
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.boxes .who {
+  display: block;
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: var(--accent);
+}
+
+.boxes .what {
+  color: var(--graphite);
+}
+
+/* ── Steps ─────────────────────────────────────────────── */
+
+.steps {
+  list-style: none;
+  counter-reset: step;
+  padding: 0;
+  margin: 2rem 0 0;
+}
+
+.step {
+  counter-increment: step;
+  position: relative;
+  padding: 0 0 2rem;
+  margin: 0 0 2rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.step::before {
+  content: counter(step);
+  position: absolute;
+  left: -3.25rem;
+  top: -0.2rem;
+  font-family: var(--serif);
+  font-size: 2.25rem;
+  font-weight: 300;
+  color: var(--accent);
+  font-variation-settings: "opsz" 72;
+}
+
+@media (max-width: 760px) {
+  .step::before {
+    position: static;
+    display: block;
+    font-size: 1.75rem;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+}
+
+.step h2,
+.step-like h2 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+.step.locked {
+  opacity: 0.45;
+}
+
+.step-like {
+  margin-top: 2rem;
+}
+
+.stories {
+  border: 0;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+
+.story {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+}
+
+.story.chosen {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.story input {
+  margin-top: 0.35rem;
+  accent-color: var(--accent);
+}
+
+.story-title {
+  display: block;
+  font-weight: 600;
+}
+
+.story-group {
+  display: block;
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  color: var(--graphite);
+}
+
+.verdict.good {
+  color: var(--good);
+  font-family: var(--sans);
+  font-size: 0.9375rem;
+  padding-left: 1.4rem;
+  position: relative;
+}
+
+.verdict.good::before {
+  content: "";
+  position: absolute;
+  left: 0.15rem;
+  top: 0.35rem;
+  width: 0.55rem;
+  height: 0.9rem;
+  border: solid var(--good);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.code-input {
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+  max-width: 30rem;
+  flex: 1;
+}
+
+.checklist {
+  padding-left: 1.2rem;
+  margin: 0 0 1rem;
+}
+
+.checklist li {
+  margin-bottom: 0.3rem;
+}
+
+.check {
+  font-family: var(--sans);
+}
+
+/* ── Files ─────────────────────────────────────────────── */
+
+.files {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+}
+
+.file {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 1rem;
+  padding: 0.9rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  margin-bottom: 0.75rem;
+  font-family: var(--sans);
+  font-size: 0.9375rem;
+}
+
+.file img,
+.file-icon {
+  width: 7rem;
+  height: 7rem;
+  object-fit: cover;
+  border-radius: 2px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+}
+
+.file-name {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  overflow-wrap: anywhere;
+}
+
+.sent-as {
+  font-weight: 400;
+  color: var(--graphite);
+}
+
+.found ul {
+  margin: 0.2rem 0 0.5rem;
+  padding-left: 1.1rem;
+  color: var(--bad);
+}
+
+.found p {
+  margin: 0;
+}
+
+.found.warn ul {
+  color: var(--warn);
+}
+
+@media (max-width: 520px) {
+  .file {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── The tip code ticket ───────────────────────────────── */
+
+.ticket {
+  display: flex;
+  margin: 1.25rem 0;
+  max-width: 34rem;
+  background: var(--surface);
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.ticket-stub {
+  flex: none;
+  width: 4.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  position: relative;
+}
+
+/* The perforation between stub and ticket. */
+.ticket-stub::after {
+  content: "";
+  position: absolute;
+  right: -5px;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  background: radial-gradient(circle at 5px 6px, var(--surface) 3px, transparent 3.5px) 0 0 / 10px 12px repeat-y;
+}
+
+.ticket-body {
+  padding: 1rem 1.25rem 0.9rem 1.5rem;
+}
+
+.ticket-code {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  font-family: var(--mono);
+  font-size: clamp(1.15rem, 3.6vw, 1.5rem);
+  letter-spacing: 0.06em;
+  background: none;
+  border: 0;
+  padding: 0;
+  user-select: all;
+  color: var(--ink);
+}
+
+.ticket figcaption {
+  margin-top: 0.5rem;
+  font-family: var(--sans);
+  font-size: 0.8125rem;
+  color: var(--graphite);
+}
+
+.progress {
+  list-style: none;
+  padding: 0;
+  font-family: var(--sans);
+  font-size: 0.9375rem;
+}
+
+.progress li {
+  padding: 0.25rem 0 0.25rem 1.4rem;
+  position: relative;
+}
+
+.progress li::before {
+  content: "";
+  position: absolute;
+  left: 0.2rem;
+  top: 0.65rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--good);
+}
+
+.progress li.now::before {
+  background: var(--accent);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.evidence {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.5rem;
+  font-family: var(--sans);
+  font-size: 0.875rem;
+}
+
+.evidence > div {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 0.5rem 0.65rem;
+}
+
+/* ── The conversation ──────────────────────────────────── */
+
+.thread {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+}
+
+.thread li {
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  border-left: 3px solid var(--rule);
+  background: var(--surface);
+}
+
+.thread li.dropbox {
+  border-left-color: var(--accent);
+}
+
+.thread .who {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.thread .who span {
+  font-weight: 400;
+  color: var(--graphite);
+  margin-left: 0.4rem;
+}
+
+.thread .text {
+  white-space: pre-wrap;
+  margin: 0;
+}

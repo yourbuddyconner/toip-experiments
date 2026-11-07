@@ -5,6 +5,8 @@ import { Controller } from "../src/controller";
 import { buildIxn, buildRot, keyAt, isCurrentAt, retiredAt, verifyKel } from "../src/kel";
 import { coldKeysFromSeed } from "../src/keys";
 import { toStream } from "../src/stream";
+import { verifyTrail } from "../src/trail";
+import { exportBundle } from "../src/verify";
 import { incept, keyQb64, msgOf, seedFrom, sign, signer, setup } from "./helpers";
 
 const codes = (r: { problems: { code: string }[] }) => r.problems.map((p) => p.code);
@@ -121,6 +123,37 @@ describe("rotation correctness", () => {
     const r = await verifyKel(p.kelMessages(), { allowUnwitnessed: true });
     expect(r.problems).toEqual([]);
     expect(r.latest.keys).toEqual([keyQb64(principalNext)]);
+  });
+
+  it("the principal rotates alone and names the agent's new key (extraKeys); the agent keeps signing", async () => {
+    const principalNext = signer("principal/next");
+    const s = setup("agent3");
+    const c = await Controller.incept({ hot: s.hot, cold: s.cold, extraNext: [nextKeyDigest(keyQb64(principalNext))], nt: 1, store: s.store, clock: s.clock });
+    const t = await c.openTrail("agent/actions");
+    await t.append({ kind: "agent/tool-call" });
+    const agentNew = s.cold.release(1, 1)[0];
+    const p = await Controller.load(c.aid, { hot: [], store: s.store, clock: s.clock });
+    const rot = await p.rotate({
+      exposed: [principalNext],
+      extraKeys: [keyQb64(agentNew)],
+      next: [...s.cold.commit(2, 1), nextKeyDigest(keyQb64(signer("principal/next2")))],
+      nt: 1,
+    });
+    expect(rot.body.k).toEqual([keyQb64(principalNext), keyQb64(agentNew)]);
+    expect(rot.body.kt).toBe("1");
+    expect(rot.controllerSigs).toHaveLength(1);
+    expect(rot.controllerSigs![0]).toMatchObject({ code: "2A", index: 0, ondex: 1 });
+    const kel = await verifyKel(p.kelMessages(), { allowUnwitnessed: true });
+    expect(kel.problems).toEqual([]);
+    // the agent loads with its new key alone and keeps writing
+    const agent = await Controller.load(c.aid, { hot: [agentNew], store: s.store, clock: s.clock });
+    const { entry } = await agent.trail(t.id).append({ kind: "agent/tool-call" });
+    expect(entry.keyRefSig!.sigs[0].index).toBe(1);
+    const tr = await verifyTrail({ kel: await verifyKel(agent.kelMessages(), { allowUnwitnessed: true }), stream: (await exportBundle(s.store, c.aid)).trails[0].stream }, { allowUnwitnessed: true });
+    expect(tr.problems).toEqual([]);
+    expect(tr.entries.map((e) => e.keyState.estSn)).toEqual([0, 0, 1]);
+    // a key named twice is refused
+    await expect(p.rotate({ exposed: [agentNew], extraKeys: [keyQb64(agentNew)], next: [nextKeyDigest("x")] })).rejects.toThrow(/twice/);
   });
 
   it("the agent can also rotate under the shared pattern", async () => {

@@ -299,6 +299,8 @@ export class Witness extends LogKeeper implements WitnessClient {
   async head(logId: Qb64): Promise<SignedMessage | undefined> {
     const msgs = await this.store.range(logId);
     for (let i = msgs.length - 1; i >= 0; i--) {
+      // a cut entry is kept and served, but it isn't the head
+      if (msgs[i].cutBy !== undefined || msgs[i].superseded) continue;
       const own = (await this.store.receipts(logId, msgs[i].s, msgs[i].d)).find((r) => r.by === this.aid && r.kind === "witness");
       if (own) return receiptMessage(own);
     }
