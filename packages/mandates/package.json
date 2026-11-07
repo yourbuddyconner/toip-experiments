@@ -1,6 +1,6 @@
 {
   "name": "@toip-tools/mandates",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Delegation credentials for people and AI agents: bounded, revocable authority with spending limits, chains that can only narrow, policy checks and human approvals.",
   "keywords": [
     "toip",
@@ -65,7 +65,7 @@
   },
   "dependencies": {
     "@noble/hashes": "2.4.0",
-    "@toip-tools/trust-core": "0.1.0"
+    "@toip-tools/trust-core": "0.1.1"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

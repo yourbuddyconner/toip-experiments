@@ -1,6 +1,6 @@
 {
   "name": "@toip-tools/relay",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A WebSocket mailbox for TSP (Trust Spanning Protocol) messages: stores and delivers end-to-end encrypted messages between DIDs it can't read.",
   "keywords": [
     "toip",
@@ -63,7 +63,7 @@
   },
   "dependencies": {
     "@noble/curves": "2.4.0",
-    "@toip-tools/trust-core": "0.1.0",
+    "@toip-tools/trust-core": "0.1.1",
     "ws": "8.22.1"
   },
   "devDependencies": {

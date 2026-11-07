@@ -1,6 +1,6 @@
 {
   "name": "@toip-tools/mesh-transport",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Trust Tasks and TSP (Trust Spanning Protocol) messages over LoRa radio or carried files, for when the internet isn't there.",
   "keywords": [
     "toip",
@@ -93,12 +93,12 @@
     "@noble/hashes": "2.4.0",
     "@openvtc/trust-tasks-proof": "0.1.6",
     "@openvtc/vti-tsp-js": "0.2.0",
-    "@toip-tools/trust-core": "0.1.0",
+    "@toip-tools/trust-core": "0.1.1",
     "cborg": "6.2.1",
     "serialport": "13.0.0"
   },
   "devDependencies": {
-    "@toip-tools/relay": "0.1.0",
+    "@toip-tools/relay": "0.1.1",
     "@types/node": "26.6.6",
     "typescript": "7.0.2",
     "vitest": "5.1.0"

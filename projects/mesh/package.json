@@ -17,10 +17,10 @@
     "@fontsource/barlow-semi-condensed": "5.3.0",
     "@noble/hashes": "2.4.0",
     "@openvtc/vti-tsp-js": "0.2.0",
-    "@toip-tools/mesh-transport": "0.1.0",
-    "@toip-tools/relay": "0.1.0",
+    "@toip-tools/mesh-transport": "0.1.1",
+    "@toip-tools/relay": "0.1.1",
     "@toip-tools/settle": "0.0.0",
-    "@toip-tools/trust-core": "0.1.0",
+    "@toip-tools/trust-core": "0.1.1",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },

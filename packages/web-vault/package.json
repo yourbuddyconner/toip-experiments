@@ -1,6 +1,6 @@
 {
   "name": "@toip-tools/web-vault",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Browser storage for identity seeds and account data, encrypted with a passkey or passphrase.",
   "keywords": [
     "toip",
@@ -59,7 +59,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@toip-tools/trust-core": "0.1.0"
+    "@toip-tools/trust-core": "0.1.1"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

@@ -1,6 +1,6 @@
 {
   "name": "@toip-tools/eventlog",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "KERI key event logs and witnessed audit trails in TypeScript: rotate keys with pre-rotation and make tampering, forks and stolen keys detectable.",
   "keywords": [
     "toip",
@@ -67,7 +67,7 @@
   "dependencies": {
     "@noble/curves": "2.4.0",
     "@noble/hashes": "2.4.0",
-    "@toip-tools/trust-core": "0.1.0",
+    "@toip-tools/trust-core": "0.1.1",
     "cborg": "6.2.1"
   },
   "devDependencies": {

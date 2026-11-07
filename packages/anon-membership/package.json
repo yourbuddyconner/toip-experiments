@@ -1,6 +1,6 @@
 {
   "name": "@toip-tools/anon-membership",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Zero-knowledge group membership for TypeScript (Noir): prove you belong to a group and meet its rules without revealing which member you are, in Node or the browser.",
   "keywords": [
     "toip",
@@ -72,7 +72,7 @@
     "@aztec/bb.js": "npm:@aztec-foundation/bb.js@6.0.0",
     "@noble/hashes": "2.4.0",
     "@noir-lang/noir_js": "1.0.0",
-    "@toip-tools/trust-core": "0.1.0"
+    "@toip-tools/trust-core": "0.1.1"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

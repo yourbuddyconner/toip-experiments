@@ -15,11 +15,11 @@
   "dependencies": {
     "@fontsource/atkinson-hyperlegible-next": "5.3.0",
     "@noble/hashes": "2.4.0",
-    "@toip-tools/anon-membership": "0.1.0",
-    "@toip-tools/eventlog": "0.1.0",
-    "@toip-tools/relay": "0.1.0",
-    "@toip-tools/trust-core": "0.1.0",
-    "@toip-tools/web-vault": "0.1.0",
+    "@toip-tools/anon-membership": "0.1.1",
+    "@toip-tools/eventlog": "0.1.1",
+    "@toip-tools/relay": "0.1.1",
+    "@toip-tools/trust-core": "0.1.1",
+    "@toip-tools/web-vault": "0.1.1",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
