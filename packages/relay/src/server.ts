@@ -79,6 +79,15 @@ interface Session {
 
 type Frame = Record<string, unknown> & { t?: unknown };
 
+/**
+ * Opens a SQLite-backed WebSocket mailbox at `/v1` and starts listening for authenticated clients.
+ * Messages remain stored until acknowledged or expired; the relay sees routing metadata, not plaintext.
+ * @param opts Bind address, database path, public authentication URL, queue limits, and optional observers.
+ * Use `port: 0` for an assigned port. `publicUrl` must exactly match the URL clients sign during authentication.
+ * @returns A listening relay with its actual port, advertised URL, queue counter, and asynchronous `close` method.
+ * The caller must await `close()` during shutdown to terminate sockets, stop expiry sweeps, and close SQLite.
+ * @throws If opening or initializing SQLite fails, or the WebSocket server cannot start listening.
+ */
 export async function startRelay(opts: RelayOptions): Promise<Relay> {
   const log = opts.log ?? (() => {});
   const limits: RelayLimits = { ...DEFAULT_LIMITS, ...opts.limits };

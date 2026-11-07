@@ -33,6 +33,36 @@ for (const fig of document.querySelectorAll("figure.code:not(.code--output)")) {
 const wire = document.querySelector(".wire");
 if (wire) requestAnimationFrame(() => requestAnimationFrame(() => wire.classList.add("play")));
 
+// Search the compiler-generated export catalog; module indexes remain usable without JavaScript.
+const apiSearch = document.querySelector("#api-search");
+if (apiSearch) {
+  const catalog = JSON.parse(document.querySelector("#sdk-search-data").textContent);
+  const results = document.querySelector("#api-results");
+  const status = document.querySelector("#api-search-status");
+  apiSearch.addEventListener("input", () => {
+    const query = apiSearch.value.trim().toLowerCase();
+    results.replaceChildren();
+    results.hidden = !query;
+    if (!query) { status.textContent = ""; return; }
+    const terms = query.split(/\s+/);
+    const matches = catalog.filter(entry => terms.every(term => `${entry.name} ${entry.module} ${entry.summary} ${entry.keywords}`.toLowerCase().includes(term)))
+      .sort((a, b) => Number(b.name.toLowerCase() === query) - Number(a.name.toLowerCase() === query) || Number(b.name.toLowerCase().includes(query)) - Number(a.name.toLowerCase().includes(query)));
+    status.textContent = matches.length ? `${matches.length} exports found${matches.length > 20 ? "; showing the first 20" : ""}.` : "No exports found. Try a library or symbol name.";
+    for (const entry of matches.slice(0, 20)) {
+      const item = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = entry.href;
+      link.textContent = entry.name;
+      const module = document.createElement("small");
+      module.textContent = `${entry.module} · ${entry.kind}`;
+      const summary = document.createElement("p");
+      summary.textContent = entry.summary;
+      item.append(link, module, summary);
+      results.append(item);
+    }
+  });
+}
+
 // Image links stay usable without JavaScript; enhance them with a native modal.
 const imageLinks = document.querySelectorAll(".shots a:has(img)");
 if (imageLinks.length && typeof HTMLDialogElement !== "undefined" && typeof HTMLDialogElement.prototype.showModal === "function") {

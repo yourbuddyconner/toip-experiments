@@ -36,7 +36,7 @@ export function involvedPage(): Page {
 </div>`;
   return {
     path: "/get-involved/",
-    title: "Get involved",
+    title: "Contribute",
     description: "Contribute code, report bugs, work on specifications, or propose a new Trust over IP example.",
     section: "involved",
     body,

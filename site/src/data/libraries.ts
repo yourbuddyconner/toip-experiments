@@ -254,6 +254,7 @@ Tests run on simulated radios. Adapters are implemented for a LoRaWAN gateway's 
     reachFor: ["Trust interactions where there is no internet: a door, a cabin, a field sensor.", "Carrying sealed messages by hand until a gateway is back."],
     notFor: ["Hiding where you are. A transmitting radio can be located.", "Large payloads: a radio frame holds about 250 bytes."],
     runsIn: "Browsers and Node. The `/gwmp`, `/detect` and `/node` entry points are Node only.",
+    snippet: { file: "mesh-transport.ts", caption: "A sealed Trust Task over simulated radios", runs: true },
     api: [
       { area: "Transport and gateway", names: ["MeshTransport", "MeshGateway", "ChallengeBeacon"] },
       { area: "Simulation (`/sim`)", names: ["SimMedium", "SimLink", "VirtualScheduler"] },

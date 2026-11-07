@@ -1,0 +1,3 @@
+Challenge accepted: true
+Reply signed by the door: true
+Every radio frame fits the MTU: true

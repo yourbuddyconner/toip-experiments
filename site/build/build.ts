@@ -8,6 +8,7 @@ import { sealSample } from "./hero";
 import { loadSpecs, warnings } from "./specs";
 import { layout, type Page } from "../src/layout";
 import { homePage } from "../src/pages/home";
+import { docsPage } from "../src/pages/docs";
 import { quickstartPage } from "../src/pages/quickstart";
 import { conceptsPage } from "../src/pages/concepts";
 import { toolkitPages } from "../src/pages/toolkit";
@@ -49,6 +50,7 @@ const specs = loadSpecs();
 const sample = await sealSample();
 const pages: Page[] = [
   homePage(sample, specs.length),
+  docsPage(),
   quickstartPage(),
   conceptsPage(),
   ...toolkitPages(),

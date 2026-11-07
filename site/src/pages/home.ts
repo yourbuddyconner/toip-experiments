@@ -6,10 +6,7 @@ import { esc, html, raw, type Raw } from "../../build/html";
 import { exampleRegion } from "../../build/source";
 import { libraries } from "../data/libraries";
 import { projects } from "../data/projects";
-import { externals as X } from "../data/links";
 import type { Page } from "../layout";
-import { libLinks, status } from "../parts";
-import { toolkitShowcase } from "../toolkit-showcase";
 
 /** JSON with light markup, for the opened document. */
 function jsonHtml(v: unknown, indent = 0): string {
@@ -72,63 +69,43 @@ export function homePage(sample: SealedSample, specCount: number): Page {
   const first = exampleRegion("examples/quickstart/02-trust-task.ts", "hero");
   const body = html`
 <div class="wrap">
-  <section class="hero" aria-labelledby="hero-title">
+  <section class="landing-hero" aria-labelledby="hero-title">
     <div>
       <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span> Interoperable tools for Trust over IP</p>
-      <h1 id="hero-title">Trust people<br>can <em>verify.</em></h1>
-      <p class="lede">Build apps where people hold their own keys, exchange private messages, and check each other's claims directly.</p>
-      <p>TypeScript libraries and runnable apps built with ToIP protocols, verifiable credentials, and cryptographic proofs. Start with two identities and a signed, encrypted message.</p>
-      <p class="actions"><a class="btn" href="${u("/quickstart/")}">Build your first exchange <span aria-hidden="true">↗</span></a><a href="${u("/toolkit/")}">Browse the libraries</a></p>
-      <dl class="hero__facts"><div><dt>Libraries</dt><dd>${libraries.length}</dd></div><div><dt>Working apps</dt><dd>${projects.filter((p) => p.status === "working").length}</dd></div><div><dt>Task types</dt><dd>${specCount}</dd></div></dl>
+      <h1 id="hero-title">Build with<br>Trust over IP.</h1>
+      <p class="lede">A TypeScript SDK for identities, private messages, verifiable credentials, and delegation.</p>
+      <p>Run a signed request and response locally, then use the same libraries in your application.</p>
+      <p class="actions"><a class="btn" href="${u("/docs/")}">Get started <span aria-hidden="true">↗</span></a><a href="${u("/quickstart/")}">Run the quickstart</a></p>
+      <p class="landing-meta">${libraries.length} SDK libraries · Browser and Node · Source workspace</p>
     </div>
-    ${wire(sample)}
+    <div class="landing-example">${code(first, "ts", { caption: "Quickstart: a signed request and response" })}<p><a href="${u("/quickstart/#trust-task")}">View the complete example</a></p></div>
   </section>
 
-  <section class="capabilities" aria-labelledby="capabilities">
-    <div><p class="eyebrow">What you can build with</p><h2 id="capabilities">From identity<br>to interaction.</h2><p>Choose the pieces your application needs.</p></div>
-    <div class="capabilities__grid">
-      <article><span class="capability-mark" aria-hidden="true">⌘</span><h3>Identity</h3><p>Create identifiers with ${libLinks(["trust-core"])}. Keep a verifiable key history with ${libLinks(["eventlog"])}.</p></article>
-      <article><span class="capability-mark" aria-hidden="true">↗</span><h3>Private messages</h3><p>Send signed, encrypted Trust Tasks over the ${libLinks(["relay"])} or ${libLinks(["mesh-transport"])}.</p></article>
-      <article><span class="capability-mark" aria-hidden="true">✓</span><h3>Verifiable claims</h3><p>Issue credentials, delegate with ${libLinks(["mandates"])}, or prove membership with ${libLinks(["anon-membership"])}.</p></article>
-      <article><span class="capability-mark" aria-hidden="true">⊞</span><h3>Working applications</h3><p>Explore <a href="${u("/examples/#settle")}">conditional payments</a>, <a href="${u("/examples/#shared-todo")}">private collaboration</a>, and <a href="${u("/examples/")}">more runnable examples</a>.</p></article>
-    </div>
+  <section class="landing-section" aria-labelledby="start-building">
+    <h2 id="start-building">Start building</h2>
+    <ol class="landing-paths">
+      <li><a href="${u("/docs/#setup")}"><span class="landing-paths__step">01</span><h3>Set up the SDK</h3><p>Install the source workspace and choose your runtime.</p><span class="landing-paths__link">Setup <span aria-hidden="true">↗</span></span></a></li>
+      <li><a href="${u("/quickstart/")}"><span class="landing-paths__step">02</span><h3>Run a trust exchange</h3><p>Create identities, send a private message, and verify a credential.</p><span class="landing-paths__link">Quickstart <span aria-hidden="true">↗</span></span></a></li>
+      <li><a href="${u("/toolkit/")}"><span class="landing-paths__step">03</span><h3>Build your application</h3><p>Find usage guides, parameters, return types, and working examples.</p><span class="landing-paths__link">SDK reference <span aria-hidden="true">↗</span></span></a></li>
+    </ol>
   </section>
 
-  <a class="ecosystem-invitation" href="${u("/ecosystem/")}"><div><span class="eyebrow">Beyond this toolkit</span><h2>Find your way around the ecosystem.</h2><p>Coming from ToIP? Meet the related communities and compare their implementation choices.</p></div><span class="ecosystem-invitation__arrow" aria-hidden="true">↗</span></a>
-
-  ${toolkitShowcase()}
-
-  <section class="band" aria-labelledby="built">
-    <h2 id="built">See the ideas at work</h2>
-    <div class="prose"><p>Each project explores a concrete trust problem. Read the design, inspect the protocol, or run a working example on your machine.</p></div>
-    <table class="rows">
-      <thead><tr><th scope="col">Project</th><th scope="col">What it is</th><th scope="col">Status</th></tr></thead>
-      <tbody>
-        ${projects.map((p) => html`<tr><th scope="row"><a href="${u(`/examples/#${p.slug}`)}">${p.name}</a></th><td>${p.pitch.split(/(?<=\.) /)[0]}</td><td>${status(p.status)}</td></tr>`)}
-      </tbody>
-    </table>
+  <section class="landing-section" aria-labelledby="built">
+    <div class="landing-section__heading"><h2 id="built">Example applications</h2><a href="${u("/examples/")}">All examples <span aria-hidden="true">↗</span></a></div>
+    <div class="landing-apps">${projects.filter(p => p.status === "working").slice(0, 3).map(p => html`<a href="${u(`/examples/#${p.slug}`)}"><h3>${p.name}</h3><p>${p.pitch.split(/(?<=\.) /)[0]}</p><span>Run the example <span aria-hidden="true">↗</span></span></a>`)}</div>
   </section>
 
-  <section class="band first" aria-labelledby="first">
-    <h2 id="first">Your first trust interaction</h2>
-    <div class="prose">
-      <p>Alice sends a request. Bob verifies it and signs his reply. Before Bob's handler runs, the toolkit decrypts the message and checks its signature, recipient, timestamp, and replay history. This is working code from the quickstart.</p>
-    </div>
-    ${code(first, "ts", { caption: "From site/examples/quickstart/02-trust-task.ts" })}
-    <p class="actions"><a class="btn" href="${u("/quickstart/")}">Start the quickstart</a></p>
+  <section class="landing-resources" aria-label="More resources">
+    <div><h2>Concepts</h2><p>Learn how identities, credentials, messaging, and governance fit together.</p><a href="${u("/concepts/")}">Read the concepts <span aria-hidden="true">↗</span></a></div>
+    <div><h2>Ecosystem</h2><p>Understand the communities, specifications, and implementation choices behind this work.</p><a href="${u("/ecosystem/")}">Explore the ecosystem <span aria-hidden="true">↗</span></a></div>
+    <div><h2>Trust Tasks</h2><p>Look up ${specCount} message types used by the SDK and example applications.</p><a href="${u("/spec/")}">Task reference <span aria-hidden="true">↗</span></a></div>
   </section>
 
-  <section class="band" aria-labelledby="involved">
-    <h2 id="involved">Get involved</h2>
-    <div class="prose">
-      <p>Report a bug, improve an example, or <a href="${u("/get-involved/#propose")}">propose an application</a>. Protocol work happens at the <a href="${X.toip}">Trust over IP Foundation</a>; this repository focuses on implementations and experiments.</p>
-      <p><a href="${u("/get-involved/")}">Contribution guide</a></p>
-    </div>
-  </section>
+  <details class="landing-inspector"><summary>Inspect a signed, encrypted message</summary>${wire(sample)}</details>
 </div>`;
   return {
     path: "/",
-    title: "toip.tools: build on the Trust over IP stack",
+    title: "toip.tools — TypeScript SDK for Trust over IP",
     description: "A TypeScript toolkit and working examples for building on Trust over IP: DIDs, credentials, the Trust Spanning Protocol and Trust Tasks.",
     section: "home",
     body,

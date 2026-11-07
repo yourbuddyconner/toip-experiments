@@ -2,7 +2,7 @@ import { BASE, ORIGIN, REPO, u } from "../build/config";
 import { fingerprintSvg } from "../build/fingerprint";
 import { html, raw, type Raw } from "../build/html";
 
-export type Section = "home" | "quickstart" | "concepts" | "toolkit" | "examples" | "spec" | "ecosystem" | "involved" | "none";
+export type Section = "home" | "docs" | "quickstart" | "concepts" | "toolkit" | "examples" | "spec" | "ecosystem" | "involved" | "none";
 
 export interface Page {
   /** Site path, starting and ending with "/" (or ending in .html for the 404 page). */
@@ -14,13 +14,9 @@ export interface Page {
 }
 
 const NAV: { section: Section; href: string; label: string }[] = [
-  { section: "quickstart", href: "/quickstart/", label: "Quickstart" },
-  { section: "concepts", href: "/concepts/", label: "Concepts" },
-  { section: "toolkit", href: "/toolkit/", label: "Toolkit" },
+  { section: "docs", href: "/docs/", label: "Documentation" },
   { section: "examples", href: "/examples/", label: "Examples" },
-  { section: "spec", href: "/spec/", label: "Task specs" },
   { section: "ecosystem", href: "/ecosystem/", label: "Ecosystem" },
-  { section: "involved", href: "/get-involved/", label: "Get involved" },
 ];
 
 export function layout(p: Page, opts: { cssHref: string; jsHref: string }): string {
@@ -52,8 +48,9 @@ ${html`<html lang="en">
     <nav class="site-nav" aria-label="Site">
       <ul>
         ${NAV.map(
-          (n) => html`<li><a href="${u(n.href)}"${p.section === n.section ? raw(p.path === n.href ? ' aria-current="page"' : ' aria-current="true"') : ""}>${n.label}</a></li>`,
+          (n) => html`<li><a href="${u(n.href)}"${p.section === n.section || n.section === "docs" && ["quickstart", "concepts", "toolkit", "spec"].includes(p.section) ? raw(p.path === n.href ? ' aria-current="page"' : ' aria-current="true"') : ""}>${n.label}</a></li>`,
         )}
+        <li><a href="${REPO}">GitHub</a></li>
       </ul>
     </nav>
   </div>
@@ -66,11 +63,12 @@ ${p.body}
     <a class="mark" href="${u("/")}">toip.tools</a>
     <p>Independent TypeScript libraries and examples for verifiable trust. Source in <a href="${REPO}">toip-tools</a>. Unaffiliated with the Trust over IP Foundation.</p>
     <ul>
-      <li><a href="${u("/quickstart/")}">Quickstart</a></li>
-      <li><a href="${u("/spec/")}">Trust Task types</a></li>
+      <li><a href="${u("/docs/")}">Documentation</a></li>
+      <li><a href="${u("/spec/")}">Trust Task reference</a></li>
       <li><a href="${u("/ecosystem/")}">Ecosystem guide</a></li>
       <li><a href="${REPO}">Source on GitHub</a></li>
       <li><a href="${REPO}/issues">Issues</a></li>
+      <li><a href="${u("/get-involved/")}">Contribute</a></li>
     </ul>
   </div>
 </footer>

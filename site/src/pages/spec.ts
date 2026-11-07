@@ -2,6 +2,7 @@ import { SPEC_ORIGIN, gh, u } from "../../build/config";
 import { code } from "../../build/highlight";
 import { html, type Raw } from "../../build/html";
 import { currentSpecBase, type Spec } from "../../build/specs";
+import { docsNav } from "../docs-nav";
 import type { Page } from "../layout";
 import { arrow, pageHead, specHref } from "../parts";
 
@@ -39,18 +40,6 @@ const uri = (name: string) => `${SPEC_ORIGIN}/spec/${name}/0.1`;
 const firstSentence = (s: string) => s.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? s;
 const lineLink = (file: string, line?: number) => html`<a href="${gh(file)}${line ? `#L${line}` : ""}"><code>${file}${line ? `:${line}` : ""}</code></a>`;
 
-function side(specs: Spec[], current?: string): Raw {
-  const fams = familyOrder(specs);
-  return html`<nav class="docs__side" aria-label="Trust Task types">
-    <ul><li><a href="${u("/spec/")}"${current ? "" : html` aria-current="page"`}>All types</a></li></ul>
-    ${fams.map(
-      (f) => html`<p class="side-h">${f}</p><ul>${specs
-        .filter((s) => s.family === f)
-        .map((s) => html`<li><a href="${specHref(s.name)}"${current === s.name ? html` aria-current="page"` : ""}><code>${s.name.slice(f.length + 1) || s.name}</code></a></li>`)}</ul>`,
-    )}
-  </nav>`;
-}
-
 function envelope(s: Spec): string {
   return JSON.stringify(
     {
@@ -67,14 +56,19 @@ function envelope(s: Spec): string {
   ).replace('"payload": "…"', '"payload": { … }');
 }
 
-function specPage(s: Spec, all: Spec[]): Page {
+function specPage(s: Spec): Page {
   const n = s.note;
   const body = html`
-<div class="wrap docs docs--side-last">
-  ${side(all, s.name)}
-  <div>
+<div class="wrap docs">
+  ${docsNav(`/spec/${s.name}/0.1/`, [
+    { label: "Payload", href: "#payload" },
+    ...(s.response ? [{ label: "Response payload", href: "#response" }] : []),
+    ...(n?.note ? [{ label: "Notes", href: "#notes" }] : []),
+    { label: "Document envelope", href: "#envelope" },
+  ])}
+  <div class="docs__content">
     <div class="page-head">
-      <h1 class="mono" style="font-size: clamp(1.6rem, 4vw, 2.4rem)">${s.name}</h1>
+      <h1 class="mono">${s.name}</h1>
       <p class="spec-uri">${uri(s.name)}</p>
     </div>
     ${n ? html`<div class="prose"><p class="lede">${n.purpose}</p></div>` : s.doc ? html`<div class="prose"><p class="lede">${s.doc}</p></div>` : ""}
@@ -88,18 +82,18 @@ function specPage(s: Spec, all: Spec[]): Page {
     </dl>
     ${s.doc && n ? html`<div class="prose"><p class="small quiet">Source documentation: “${s.doc}”</p></div>` : ""}
 
-    <h2>Payload</h2>
+    <h2 id="payload">Payload</h2>
     ${
       s.payload
         ? code(s.payload.text, "ts", { caption: s.payload.decl ? html`${s.payload.decl.file}:${s.payload.decl.line}` : html`As the handler declares it, in ${n?.payloadFile ?? s.file}` })
         : html`<div class="prose"><p>A payload declaration is not available on this page. Follow the source links above for the handler's requirements.</p></div>`
     }
-    ${s.response ? html`<h2>Response payload</h2>${code(s.response.text, "ts", { caption: s.response.decl ? html`${s.response.decl.file}:${s.response.decl.line}` : html`As the handler declares it, in ${n?.responseFile ?? s.file}` })}` : ""}
+    ${s.response ? html`<h2 id="response">Response payload</h2>${code(s.response.text, "ts", { caption: s.response.decl ? html`${s.response.decl.file}:${s.response.decl.line}` : html`As the handler declares it, in ${n?.responseFile ?? s.file}` })}` : ""}
     ${s.related.length ? html`<h3>Types it uses</h3>${s.related.map((d) => code(d.text, "ts", { caption: `${d.file}:${d.line}` }))}` : ""}
 
-    ${n?.note ? html`<h2>Notes</h2><div class="prose"><p>${n.note}</p></div>` : ""}
+    ${n?.note ? html`<h2 id="notes">Notes</h2><div class="prose"><p>${n.note}</p></div>` : ""}
 
-    <h2>Document envelope</h2>
+    <h2 id="envelope">Document envelope</h2>
     <div class="prose"><p>Every Trust Task uses this envelope. Replace <code>payload</code> with the structure shown above.</p></div>
     ${code(envelope(s), "json", { caption: "Shape of a document of this type" })}
   </div>
@@ -117,9 +111,9 @@ function indexPage(specs: Spec[]): Page {
   const base = currentSpecBase();
   const fams = familyOrder(specs);
   const body = html`
-<div class="wrap docs docs--side-last">
-  ${side(specs)}
-  <div>
+<div class="wrap docs">
+  ${docsNav("/spec/", fams.map((f) => ({ label: FAMILIES[f]?.title ?? f, href: `#${f}` })))}
+  <div class="docs__content">
     ${pageHead("Trust Task reference", html`Explore ${specs.length} message types used by the toolkit and its apps. Each page explains the interaction, identifies the sender and recipient, and shows the payload declared in the code.`)}
     <div class="prose">
       <p>A Trust Task's <code>type</code> is the URI of its specification. Types defined here use <code>${SPEC_ORIGIN}/spec/&lt;name&gt;/0.1</code>, so the URI also leads to its reference page. These are project-specific definitions, separate from the public <a href="https://trusttasks.org/">Trust Tasks registry</a>.</p>
@@ -141,7 +135,7 @@ function indexPage(specs: Spec[]): Page {
 </div>`;
   return {
     path: "/spec/",
-    title: "Trust Task types",
+    title: "Trust Task reference",
     description: "Every Trust Task type defined in the toolkit and its apps: purpose, sender and receiver, and payload, generated from the code.",
     section: "spec",
     body,
@@ -149,5 +143,5 @@ function indexPage(specs: Spec[]): Page {
 }
 
 export function specPages(specs: Spec[]): Page[] {
-  return [indexPage(specs), ...specs.map((s) => specPage(s, specs))];
+  return [indexPage(specs), ...specs.map((s) => specPage(s))];
 }

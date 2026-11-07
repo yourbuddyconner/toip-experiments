@@ -23,6 +23,22 @@ after(async () => {
   server?.close();
 });
 
+test("SDK search opens a generated API page with public method details", async () => {
+  const page = await browser.newPage();
+  try {
+    await page.goto(`${root}toolkit/`);
+    await page.getByRole("searchbox", { name: "Find an export" }).fill("web-vault unlock");
+    assert.ok(await page.locator('#api-results a[href$="/web-vault/api/createVault/"]').count(), "Search should include methods on factory return values");
+    await page.getByRole("searchbox", { name: "Find an export" }).fill("Endpoint");
+    assert.ok(await page.locator('#api-results a[href$="/trust-core/api/Endpoint/"]').count(), "Search should find the Endpoint reference");
+    await page.locator('#api-results a[href$="/trust-core/api/Endpoint/"]').click();
+    assert.equal(await page.getByRole("heading", { level: 1 }).innerText(), "Endpoint");
+    assert.ok(await page.locator("#member-request").count());
+    assert.ok(await page.locator("#member-close").count());
+    assert.equal(await page.locator("#member-settle").count(), 0);
+  } finally { await page.close(); }
+});
+
 for (const width of [390, 1440]) {
   test(`ecosystem guide is reachable from the homepage at ${width}px`, async () => {
     const page = await browser.newPage({ viewport: { width, height: 900 } });

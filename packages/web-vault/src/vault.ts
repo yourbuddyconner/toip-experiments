@@ -101,6 +101,15 @@ const prfOf = (c: Credential | null) => ((c as PublicKeyCredential | null)?.getC
 export const passkeysAvailable = () =>
   typeof PublicKeyCredential !== "undefined" && !!navigator.credentials?.create && !/^\d+\.\d+\.\d+\.\d+$|^\[/.test(location.hostname);
 
+/**
+ * Creates a browser account vault with its own storage namespace and unlocked-account cache.
+ * Seeds and blobs are sealed with an AES-GCM key derived from a passkey's PRF output or a passphrase.
+ * Unlocked seeds and keys remain accessible to application code in memory.
+ * @param config App-specific prefix and optional protection, browser API, storage, and identity settings.
+ * The prefix must contain only letters, digits, and dashes; use a distinct prefix per app on an origin.
+ * @returns Account, sealed-blob, backup, and IndexedDB CryptoKey methods. Call `lockAll()` when locking the UI.
+ * @throws If the storage prefix contains unsupported characters or is empty.
+ */
 export function createVault(config: VaultConfig) {
   const { prefix } = config;
   if (!/^[A-Za-z0-9-]+$/.test(prefix)) throw new Error("the vault prefix must be letters, digits and dashes");
@@ -117,6 +126,10 @@ export function createVault(config: VaultConfig) {
 
   // ------------------------------------------------------------ accounts
 
+  /**
+   * Lists saved account metadata without unlocking seeds or prompting for a passkey.
+   * @returns Stored accounts, or an empty list when the account record cannot be read or decoded.
+   */
   function accounts(): Account[] {
     try {
       const list = JSON.parse(storage().getItem(ACCOUNTS) ?? "[]") as Account[];
@@ -130,7 +143,12 @@ export function createVault(config: VaultConfig) {
   const saveAccounts = (list: Account[]) => storage().setItem(ACCOUNTS, JSON.stringify(list));
   const upsert = (a: Account) => saveAccounts([...accounts().filter((x) => x.id !== a.id), a]);
 
-  /** Removes the account and everything stored for its DID under this prefix. Storage is cleared at once; CryptoKeys when the promise settles. */
+  /**
+   * Removes account metadata, this prefix's data for its DID, and its unlocked-cache entry.
+   * Does not remove the authenticator's passkey. Local storage is cleared before IndexedDB cleanup completes.
+   * @param id Saved account ID to remove; an unknown ID is a no-op.
+   * @returns Completion of attempted CryptoKey deletion. IndexedDB cleanup failures are swallowed.
+   */
   function removeAccount(id: string): Promise<void> {
     const a = accounts().find((x) => x.id === id);
     if (!a) return Promise.resolve();
@@ -195,6 +213,11 @@ export function createVault(config: VaultConfig) {
 
   /** Accounts unlocked in this tab, so moving between pages never asks again. A reload does. */
   const unlocked = new Map<string, Unlocked>();
+  /**
+   * Reads this vault instance's unlocked cache without prompting.
+   * @param id Account ID to look up.
+   * @returns The in-memory seed/key handle, or `undefined` if this vault has not unlocked it.
+   */
   const unlockedAccount = (id: string) => unlocked.get(id);
 
   async function lockFor(a: Pick<Account, "id" | "name">, seed: Uint8Array, how: Protection): Promise<{ lock: Lock; key: CryptoKey }> {
@@ -209,7 +232,15 @@ export function createVault(config: VaultConfig) {
     return { key, lock: { kind: "passphrase", salt: toB64u(salt), iterations: rounds, seed: await seal(key, seed, `${a.id}|seed`) } };
   }
 
-  /** Makes an account, its key sealed from the start. With `seed`, restores one from its backup code. */
+  /**
+   * Creates a saved account with its seed sealed from the start and caches its unlocked handle.
+   * @param name Display name, trimmed and limited to 60 characters.
+   * @param how Passkey protection or a passphrase of at least eight characters.
+   * @param seed Identity seed to restore, normally decoded with `seedFromBackup`; defaults to 32 random bytes.
+   * @returns The account metadata, plaintext seed, and derived sealing key.
+   * @throws {PasskeyUnsupported} If the selected passkey does not provide usable PRF output.
+   * @throws If passkey creation fails, the passphrase is too short, or cryptography/storage operations fail.
+   */
   async function createAccount(name: string, how: Protection, seed: Uint8Array = random(32)): Promise<Unlocked> {
     const base = { id: crypto.randomUUID(), name: name.trim().slice(0, 60), created: new Date().toISOString(), did: didOf(seed) };
     const { lock, key } = await lockFor(base, seed, how);
@@ -220,7 +251,15 @@ export function createVault(config: VaultConfig) {
     return u;
   }
 
-  /** Opens an account's key: the passkey prompt, or the passphrase. */
+  /**
+   * Unlocks an account with its passkey or passphrase, reusing this instance's cached handle when present.
+   * Legacy accounts with a clear seed return a handle with `key: null`; call `protect` to seal them.
+   * @param a Saved account metadata from `accounts()`.
+   * @param passphrase Required to decrypt a passphrase-protected account; unused for passkey protection.
+   * @returns The account's plaintext seed and sealing key, also retained in the unlocked cache.
+   * @throws {PasskeyUnsupported} If the passkey assertion provides no usable PRF output.
+   * @throws If protection cannot open the seed, the account has no key, or the browser operation fails.
+   */
   async function unlock(a: Account, passphrase?: string): Promise<Unlocked> {
     const done = unlocked.get(a.id);
     if (done) return done;
@@ -245,7 +284,15 @@ export function createVault(config: VaultConfig) {
     return u;
   }
 
-  /** Seals an account that kept its key in the clear, and forgets the clear copy. */
+  /**
+   * Seals an account seed and removes the legacy clear seed from saved account metadata.
+   * Existing blobs are not rewritten; rewriting them with `writeJson` seals them under the new key.
+   * @param u Unlocked account whose seed will be protected.
+   * @param how New passkey or passphrase protection.
+   * @returns An updated saved account and cached unlocked handle with its sealing key.
+   * @throws {PasskeyUnsupported} If passkey PRF output is unavailable.
+   * @throws If protection, encryption, or persistence fails.
+   */
   async function protect(u: Unlocked, how: Protection): Promise<Unlocked> {
     const { lock, key } = await lockFor(u.account, u.seed, how);
     const account: Account = { ...u.account, lock };
@@ -256,6 +303,9 @@ export function createVault(config: VaultConfig) {
     return next;
   }
 
+  /**
+   * Clears this vault instance's unlocked cache. Seeds or keys retained by callers are not erased.
+   */
   const lockAll = () => unlocked.clear();
 
   // ------------------------------------------------------------ sealed blobs
@@ -264,7 +314,13 @@ export function createVault(config: VaultConfig) {
     if (!BLOB_NAME.test(name) || RESERVED.has(name)) throw new Error(`a blob name must be lowercase letters, digits and dashes, and not ${[...RESERVED].join(", ")}: ${JSON.stringify(name)}`);
   }
 
-  /** Reads a sealed blob. Null if there is none; throws if it doesn't open (wrong account, wrong name, tampered). */
+  /**
+   * Reads bytes from a blob sealed to this account and blob name.
+   * @param u Protected, unlocked account whose key decrypts the blob.
+   * @param name Lowercase letters, digits, and dashes; `seed`, `accounts`, and `keys` are reserved.
+   * @returns Decrypted bytes, or `null` when the blob is absent.
+   * @throws If the name is invalid, the account is unprotected, or stored data cannot be parsed or decrypted.
+   */
   async function readBlob(u: Unlocked, name: string): Promise<Uint8Array | null> {
     checkName(name);
     const raw = storage().getItem(blobKey(name, u.account.did));
@@ -275,6 +331,14 @@ export function createVault(config: VaultConfig) {
     return open(u.key, v.sealed, `${u.account.id}|${name}`);
   }
 
+  /**
+   * Seals bytes with account/name-bound associated data and saves them in localStorage.
+   * @param u Protected, unlocked account whose key seals the blob.
+   * @param name Valid nonreserved blob name, as required by `readBlob`.
+   * @param bytes Plaintext bytes to save.
+   * @returns Completion of encryption and storage.
+   * @throws If the name is invalid, the account is unprotected, or encryption/storage fails.
+   */
   async function writeBlob(u: Unlocked, name: string, bytes: Uint8Array): Promise<void> {
     checkName(name);
     if (!u.key) throw new Error("protect this account first");
@@ -284,6 +348,10 @@ export function createVault(config: VaultConfig) {
   /**
    * Reads a JSON blob. For an account that isn't protected yet, or a value written before it was,
    * the blob may be in the clear; that is accepted.
+   * @param u Unlocked account; a sealing key is required when the stored value is encrypted.
+   * @param name Valid nonreserved blob name.
+   * @returns The parsed value, or `null` when absent. The generic type does not validate stored data.
+   * @throws If the name is invalid or stored data cannot be read, decrypted, or parsed.
    */
   async function readJson<T>(u: Unlocked, name: string): Promise<T | null> {
     checkName(name);
@@ -297,7 +365,14 @@ export function createVault(config: VaultConfig) {
     return v as T;
   }
 
-  /** Writes a JSON blob: sealed, or in the clear for an account that isn't protected yet. */
+  /**
+   * Writes JSON sealed under the account's key, or in the clear for an unprotected legacy account.
+   * @param u Unlocked account; call `protect` first when encryption is required.
+   * @param name Valid nonreserved blob name.
+   * @param value JSON-serializable value to save.
+   * @returns Completion of serialization, optional encryption, and storage.
+   * @throws If naming, JSON serialization, encryption, or storage fails.
+   */
   async function writeJson(u: Unlocked, name: string, value: unknown): Promise<void> {
     checkName(name);
     const json = JSON.stringify(value);
@@ -310,7 +385,11 @@ export function createVault(config: VaultConfig) {
     storage().removeItem(blobKey(name, a.did));
   }
 
-  /** Settle's saved state: the "state" blob, null when it is missing or doesn't open. */
+  /**
+   * Reads the `state` JSON blob, accepting the legacy clear format.
+   * @param u Unlocked account whose state is requested.
+   * @returns Parsed state, or `null` when missing, unreadable, or unavailable without a sealing key.
+   */
   async function readState<T>(u: Unlocked): Promise<T | null> {
     try {
       const raw = JSON.parse(storage().getItem(blobKey("state", u.account.did)) ?? "null");
@@ -354,12 +433,27 @@ export function createVault(config: VaultConfig) {
 
   const cryptoKeyId = (a: Account, name: string) => `${a.id}|${name}`;
 
-  /** Keeps a CryptoKey (typically non-extractable) for the account. The browser stores it without exposing its secret. */
+  /**
+   * Keeps a CryptoKey, including a non-extractable key, in the app's IndexedDB key store.
+   * This storage is separate from seed/blob encryption and does not require unlocking the account.
+   * @param a Account that owns the key.
+   * @param name Valid nonreserved key name.
+   * @param key Browser CryptoKey to persist.
+   * @returns Completion of the IndexedDB write transaction.
+   * @throws If the name is invalid or IndexedDB is unavailable or fails.
+   */
   async function putCryptoKey(a: Account, name: string, key: CryptoKey): Promise<void> {
     checkName(name);
     await tx("readwrite", (s) => s.put(key, cryptoKeyId(a, name)));
   }
 
+  /**
+   * Loads a saved CryptoKey without unlocking the account seed.
+   * @param a Account that owns the key.
+   * @param name Valid nonreserved key name.
+   * @returns The stored key, or `null` when absent.
+   * @throws If the name is invalid or IndexedDB is unavailable or fails.
+   */
   async function getCryptoKey(a: Account, name: string): Promise<CryptoKey | null> {
     checkName(name);
     return ((await tx<CryptoKey>("readonly", (s) => s.get(cryptoKeyId(a, name)))) ?? null) as CryptoKey | null;
@@ -377,8 +471,18 @@ export function createVault(config: VaultConfig) {
 
   // ------------------------------------------------------------ backups
 
+  /**
+   * Encodes the plaintext identity seed as this app's backup code. Keep the result secret.
+   * @param u Unlocked account to back up.
+   * @returns An app-prefixed base64url seed; blobs and separately stored CryptoKeys are not included.
+   */
   const backupCode = (u: Unlocked) => backupPrefix + toB64u(u.seed);
 
+  /**
+   * Decodes a backup for restoration with `createAccount` and fresh protection.
+   * @param code Backup text, with optional surrounding whitespace.
+   * @returns A 32-byte seed, or `null` for another prefix or invalid seed encoding/length.
+   */
   function seedFromBackup(code: string): Uint8Array | null {
     const t = code.trim();
     if (!t.startsWith(backupPrefix)) return null;

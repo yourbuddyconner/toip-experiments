@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["../packages/*/src/**/*.ts", "build/fixtures/sdk-api/**/*.ts"],
+  "exclude": ["../packages/**/src/**/*.test.ts"]
+}

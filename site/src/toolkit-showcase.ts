@@ -49,8 +49,7 @@ function illustration(slug: string): Raw {
 export function toolkitShowcase(): Raw {
   return html`<section class="toolkit-showcase" aria-labelledby="toolkit">
     <div class="toolkit-showcase__heading">
-      <div><p class="eyebrow">The toolkit</p><h2 id="toolkit">Pick your<br><em>building blocks.</em></h2></div>
-      <a class="toolkit-showcase__reference" href="${u("/toolkit/")}">Full library reference <span aria-hidden="true">↗</span></a>
+      <div><h2 id="toolkit">Libraries</h2></div>
     </div>
     <div class="toolkit-showcase__grid">
       ${tools.map((tool) => {
@@ -64,6 +63,6 @@ export function toolkitShowcase(): Raw {
         </a>`;
       })}
     </div>
-    <p class="toolkit-showcase__note">Use the libraries from the repository. <a href="${u("/toolkit/#use")}">Set up your project <span aria-hidden="true">↗</span></a></p>
+    <p class="toolkit-showcase__note">Use the libraries from the repository. <a href="${u("/docs/#setup")}">Setup instructions <span aria-hidden="true">↗</span></a></p>
   </section>`;
 }

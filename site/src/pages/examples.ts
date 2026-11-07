@@ -12,8 +12,8 @@ export function examplesPage(): Page {
     <p class="side-h">Projects</p>
     <ul>${projects.map((p) => html`<li><a href="#${p.slug}">${p.name}</a></li>`)}</ul>
   </nav>
-  <div>
-    ${pageHead("Ideas you can run", "Explore the toolkit through payments, private collaboration, anonymous speech, and agent delegation. Each project has a written design; working examples include commands to run them locally.")}
+  <div class="docs__content">
+    ${pageHead("Examples", "Explore the toolkit through payments, private collaboration, anonymous speech, and agent delegation. Each project has a written design; working examples include commands to run them locally.")}
     <div class="prose">
       <p><strong>Working</strong> projects run and have tests. <strong>Being built</strong> projects have a design and an implementation in progress. <strong>Design only</strong> projects are proposals ready to build.</p>
       ${code("git clone https://github.com/yourbuddyconner/toip-tools.git\ncd toip-tools\nnpm install", "bash", { caption: "Set up the repository once" })}

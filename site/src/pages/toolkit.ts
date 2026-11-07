@@ -1,122 +1,105 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { REPO_DIR, SITE_DIR, gh, ghTree, u } from "../../build/config";
-import { githubSlug, html, md, mdi, type Raw } from "../../build/html";
+import { REPO_DIR, SITE_DIR, gh, u } from "../../build/config";
 import { code } from "../../build/highlight";
+import { html, md, raw, type Raw } from "../../build/html";
+import { readSdkModules, sdkEntryPoints, type ApiModule } from "../../build/sdk-api";
 import { exampleSource, splitLeadComment } from "../../build/source";
 import { libraries, type Library } from "../data/libraries";
-import { projectBySlug } from "../data/projects";
+import { sdkGuides } from "../data/sdk-guides";
+import { docsNav } from "../docs-nav";
 import type { Page } from "../layout";
-import { pageHead, status } from "../parts";
+import { pageHead } from "../parts";
+import { apiModulePath, apiSymbolPath, findApi, moduleIndex, symbolPage } from "../sdk-reference";
+import { toolkitShowcase } from "../toolkit-showcase";
 
-function side(current?: string): Raw {
-  return html`<nav class="docs__side" aria-label="Libraries">
-    <p class="side-h">Toolkit</p>
-    <ul><li><a href="${u("/toolkit/")}"${current ? "" : html` aria-current="page"`}>Overview</a></li></ul>
-    <p class="side-h">Libraries</p>
-    <ul>${libraries.map((l) => html`<li><a href="${u(`/toolkit/${l.slug}/`)}"${current === l.slug ? html` aria-current="page"` : ""}><code>${l.slug}</code></a></li>`)}</ul>
-  </nav>`;
+function apiLinks(moduleList: ApiModule[], library: string, names: string[]): Raw {
+  return html`<div class="sdk-related">${names.map(name => {
+    const ref = findApi(moduleList, library, name);
+    if (!ref) throw new Error(`Usage guide names an unknown public API: ${library}/${name}`);
+    return html`<a href="${u(apiSymbolPath(ref.module, ref.symbol))}"><code>${name}</code></a>`;
+  })}</div>`;
 }
 
-const useFromRepo = (name: string) => `// Not on npm yet. Inside the repository (see "Use the libraries" on the toolkit page):
-import { … } from "${name}";`;
+function libraryPage(library: Library, all: ApiModule[]): Page {
+  const modules = all.filter(m => m.library === library.slug);
+  const main = modules.find(m => m.subpath === ".")!;
+  const guide = sdkGuides[library.slug];
+  if (!guide) throw new Error(`Missing SDK usage guide for ${library.slug}`);
+  const path = `/toolkit/${library.slug}/`;
+  const pkg = JSON.parse(readFileSync(join(REPO_DIR, library.dir, "package.json"), "utf8")) as { version: string; exports: Record<string, unknown> };
+  const assets = Object.entries(pkg.exports).flatMap(([subpath, file]) => typeof file === "string" && /\.wasm$/.test(file) ? [[subpath, file] as const] : []);
+  const example = library.snippet ? splitLeadComment(exampleSource(`examples/snippets/${library.snippet.file}`)) : undefined;
+  const output = library.snippet?.runs && existsSync(join(SITE_DIR, `examples/snippets/output/${library.slug}.txt`)) ? exampleSource(`examples/snippets/output/${library.slug}.txt`) : undefined;
+  const body = html`<div class="wrap docs">${docsNav(path, [
+    { label: "Setup", href: "#setup" }, { label: "Usage", href: "#usage" }, { label: "Example", href: "#example" },
+    { label: "Lifecycle", href: "#lifecycle" }, { label: "Error handling", href: "#errors" }, { label: "API reference", href: "#api" },
+  ])}<div class="docs__content">
+    <div class="doc-breadcrumbs"><a href="${u("/docs/")}">Documentation</a><span>/</span><a href="${u("/toolkit/")}">SDK reference</a></div>
+    <div class="page-head"><p class="eyebrow">SDK library · ${main.runtime}</p><h1 class="mono">${library.slug}</h1><div class="prose">${md(guide.intro)}</div></div>
+    <div class="sdk-source"><code>${library.name}</code><span>v${pkg.version}</span><a href="${gh(main.file)}">Source</a></div>
 
-function outputFor(slug: string): string | undefined {
-  const f = join(SITE_DIR, "examples/snippets/output", `${slug}.txt`);
-  return existsSync(f) ? exampleSource(`examples/snippets/output/${slug}.txt`) : undefined;
+    <section class="prose" aria-labelledby="setup"><h2 id="setup">Setup</h2>
+      <p>Complete <a href="${u("/docs/#setup")}">Setup</a> to build and use the workspace, then import this package's public entry point.</p>
+      <p><strong>Runtime:</strong> ${library.runsIn}</p>
+    </section>
+    ${code(`import { ${library.api[0].names.filter(name => main.symbols.some(s => s.name === name)).slice(0, 3).map(name => {
+      const symbol = main.symbols.find(s => s.name === name)!;
+      return ["interface", "type"].includes(symbol.kind) ? `type ${name}` : name;
+    }).join(", ")} } from "${library.name}";`, "ts", { caption: "Import" })}
+
+    <section aria-labelledby="usage"><h2 id="usage">Usage</h2>
+      ${guide.tasks.map(task => html`<section class="sdk-task"><h3>${task.title}</h3><div class="prose">${md(task.body)}</div>${apiLinks(all, library.slug, task.symbols)}</section>`)}
+    </section>
+
+    <section aria-labelledby="example"><h2 id="example">Example</h2>
+      ${example && library.snippet ? html`<div class="prose"><p>${example.lead}</p>${library.snippet.note ? html`<p class="small quiet">${library.snippet.note}</p>` : ""}</div>
+      ${code(example.code, "ts", { caption: `site/examples/snippets/${library.snippet.file}` })}
+      ${library.snippet.runs ? code(`npx tsx --tsconfig site/tsconfig.json site/examples/snippets/${library.snippet.file}`, "bash", { caption: "Run from the repository root" }) : ""}
+      ${output ? code(output, "console", { caption: "Recorded output" }) : ""}` : html`<p class="prose">See the source and API reference for examples.</p>`}
+    </section>
+
+    <section class="prose" aria-labelledby="lifecycle"><h2 id="lifecycle">Lifecycle and persistence</h2><ul>${guide.lifecycle.map(item => html`<li>${md(item)}</li>`)}</ul></section>
+    <section aria-labelledby="errors"><h2 id="errors">Error handling</h2>
+      <div class="sdk-errors">${guide.errors.map(error => html`<article><h3><code>${error.name}</code></h3><div class="prose">${md(error.behavior)}${md(error.handling)}</div></article>`)}</div>
+      ${library.notFor?.length ? html`<div class="sdk-note"><h3>Limitations</h3><ul>${library.notFor.map(item => html`<li>${md(item)}</li>`)}</ul></div>` : ""}
+    </section>
+
+    <section aria-labelledby="api"><h2 id="api">API reference</h2>
+      <p class="prose">Choose an entry point for the complete export list. Each export has a reference page with its signature, parameter types, return type, fields, and public methods where applicable.</p>
+      <ul class="sdk-modules">${modules.map(module => html`<li><a href="${u(apiModulePath(module))}"><code>${module.name}</code><span aria-hidden="true">↗</span></a><p>${module.runtime} · ${module.symbols.length} exports</p></li>`)}</ul>
+      ${assets.length ? html`<h3>Bundled assets</h3><ul>${assets.map(([subpath, file]) => html`<li><code>${library.name}${subpath.slice(1)}</code> — <a href="${gh(join(library.dir, file))}">source asset</a></li>`)}</ul>` : ""}
+    </section>
+  </div></div>`;
+  return { path, title: `${library.slug} SDK`, description: `${library.name}: setup, usage, examples, lifecycle, errors, and complete public API reference.`, section: "toolkit", body };
 }
 
-const hasReadme = (l: Library) => existsSync(join(REPO_DIR, l.dir, "README.md"));
-const entry = (l: Library) => (existsSync(join(REPO_DIR, l.dir, "src/index.ts")) ? `${l.dir}/src/index.ts` : `${l.dir}/src/server.ts`);
-
-function libPage(l: Library): Page {
-  const snip = l.snippet ? splitLeadComment(exampleSource(`examples/snippets/${l.snippet.file}`)) : undefined;
-  const out = l.snippet?.runs ? outputFor(l.slug) : undefined;
-  const designMesh = gh("projects/mesh/docs/design.md", githubSlug("19.1 `packages/mesh-transport` API"));
-  const body = html`
-<div class="wrap docs">
-  ${side(l.slug)}
-  <div>
-    <div class="page-head">
-      <h1 class="mono" style="font-size: clamp(1.7rem, 4vw, 2.6rem)">${l.name}</h1>
-      <p class="lede">${l.does}</p>
-    </div>
-    <dl class="facts">
-      <dt>Status</dt><dd>${status(l.status)}</dd>
-      <dt>Runs in</dt><dd>${mdi(l.runsIn)}</dd>
-      <dt>Built on</dt><dd>${mdi(l.builtOn)}</dd>
-      <dt>Used by</dt><dd>${l.usedBy.map((p, i) => html`${i ? ", " : ""}<a href="${u(`/examples/#${p}`)}">${projectBySlug(p).name}</a>`)}</dd>
-      ${l.specs ? html`<dt>Trust Tasks</dt><dd><a href="${u(`/spec/#${l.specs}`)}">The <code>${l.specs}/…</code> types</a></dd>` : ""}
-      <dt>Source</dt><dd>${l.status === "in progress" ? html`<a href="${designMesh}">The Mesh design, section 19.1</a> (the package is being built)` : hasReadme(l) ? html`<a href="${ghTree(l.dir)}"><code>${l.dir}</code></a> and its <a href="${gh(`${l.dir}/README.md`)}">README</a>` : html`<a href="${ghTree(l.dir)}"><code>${l.dir}</code></a> (no README yet; start at <a href="${gh(entry(l))}"><code>${entry(l).slice(l.dir.length + 1)}</code></a>)`}</dd>
-    </dl>
-    <div class="prose">${md(l.about)}</div>
-
-    <div class="prose">
-      <h2>When to use it</h2>
-      <ul>${l.reachFor.map((r) => html`<li>${mdi(r)}</li>`)}</ul>
-      ${l.notFor ? html`<h3>Limitations</h3><ul>${l.notFor.map((r) => html`<li>${mdi(r)}</li>`)}</ul>` : ""}
-    </div>
-
-    ${
-      snip
-        ? html`<h2>Example</h2>
-    <div class="prose"><p>${snip.lead}</p>${l.snippet!.note ? html`<p class="small quiet">${l.snippet!.note}</p>` : ""}</div>
-    ${code(snip.code, "ts", { caption: `site/examples/snippets/${l.snippet!.file}: ${l.snippet!.caption}` })}
-    ${
-      l.snippet!.runs
-        ? html`${code(`npx tsx --tsconfig site/tsconfig.json site/examples/snippets/${l.snippet!.file}`, "bash", { caption: "Run it from the repository root" })}
-    ${out ? code(out, "console", { caption: "Recorded output" }) : ""}`
-        : ""
-    }`
-        : html`<h2>Explore the API</h2><div class="prose"><p>For the transport API and usage examples, start with <a href="${gh(`${l.dir}/README.md`)}">the package README</a>. The architecture is documented in <a href="${designMesh}">section 19.1 of the Mesh design</a>.</p></div>`
-    }
-
-    <h2>Import</h2>
-    ${code(useFromRepo(l.name), "ts", { caption: "Import" })}
-    ${l.subpaths ? html`<div class="prose"><ul>${l.subpaths.map((s) => html`<li><code>${s.path}</code>: ${s.what}.</li>`)}</ul></div>` : ""}
-
-    <h2>API at a glance</h2>
-    <div class="api">${l.api.map((a) => html`<div><h4>${a.area}</h4><p>${a.names.map((n) => html`<code>${n}</code> `)}</p></div>`)}</div>
-    <div class="prose"><p>${l.status === "in progress" ? html`These are the design's names and may change.` : hasReadme(l) ? html`The full list, with every option, is in the <a href="${gh(`${l.dir}/README.md`)}">README</a> and <a href="${gh(entry(l))}"><code>${entry(l).slice(l.dir.length + 1)}</code></a>.` : html`Everything it exports is in <a href="${gh(entry(l))}"><code>${entry(l).slice(l.dir.length + 1)}</code></a>, with short comments on each.`}</p></div>
-  </div>
-</div>`;
-  return { path: `/toolkit/${l.slug}/`, title: l.name, description: `${l.name}: ${l.does}`, section: "toolkit", body };
-}
-
-function indexPage(): Page {
-  const body = html`
-<div class="wrap docs">
-  ${side()}
-  <div>
-    ${pageHead("The building blocks", "Eight TypeScript libraries, from identity and messaging to delegation and audit trails. Choose a library to see where it fits, how to use it, and what it exports.")}
-    <table class="rows">
-      <thead><tr><th scope="col">Library</th><th scope="col">What it does</th><th scope="col">Status</th></tr></thead>
-      <tbody>${libraries.map((l) => html`<tr><th scope="row"><a href="${u(`/toolkit/${l.slug}/`)}"><code>${l.slug}</code></a></th><td>${l.does}</td><td>${status(l.status)}</td></tr>`)}</tbody>
-    </table>
-
-    <div class="prose">
-      <h2 id="use">Use the libraries</h2>
-      <p>The packages aren't published to npm yet. You can use them as local workspaces or point TypeScript directly at the source. Every example on this site is typechecked against that source.</p>
-      <h3>Build inside the repository</h3>
-      <p>Create a project under <code>projects/</code> and add it to <code>workspaces</code> in the root <code>package.json</code>. Declare the libraries as dependencies at version <code>0.0.0</code>, following <a href="${gh("projects/settle/package.json")}">Settle's example</a>. Then run <code>npm install</code> at the root to link them.</p>
-    </div>
-    ${code(`{\n  "name": "my-app",\n  "type": "module",\n  "dependencies": {\n    "@toip-tools/trust-core": "0.0.0",\n    "@toip-tools/relay": "0.0.0"\n  }\n}`, "json", { caption: "projects/my-app/package.json" })}
-    <div class="prose">
-      <h3>Point TypeScript at the source</h3>
-      <p>The packages expose TypeScript source directly. A <code>paths</code> mapping lets <code>tsc</code> and <code>tsx</code> resolve their import names to local entry points; bundlers may need matching aliases. The configuration below runs this site's examples. Install dependencies at the repository root first.</p>
-    </div>
-    ${code(exampleSource("tsconfig.json"), "json", { caption: "site/tsconfig.json" })}
-  </div>
-</div>`;
+function indexPage(modules: ApiModule[]): Page {
+  const catalog = modules.flatMap(module => module.symbols.map(symbol => ({
+    name: symbol.name, module: module.name, kind: symbol.kind, href: u(apiSymbolPath(module, symbol)),
+    summary: symbol.description.split(/\n|(?<=\.)\s/)[0], keywords: [...symbol.members, ...symbol.returnedMembers].map(m => m.name).join(" "),
+  })));
   return {
-    path: "/toolkit/",
-    title: "Toolkit",
-    description: "TypeScript libraries for Trust over IP: identities and TSP messaging, a relay, COSE, a passkey vault, delegation, zero-knowledge membership, KERI event logs, and radio transport.",
-    section: "toolkit",
-    body,
+    path: "/toolkit/", title: "SDK reference", description: "Setup, usage guides, runnable examples, and searchable API reference for the toip.tools TypeScript SDK.", section: "toolkit",
+    body: html`<div class="wrap docs">${docsNav("/toolkit/")}<div class="docs__content">
+      ${pageHead("SDK reference", "Usage guides and API documentation for every public package entry point.")}
+      <p class="prose">New to the SDK? Follow <a href="${u("/docs/#setup")}">Setup</a> and the <a href="${u("/quickstart/")}">Quickstart</a>. This reference covers ${modules.length} modules and ${catalog.length} exports from the current source.</p>
+      <div class="sdk-search" role="search" aria-label="API reference">
+        <label for="api-search">Find an export</label>
+        <input type="search" id="api-search" placeholder="Search classes, functions, types, or methods" aria-describedby="api-search-help" aria-controls="api-results" autocomplete="off">
+        <p id="api-search-help" class="small quiet">Try <code>Endpoint</code>, <code>VaultConfig</code>, or <code>mesh SimMedium</code>.</p>
+        <p id="api-search-status" class="small quiet" role="status"></p>
+        <ul id="api-results" class="sdk-search__results" hidden></ul>
+      </div>
+      <script type="application/json" id="sdk-search-data">${raw(JSON.stringify(catalog).replaceAll("<", "\\u003c"))}</script>
+      <div id="use" class="sdk-note"><p>Packages are currently available from the source repository. <a href="${u("/docs/#workspace")}">Workspace setup instructions</a>.</p></div>
+      ${toolkitShowcase()}
+    </div></div>`,
   };
 }
 
 export function toolkitPages(): Page[] {
-  return [indexPage(), ...libraries.map(libPage)];
+  const modules = readSdkModules(sdkEntryPoints());
+  return [indexPage(modules), ...libraries.map(library => libraryPage(library, modules)),
+    ...modules.flatMap(module => [moduleIndex(module, modules), ...module.symbols.map(symbol => symbolPage(module, symbol, modules))])];
 }

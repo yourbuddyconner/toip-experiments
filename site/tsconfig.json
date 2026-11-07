@@ -13,6 +13,7 @@
       "@toip-tools/relay": ["../packages/relay/src/server.ts"],
       "@toip-tools/eventlog/node": ["../packages/eventlog/src/node/index.ts"],
       "@toip-tools/anon-membership/worker": ["../packages/anon-membership/src/worker.ts"],
+      "@toip-tools/mesh-transport/sim": ["../packages/mesh-transport/src/sim.ts"],
       "@toip-tools/*": ["../packages/*/src/index.ts"]
     }
   },

@@ -2,6 +2,7 @@ import { CLONE, REPO, gh, u } from "../../build/config";
 import { code } from "../../build/highlight";
 import { html, md, type Raw } from "../../build/html";
 import { exampleOutput, exampleSource } from "../../build/source";
+import { docsNav } from "../docs-nav";
 import type { Page } from "../layout";
 import { pageHead, specHref } from "../parts";
 
@@ -21,13 +22,22 @@ function step(n: number, id: string, title: string, intro: Raw, file: string, af
 
 export function quickstartPage(): Page {
   const body = html`
-<div class="wrap">
-  ${pageHead("Your first trust exchange", "Create two identities, send a private message, and verify a credential. Four runnable examples, about ten minutes.")}
+<div class="wrap docs">
+  ${docsNav("/quickstart/", [
+    { label: "Before you start", href: "#before" },
+    { label: "Identities", href: "#identities" },
+    { label: "Trust Tasks", href: "#trust-task" },
+    { label: "Relay", href: "#relay" },
+    { label: "Credentials", href: "#credentials" },
+    { label: "Next steps", href: "#next" },
+  ])}
+  <div class="docs__content">
+  ${pageHead("Quickstart", "Create two identities, send a private message, and verify a credential. Four runnable examples, about ten minutes.")}
 
   <section class="prose" aria-labelledby="before">
     <h2 id="before">Before you start</h2>
     <p>You'll need Node 22.5 or later and Git. Every part of this tutorial runs on your machine, including the relay, so you can start without creating an account or setting up a remote server.</p>
-    ${code(`git clone ${CLONE}\ncd toip-tools\nnpm install`, "bash", { caption: "Get the code" })}
+    ${code(`git clone ${CLONE}\ncd toip-tools\nnpm install\nnpm install --prefix site`, "bash", { caption: "Get the code" })}
     <p>Run the commands below from the repository root. The examples import libraries from <a href="${REPO}/tree/main/packages"><code>packages/</code></a> using names such as <code>@toip-tools/trust-core</code>. The <code>--tsconfig</code> option points to <a href="${gh("site/tsconfig.json")}">the configuration</a> that resolves those names to the local source.</p>
   </section>
 
@@ -97,6 +107,7 @@ export function quickstartPage(): Page {
       <li>Run all four steps at once from <code>site/</code> with <code>npm install</code> and <code>npm run quickstart</code>.</li>
     </ul>
   </section>
+  </div>
 </div>`;
   return {
     path: "/quickstart/",

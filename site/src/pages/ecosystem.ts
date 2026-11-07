@@ -7,8 +7,7 @@ export function ecosystemPage(): Page {
   const body = html`
 <div class="wrap">
   <header class="page-head ecosystem-head">
-    <p class="eyebrow">A field guide for ToIP builders</p>
-    <h1>Shared ideas.<br><em>Different approaches.</em></h1>
+    <h1>Ecosystem</h1>
     <p class="lede">ToIP, First Person, OpenVTC, and the P2P Trust Stack are connected communities and projects. They have different scopes, architectures, and implementation choices.</p>
   </header>
 

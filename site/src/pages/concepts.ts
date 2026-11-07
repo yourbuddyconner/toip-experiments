@@ -2,6 +2,7 @@ import { u } from "../../build/config";
 import { html, md, type Raw } from "../../build/html";
 import { externals as X } from "../data/links";
 import { credentialDiagram, didDiagram, governanceDiagram, keriDiagram, taskDiagram, tspDiagram, zkDiagram } from "../diagrams";
+import { docsNav } from "../docs-nav";
 import type { Page } from "../layout";
 import { libLink, pageHead } from "../parts";
 
@@ -209,12 +210,9 @@ export const conceptIds = concepts.map((c) => c.id);
 export function conceptsPage(): Page {
   const body = html`
 <div class="wrap docs">
-  <nav class="docs__side" aria-label="Concepts">
-    <p class="side-h">On this page</p>
-    <ul>${concepts.map((c) => html`<li><a href="#${c.id}">${c.title}</a></li>`)}</ul>
-  </nav>
-  <div>
-    ${pageHead("Core concepts", "Identity, messaging, credentials, governance, and proofs: what each does and how this toolkit uses it.")}
+  ${docsNav("/concepts/", concepts.map((c) => ({ label: c.title, href: `#${c.id}` })))}
+  <div class="docs__content">
+    ${pageHead("Concepts", "Identity, messaging, credentials, governance, and proofs: what each does and how this toolkit uses it.")}
     <div class="prose">
       <p>Each section links to its specifications. For the communities behind them and their different implementation choices, see the <a href="${u("/ecosystem/")}">ecosystem guide</a>.</p>
     </div>
@@ -237,7 +235,7 @@ export function conceptsPage(): Page {
 </div>`;
   return {
     path: "/concepts/",
-    title: "Core concepts",
+    title: "Concepts",
     description: "Decentralized identifiers, verifiable credentials, the Trust Spanning Protocol, Trust Tasks, governance, KERI and zero-knowledge membership, in plain words.",
     section: "concepts",
     body,
