@@ -14,6 +14,7 @@ const PAGES: [string, string][] = [
   ["toolkit-trust-core", "toolkit/trust-core/"],
   ["toolkit-mesh-transport", "toolkit/mesh-transport/"],
   ["examples", "examples/"],
+  ["ecosystem", "ecosystem/"],
   ["spec", "spec/"],
   ["spec-settle-escrow-attest", "spec/settle/escrow/attest/0.1/"],
   ["get-involved", "get-involved/"],

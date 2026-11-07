@@ -5,7 +5,7 @@ import { esc, html, raw, type Raw } from "./html";
 const theme: ThemeRegistrationRaw = {
   name: "toip-ink",
   type: "dark",
-  colors: { "editor.background": "#0f1d3a", "editor.foreground": "#dde6ef" },
+  colors: { "editor.background": "#142c26", "editor.foreground": "#e8eee4" },
   // The rules go under the TextMate `settings` key, which ThemeRegistrationRaw requires.
   settings: [
     { scope: ["comment", "punctuation.definition.comment"], settings: { foreground: "#93a6bf", fontStyle: "" } },

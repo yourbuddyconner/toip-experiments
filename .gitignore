@@ -5,3 +5,6 @@ policies/bundle.tar.gz
 .data
 *.db
 .claude/worktrees
+
+# Local agent planning notes
+**/docs/superpowers/

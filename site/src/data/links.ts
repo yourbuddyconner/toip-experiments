@@ -4,6 +4,9 @@ export const externals = {
   // Trust over IP and the P2P Trust Stack
   toip: "https://trustoverip.org/",
   toipGithub: "https://github.com/trustoverip",
+  toipModel: "https://trustoverip.org/toip-model/",
+  dif: "https://identity.foundation/",
+  didcomm: "https://identity.foundation/didcomm-messaging/spec/v2.1/",
   p2pStack: "https://www.fpndtg.com/index.html", // S01
   p2pLayer1: "https://www.fpndtg.com/stack/layer1-support.html",
   p2pLayer2: "https://www.fpndtg.com/stack/layer2-spanning.html",
@@ -11,7 +14,10 @@ export const externals = {
   p2pLayer4: "https://www.fpndtg.com/stack/layer4-applications.html", // S02
   p2pGlossary: "https://www.fpndtg.com/developers/glossary.html", // S02
   firstPerson: "https://firstperson.network/", // S01 (named, not read)
+  firstPersonPaper: "https://www.firstperson.network/white-paper", // S04
   trustStackers: "https://github.com/TrustStackers", // S03
+  p2pRepo: "https://github.com/TrustStackers/p2p-trust-stack", // S04
+  p2pPolicy: "https://github.com/TrustStackers/p2p-trust-stack/blob/main/packages/core/src/services/local-policy-engine.ts", // S04
   lfdtWorkingGroups: "https://www.lfdecentralizedtrust.org/blog/toip-and-dif-announce-three-new-working-groups-for-trust-in-the-age-of-ai",
   iiw: "https://internetidentityworkshop.com/",
 
@@ -42,4 +48,6 @@ export const externals = {
   openvtc: "https://github.com/OpenVTC", // S02
   openvtcRepo: "https://github.com/OpenVTC/openvtc", // S02
   vti: "https://github.com/OpenVTC/verifiable-trust-infrastructure", // S02
+  vtiSpec: "https://trustoverip.github.io/dtgwg-vti-spec/", // S04
+  openvtcTsp: "https://github.com/OpenVTC/vta-browser-plugin/tree/main/packages/tsp-js", // S04
 } as const;

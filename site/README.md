@@ -1,16 +1,17 @@
 # toip.tools
 
-The developer site at https://toip.tools: a quickstart, illustrated concepts, library guides, runnable projects, and a reference for every Trust Task type defined in this repository.
+The developer site at https://toip.tools: a quickstart, illustrated concepts, library guides, runnable projects, an ecosystem guide, and a reference for every Trust Task type defined in this repository.
 
 ## Design
 
-- **Palette.** Cool paper (`#f8f9fb`), white surfaces, and deep blue ink (`#13224a`), with slate (`#44526b`) secondary text and pale rules (`#d4dce7`). Code and the wire sit on navy (`#0f1d3a`). Green (`#0a6b5e`) marks verification and links; magenta (`#a1286a`) marks refusal. Focus rings are blue (`#2350d8`).
-- **Type.** One self-hosted family, [Recursive](https://github.com/arrowtype/recursive). Its `MONO` axis separates proportional prose from code, DIDs, bytes, and spec URIs. Headings are bold and tightly spaced; body text is 17 px with generous leading and a bounded reading width.
-- **The one bold element: the wire.** The landing page shows a real Trust Task, sealed from Alice to Bob when the site was built: the TSP envelope byte by byte on navy, with the two DIDs readable in the clear, the sealed payload as hex, and the signature, then the document Bob opened on paper below. It fills in once on load (not with reduced motion, and not without JavaScript, where it's simply all there).
+- **Palette.** Warm paper (`#f7f3eb`), evergreen ink (`#1e372f`), and vermilion accents (`#b4462b`). Dark protocol panels use `#142c26`; verification stays green. Focus rings remain blue.
+- **Type.** Georgia supplies expressive serif headings. Self-hosted [Recursive](https://github.com/arrowtype/recursive) handles prose and code, with its `MONO` axis separating them. Body text is 17 px with generous leading and a bounded reading width.
+- **The wire.** The home page illustrates a real Trust Task sealed at build time, with sender, recipient, ciphertext, signature, and the document Bob opens. A small exchange diagram introduces the byte view. Reduced-motion and JavaScript-free versions show the complete message immediately.
 - **Fingerprints.** Every DID the site prints carries a small 2 by 8 glyph and a hue, both from SHA-256 of the DID, so the same key looks the same everywhere. The wordmark's glyph is the fingerprint of `toip.tools`.
 - **Code.** Build-time highlighting uses a custom Shiki theme with distinct colors for comments, keywords, strings, functions, and types. Each panel labels its language, provides a copy button, and scrolls horizontally. Recorded output has a separate light treatment.
 - **Images.** Project screenshots open in a native dialog with a caption, close button, Escape dismissal, and focus restoration. Without JavaScript, the links open the original images.
-- Left-aligned columns, section rules, and generous spacing carry the rest. Status badges use a shape and a word; numbered markers are reserved for the stack's layers and the quickstart's steps.
+- **Ecosystem.** A directory, approach profiles, and a comparison table distinguish shared specifications from independent implementation choices. Concepts and the home page link to this guide rather than mixing project comparisons into protocol explanations.
+- Status badges use a shape and a word. Numbered markers are reserved for the quickstart's steps.
 
 ## Run it
 
@@ -28,7 +29,7 @@ npm run dev            # build, serve at http://localhost:4321/, rebuild on chan
 - `npm run examples:record`: run the examples and save their output to `examples/*/output/`, which the pages show. Run it after changing an example.
 - `npm run links -- --external`: also fetch every external link.
 - `npm run screenshots`: screenshots of the main pages at 1440 and 390 px, with JavaScript off, and with keyboard focus, into `screenshots/` (not committed). Needs Playwright's Chromium (`npx playwright install chromium`).
-- `npm run test:ui`: after building, test image previews on desktop and mobile, including keyboard dismissal, focus restoration, and the JavaScript-free fallback. Uses Playwright's Chromium.
+- `npm run test:ui`: after building, check ecosystem navigation and layout, homepage scope, and image previews on desktop and mobile. Includes keyboard dismissal, focus restoration, and the JavaScript-free image fallback. Uses Playwright's Chromium.
 
 ## How it's built
 

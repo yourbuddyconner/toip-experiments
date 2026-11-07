@@ -72,7 +72,7 @@ The protocol implementation comes from the OpenVTC TypeScript libraries: \`@open
     about: `
 A relay lets parties exchange messages even when they aren't online together. Devices authenticate with their \`did:key\` by signing a challenge bound to the relay's URL. Messages are delivered immediately to connected recipients and stored in SQLite until acknowledged, with limits per sender and recipient.
 
-The relay can see sender and recipient identifiers, timing, and message sizes. Contents stay encrypted. This is the toolkit's own WebSocket transport; TSP Routed Mode and the P2P Trust Stack's libp2p relays use different designs.
+The relay can see sender and recipient identifiers, timing, and message sizes. Contents stay encrypted. It delivers TSP Direct messages; it does not implement TSP Routed Mode.
 `,
     reachFor: [
       "Parties are often offline, and messages must wait for them.",
@@ -126,7 +126,7 @@ The tests reproduce the COSE working group's Ed25519 example byte for byte and v
     about: `
 Keep a user's identity seed encrypted in their browser. The vault derives an AES-GCM key from a passkey's PRF output, or uses PBKDF2 with a passphrase when PRF is unavailable. Credentials, state, and receipts can share that encryption key, with each stored item bound to its account and name. A backup code restores the account in another browser.
 
-Originally built for Settle, the vault is now shared by several apps. The passkey unlocks the seed; signing happens with the seed in memory while the account is open.
+The passkey unlocks the seed; signing happens with the seed in memory while the account is open.
 `,
     reachFor: ["A browser app whose users hold their own keys.", "You need several apps on one origin, each with its own accounts."],
     notFor: ["Signing with the passkey itself. The seed is unsealed in memory while the account is open."],

@@ -12,6 +12,7 @@ import { quickstartPage } from "../src/pages/quickstart";
 import { conceptsPage } from "../src/pages/concepts";
 import { toolkitPages } from "../src/pages/toolkit";
 import { examplesPage } from "../src/pages/examples";
+import { ecosystemPage } from "../src/pages/ecosystem";
 import { specPages } from "../src/pages/spec";
 import { involvedPage } from "../src/pages/involved";
 import { notFoundPage } from "../src/pages/notfound";
@@ -52,6 +53,7 @@ const pages: Page[] = [
   conceptsPage(),
   ...toolkitPages(),
   examplesPage(),
+  ecosystemPage(),
   ...specPages(specs),
   involvedPage(),
 ];

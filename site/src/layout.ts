@@ -2,7 +2,7 @@ import { BASE, ORIGIN, REPO, u } from "../build/config";
 import { fingerprintSvg } from "../build/fingerprint";
 import { html, raw, type Raw } from "../build/html";
 
-export type Section = "home" | "quickstart" | "concepts" | "toolkit" | "examples" | "spec" | "involved" | "none";
+export type Section = "home" | "quickstart" | "concepts" | "toolkit" | "examples" | "spec" | "ecosystem" | "involved" | "none";
 
 export interface Page {
   /** Site path, starting and ending with "/" (or ending in .html for the 404 page). */
@@ -19,6 +19,7 @@ const NAV: { section: Section; href: string; label: string }[] = [
   { section: "toolkit", href: "/toolkit/", label: "Toolkit" },
   { section: "examples", href: "/examples/", label: "Examples" },
   { section: "spec", href: "/spec/", label: "Task specs" },
+  { section: "ecosystem", href: "/ecosystem/", label: "Ecosystem" },
   { section: "involved", href: "/get-involved/", label: "Get involved" },
 ];
 
@@ -36,7 +37,7 @@ ${html`<html lang="en">
 <meta property="og:title" content="${p.title}">
 <meta property="og:description" content="${p.description}">
 <meta property="og:type" content="website">
-<meta name="theme-color" content="#13224a">
+<meta name="theme-color" content="#1e372f">
 <link rel="icon" href="${u("/favicon.svg")}" type="image/svg+xml">
 <link rel="preload" href="${u("/fonts/recursive-latin-mono.woff2")}" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="${opts.cssHref}">
@@ -63,10 +64,11 @@ ${p.body}
 <footer class="site-foot">
   <div class="wrap">
     <a class="mark" href="${u("/")}">toip.tools</a>
-    <p>Open protocols, working code, and a place to start. Built from the libraries and examples in <a href="${REPO}">toip-experiments</a>. Independently maintained; unaffiliated with the Trust over IP Foundation.</p>
+    <p>Independent TypeScript libraries and examples for verifiable trust. Source in <a href="${REPO}">toip-experiments</a>. Unaffiliated with the Trust over IP Foundation.</p>
     <ul>
       <li><a href="${u("/quickstart/")}">Quickstart</a></li>
       <li><a href="${u("/spec/")}">Trust Task types</a></li>
+      <li><a href="${u("/ecosystem/")}">Ecosystem guide</a></li>
       <li><a href="${REPO}">Source on GitHub</a></li>
       <li><a href="${REPO}/issues">Issues</a></li>
     </ul>

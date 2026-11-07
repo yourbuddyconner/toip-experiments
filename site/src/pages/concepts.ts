@@ -1,4 +1,4 @@
-import { gh, u } from "../../build/config";
+import { u } from "../../build/config";
 import { html, md, type Raw } from "../../build/html";
 import { externals as X } from "../data/links";
 import { credentialDiagram, didDiagram, governanceDiagram, keriDiagram, taskDiagram, tspDiagram, zkDiagram } from "../diagrams";
@@ -16,8 +16,6 @@ interface Concept {
   sources: { href: string; label: string }[];
 }
 
-const S = (n: string) => html`<a href="${gh(`docs/sources/${n}`)}">source note</a>`;
-
 const concepts: Concept[] = [
   {
     id: "dids",
@@ -28,7 +26,7 @@ const concepts: Concept[] = [
 
       The toolkit starts with \`did:key\`, which encodes the public key in the identifier itself. Resolution needs no network or registry. The tradeoff is a fixed key: if it is lost or compromised, you need a new identifier. This makes \`did:key\` useful for tutorials and short-lived identities.
 
-      Other methods support longer-lived relationships. The P2P Trust Stack uses \`did:peer:4\` and \`did:scid:vh\`; the latter maintains a history with pre-rotation and witnesses. KERI, described below, also lets an identifier keep its identity as its keys change.
+      Other approaches support key rotation. KERI, described below, records changes in a key-event history so an identifier can keep its identity as its keys change.
     `,
     diagram: didDiagram(),
     caption: "A did:key is its public key, written out. A KERI identifier (AID) is a digest of its first event, which already commits to the next key.",
@@ -36,7 +34,6 @@ const concepts: Concept[] = [
     sources: [
       { href: X.didCore, label: "W3C Decentralized Identifiers (DIDs) v1.0" },
       { href: X.didKey, label: "The did:key method (W3C CCG draft)" },
-      { href: X.p2pLayer1, label: "P2P Trust Stack, Layer 1: trust support" },
     ],
   },
   {
@@ -66,7 +63,7 @@ const concepts: Concept[] = [
 
       This separates message security from delivery. A relay, radio link, or portable file can carry the same protected message. The carrier can delay or drop it, but cannot read its encrypted payload or alter it without detection.
 
-      In *Direct* mode, which this toolkit uses, both VIDs travel in the clear, so a carrier learns who is talking to whom. The specification also defines *Routed* and *Nested* modes, in which intermediaries forward messages without learning both ends. The P2P Trust Stack runs TSP with CESR encoding over libp2p, and starts each relationship with an invitation and an acceptance (\`TSP_RFI\`, \`TSP_RFA\`).
+      In *Direct* mode, which this toolkit uses, both VIDs travel in the clear, so a carrier learns who is talking to whom. The specification also defines *Routed* and *Nested* modes that provide additional metadata protection through intermediaries.
     `,
     diagram: tspDiagram(),
     caption: "What each part of a Direct-mode TSP message reveals. The landing page shows a real one, byte for byte.",
@@ -74,7 +71,6 @@ const concepts: Concept[] = [
     sources: [
       { href: X.tspSpec, label: "ToIP Trust Spanning Protocol specification" },
       { href: X.hpke, label: "RFC 9180: Hybrid Public Key Encryption" },
-      { href: X.p2pLayer2, label: "P2P Trust Stack, Layer 2: trust spanning" },
       { href: X.openvtc, label: "OpenVTC, whose TypeScript TSP library this toolkit uses" },
     ],
   },
@@ -93,7 +89,6 @@ const concepts: Concept[] = [
     sources: [
       { href: X.trustTasks, label: "Trust Tasks registry" },
       { href: X.trustTasksTf, label: "ToIP Trust Tasks task force" },
-      { href: X.p2pLayer3, label: "P2P Trust Stack, Layer 3: trust tasks" },
     ],
   },
   {
@@ -105,14 +100,14 @@ const concepts: Concept[] = [
 
       A governance framework records those decisions: who may issue which credentials, how members join and leave, and how disputes are resolved. A trust registry makes a key question answerable by software: *is this DID authorized to issue this kind of credential?*
 
-      In the P2P Trust Stack, a Verified Trust Community has governance rules for who can join, which credentials membership needs and what members can do. Today those rules are an admin list and a signature threshold; roles, delegation, voting and admission requests are planned.
+      These rules belong to the community operating the system. A shared credential format does not determine who may join, who can delegate authority, or how decisions can be challenged.
     `,
     diagram: governanceDiagram(),
     caption: "Governance turns 'this key signed it' into 'this is an authority for this claim'.",
     here: html`There is no trust registry library here yet. The projects decide trust in simpler ways you can read: a verifier pins the issuers it accepts (${libLinks(["anon-membership"])}'s <code>AcceptPolicy</code>), a list's own key signs its roster (<a href="${u("/examples/#shared-todo")}">Shared To-Do</a>), authority flows down a chain from a principal (${libLinks(["mandates"])}), and each party decides with a Rego policy it runs itself (<code>Policies</code> in trust-core).`,
     sources: [
       { href: X.toip, label: "Trust over IP Foundation" },
-      { href: X.p2pLayer3, label: "P2P Trust Stack, Layer 3: communities and governance" },
+      { href: X.toipModel, label: "The ToIP model: technology, governance, and ecosystems" },
     ],
   },
   {
@@ -140,7 +135,7 @@ const concepts: Concept[] = [
     body: md`
       Presenting a full credential reveals all its claims, and repeated presentations can link a holder's activity. *Selective disclosure* lets a holder reveal chosen claims. *Zero-knowledge proofs* can establish a statement, such as "I am a current employee" or "I am over 18", without disclosing the underlying credential or record.
 
-      The P2P Trust Stack plans profile credentials with a visibility level "available only through a zero-knowledge proof", without a protocol for it yet, and the Trust Tasks registry already has a task in which a member's agent proves that enough distinct vetters attested for it.
+      A membership proof is one application: a person shows they belong to an accepted group without revealing their membership record. The verifier still needs rules for which issuers, group roots, and proof systems it accepts.
     `,
     diagram: zkDiagram(),
     caption: "Group membership in zero knowledge: the verifier checks a signed root and a nullifier, and never sees the leaf.",
@@ -149,7 +144,6 @@ const concepts: Concept[] = [
       { href: X.noir, label: "Noir" },
       { href: X.barretenberg, label: "Barretenberg (in Aztec's repository)" },
       { href: X.semaphore, label: "Semaphore, an earlier design for anonymous group signalling" },
-      { href: X.p2pLayer3, label: "P2P Trust Stack, Layer 3: R-Cards" },
     ],
   },
 ];
@@ -164,9 +158,9 @@ export function conceptsPage(): Page {
     <ul>${concepts.map((c) => html`<li><a href="#${c.id}">${c.title}</a></li>`)}</ul>
   </nav>
   <div>
-    ${pageHead("The ideas behind the code", "Start with identity, follow a message, and see how credentials, governance, and proofs let people work together. Each concept includes a diagram and the toolkit's implementation.")}
+    ${pageHead("The ideas behind the code", "Identity, messaging, credentials, governance, and proofs: what each does and how this toolkit uses it.")}
     <div class="prose">
-      <p>Links at the end of each section lead to the specifications. Comparisons with the P2P Trust Stack draw on the repository's ${S("S01-p2p-trust-stack-site.md")} and ${html`<a href="${gh("docs/sources/S02-trust-tasks-registry-and-openvtc.md")}">follow-up</a>`}. Those notes used summaries of the stack's pages; consult the original sources for implementation decisions.</p>
+      <p>Each section links to its specifications. For the communities behind them and their different implementation choices, see the <a href="${u("/ecosystem/")}">ecosystem guide</a>.</p>
     </div>
     ${concepts.map(
       (c) => html`<section class="concept" id="${c.id}" aria-labelledby="${c.id}-h">

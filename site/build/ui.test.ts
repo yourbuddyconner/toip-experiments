@@ -23,6 +23,28 @@ after(async () => {
   server?.close();
 });
 
+for (const width of [390, 1440]) {
+  test(`ecosystem guide is reachable from the homepage at ${width}px`, async () => {
+    const page = await browser.newPage({ viewport: { width, height: 900 } });
+    try {
+      await page.goto(root);
+      assert.ok(!/P2P Trust Stack|TrustStackers/.test(await page.locator("main").innerText()), "The homepage should focus on this toolkit; project comparisons belong in the ecosystem guide");
+      const homeSize = await page.evaluate(() => ({ viewport: innerWidth, content: document.documentElement.scrollWidth }));
+      assert.ok(homeSize.content <= homeSize.viewport, "The homepage should fit the viewport");
+      const link = page.getByRole("navigation", { name: "Site", exact: true }).getByRole("link", { name: "Ecosystem", exact: true });
+      assert.equal(await link.count(), 1, "The ecosystem guide should be in the main navigation");
+      await link.click();
+      assert.match(page.url(), /\/ecosystem\/$/);
+      assert.equal(await link.getAttribute("aria-current"), "page");
+      await page.getByRole("heading", { level: 1 }).waitFor({ state: "visible" });
+      const dimensions = await page.evaluate(() => ({ viewport: innerWidth, content: document.documentElement.scrollWidth }));
+      assert.ok(dimensions.content <= dimensions.viewport, "The guide should fit the viewport");
+    } finally {
+      await page.close();
+    }
+  });
+}
+
 test("image opens in a named modal; Escape closes it and restores focus", async () => {
   const page = await browser.newPage();
   try {

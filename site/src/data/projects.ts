@@ -30,7 +30,7 @@ export const projects: Project[] = [
     libraries: ["trust-core", "relay", "web-vault"],
     run: [
       { what: "The whole network and the web app, on a local Solana cluster", cmd: "npm run settle" },
-      { what: "A narrated demo in the terminal", cmd: "npm run demo --workspace projects/settle" },
+      { what: "Run the terminal demo", cmd: "npm run demo --workspace projects/settle" },
       { what: "The app in a real browser, with screenshots", cmd: "npm run e2e --workspace projects/settle" },
     ],
     shots: [
@@ -47,7 +47,7 @@ export const projects: Project[] = [
     pitch:
       "Private to-do lists for a household. Each person and list has its own key and DID, created on the device. The list signs membership credentials, and members exchange signed changes in encrypted TSP messages. Every device verifies a change before applying it; the relay handles delivery without reading the list.",
     demonstrates: [
-      "The basic ToIP ideas in an app small enough to read in an afternoon.",
+      "Identity, credentials, and encrypted messaging in a small collaborative app.",
       "Invitations, roles, removal, and private items sealed to chosen readers.",
       "Offline outboxes and catching up from other members, through a relay that can't read anything.",
     ],
@@ -65,7 +65,7 @@ export const projects: Project[] = [
     libraries: ["anon-membership", "trust-core", "relay", "web-vault"],
     run: [
       { what: "The organization, the source app, the journalist's inbox and the relay, each on its own localhost origin", cmd: "npm run tipline" },
-      { what: "The whole story, narrated in the terminal", cmd: "npm run demo --workspace projects/tipline" },
+      { what: "Run the terminal demo", cmd: "npm run demo --workspace projects/tipline" },
       { what: "The demo in a real browser, checking the source leaves nothing behind", cmd: "npm run e2e --workspace projects/tipline" },
     ],
   },
@@ -79,7 +79,7 @@ export const projects: Project[] = [
     libraries: ["anon-membership", "eventlog", "trust-core", "relay", "web-vault"],
     run: [
       { what: "Issuers, the forum host and the web app on http://localhost:4320", cmd: "npm run agora" },
-      { what: "The twelve demo steps, narrated in the terminal", cmd: "npm run demo --workspace projects/agora" },
+      { what: "Run the twelve-step terminal demo", cmd: "npm run demo --workspace projects/agora" },
       { what: "Members, a non-member and a reader, in a real browser", cmd: "npm run e2e --workspace projects/agora" },
     ],
   },
@@ -93,8 +93,8 @@ export const projects: Project[] = [
     libraries: ["mandates", "eventlog", "trust-core", "relay"],
     run: [
       { what: "The principal's console and the courier's view on http://localhost:4330", cmd: "npm run agents" },
-      { what: "The whole story in the terminal, with scripted models", cmd: "npm run demo --workspace projects/agents" },
-      { what: "The same story with Claude, if ANTHROPIC_API_KEY is set", cmd: "npm run demo --workspace projects/agents -- --live" },
+      { what: "Run the terminal demo with scripted models", cmd: "npm run demo --workspace projects/agents" },
+      { what: "Run with Claude; requires ANTHROPIC_API_KEY", cmd: "npm run demo --workspace projects/agents -- --live" },
     ],
   },
   {
@@ -107,7 +107,7 @@ export const projects: Project[] = [
     libraries: ["eventlog", "trust-core"],
     run: [
       { what: "Four witnesses, two watchers and the explorer on http://localhost:4340", cmd: "npm run trail" },
-      { what: "The ten steps, attacks included, narrated in the terminal", cmd: "npm run demo --workspace projects/trail" },
+      { what: "Run the terminal demo, including tampering and recovery", cmd: "npm run demo --workspace projects/trail" },
       { what: "The explorer through all ten steps in a real browser", cmd: "npm run e2e --workspace projects/trail" },
     ],
   },
@@ -116,8 +116,8 @@ export const projects: Project[] = [
     name: "Capture",
     status: "working",
     pitch:
-      "Verifiable origins for photos and sensor readings. The design gives each device an identity and a key it can use without exporting. Captures and edits form a signed history that readers can check in a browser. Redaction proofs are designed to show that pixels outside a hidden region still match the original capture.",
-    demonstrates: ["Device keys in WebCrypto and passkeys.", "Owner-to-device mandates.", "Key histories that keep old captures verifiable after a rotation."],
+      "Verifiable origins for photos and sensor readings. Devices sign captures with their own keys, and edits extend a signed history. A browser verifier checks the device, the capture's time interval, and which image tiles remain unchanged after redaction.",
+    demonstrates: ["Non-exportable WebCrypto device keys, protected by passkeys or passphrases.", "Owner-to-device mandates.", "Key histories that keep old captures verifiable after a rotation."],
     libraries: ["cose", "eventlog", "mandates", "web-vault", "mesh-transport"],
     run: [
       { what: "The camera, editor, verifier and sensor dashboard on http://localhost:4350, with witnesses and simulated sensors", cmd: "npm run capture" },
@@ -135,7 +135,7 @@ export const projects: Project[] = [
     libraries: ["mesh-transport", "cose", "trust-core"],
     run: [
       { what: "The radio visualizer on http://localhost:4360: a field map, frames in flight, airtime meters", cmd: "npm run mesh" },
-      { what: "All three acts on the simulated radio, narrated in the terminal", cmd: "npm run demo --workspace projects/mesh" },
+      { what: "Run all three demos on the simulated radio", cmd: "npm run demo --workspace projects/mesh" },
       { what: "Checks a LoRa gateway or RAK3172 is talking to you (see HARDWARE.md)", cmd: "npm run mesh --workspace projects/mesh -- doctor" },
     ],
   },

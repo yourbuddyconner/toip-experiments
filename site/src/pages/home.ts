@@ -32,7 +32,12 @@ function wire(s: SealedSample): Raw {
   const shownSealed = 192;
   return html`<figure class="wire" aria-labelledby="wire-cap">
   <div class="wire__panel">
-    <div class="wire__top"><span>On the wire <strong>${s.bytes.toLocaleString("en-US")} bytes</strong></span><span>TSP Direct</span></div>
+    <div class="wire__top"><span class="wire__specimen">A message you can inspect</span><span>TSP / Direct</span></div>
+    <div class="wire__journey" aria-hidden="true">
+      <div class="wire__person"><b>A</b><span>Alice<small>signs &amp; sends</small></span></div>
+      <div class="wire__route"><span>${s.bytes.toLocaleString("en-US")} encrypted bytes</span></div>
+      <div class="wire__person"><b>B</b><span>Bob<small>opens &amp; verifies</small></span></div>
+    </div>
     <div class="seg">
       <div class="seg__label">TSP header<br>${head.length} bytes</div>
       <p class="seg__bytes">${head.hex}</p>
@@ -68,29 +73,27 @@ export function homePage(sample: SealedSample, specCount: number): Page {
 <div class="wrap">
   <section class="hero" aria-labelledby="hero-title">
     <div>
-      <p class="eyebrow">TypeScript tools for Trust over IP</p>
-      <h1 id="hero-title">Trust people can verify.</h1>
+      <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span> Independent tools for Trust over IP</p>
+      <h1 id="hero-title">Trust people<br>can <em>verify.</em></h1>
       <p class="lede">Build apps where people hold their own keys, exchange private messages, and check each other's claims directly.</p>
-      <p>Trust over IP (ToIP) provides the open protocols. This toolkit brings them together in eight TypeScript libraries, with working apps to learn from. Start with two identities and a signed, encrypted message.</p>
-      <p class="actions"><a class="btn" href="${u("/quickstart/")}">Send your first Trust Task <span aria-hidden="true">↗</span></a><a href="${u("/concepts/")}">Explore the concepts</a></p>
-      <p class="hero__note">Open source. Runs in browsers and Node. No account required for the quickstart.</p>
+      <p>TypeScript libraries and runnable apps built with ToIP protocols, verifiable credentials, and cryptographic proofs. Start with two identities and a signed, encrypted message.</p>
+      <p class="actions"><a class="btn" href="${u("/quickstart/")}">Build your first exchange <span aria-hidden="true">↗</span></a><a href="${u("/toolkit/")}">Browse the libraries</a></p>
+      <dl class="hero__facts"><div><dt>Libraries</dt><dd>${libraries.length}</dd></div><div><dt>Working apps</dt><dd>${projects.filter((p) => p.status === "working").length}</dd></div><div><dt>Task types</dt><dd>${specCount}</dd></div></dl>
     </div>
     ${wire(sample)}
   </section>
 
-  <section class="band" aria-labelledby="layers">
-    <h2 id="layers">From keys to working apps</h2>
-    <div class="prose">
-      <p>The <a href="${X.p2pStack}">P2P Trust Stack</a> organizes this work into four layers. Each answers a different question: who are you, how do we communicate, what can we do together, and what can we build?</p>
+  <section class="capabilities" aria-labelledby="capabilities">
+    <div><p class="eyebrow">What you can build with</p><h2 id="capabilities">From identity<br>to interaction.</h2><p>Choose the pieces your application needs.</p></div>
+    <div class="capabilities__grid">
+      <article><span class="capability-mark" aria-hidden="true">⌘</span><h3>Identity</h3><p>Create identifiers with ${libLinks(["trust-core"])}. Keep a verifiable key history with ${libLinks(["eventlog"])}.</p></article>
+      <article><span class="capability-mark" aria-hidden="true">↗</span><h3>Private messages</h3><p>Send signed, encrypted Trust Tasks over the ${libLinks(["relay"])} or ${libLinks(["mesh-transport"])}.</p></article>
+      <article><span class="capability-mark" aria-hidden="true">✓</span><h3>Verifiable claims</h3><p>Issue credentials, delegate with ${libLinks(["mandates"])}, or prove membership with ${libLinks(["anon-membership"])}.</p></article>
+      <article><span class="capability-mark" aria-hidden="true">⊞</span><h3>Working applications</h3><p>Explore <a href="${u("/examples/#settle")}">conditional payments</a>, <a href="${u("/examples/#shared-todo")}">private collaboration</a>, and <a href="${u("/examples/")}">more runnable examples</a>.</p></article>
     </div>
-    <ol class="layers">
-      <li><span class="n">Layer 1</span><h3>Trust support</h3><p>Create an identity and control its keys. ${libLinks(["trust-core"])} provides <code>did:key</code> identities; ${libLinks(["eventlog"])} adds KERI key histories so an identifier can survive key rotation.</p></li>
-      <li><span class="n">Layer 2</span><h3>Trust spanning</h3><p>Exchange messages signed by the sender and encrypted for the recipient. ${libLinks(["trust-core"])} implements TSP Direct messaging through OpenVTC, with ${libLinks(["relay"])} for internet delivery and ${libLinks(["mesh-transport"])} for radio links.</p></li>
-      <li><span class="n">Layer 3</span><h3>Trust tasks</h3><p>Put that connection to work: issue credentials, delegate authority with ${libLinks(["mandates"])}, or prove group membership with ${libLinks(["anon-membership"])}. Browse <a href="${u("/spec/")}">${specCount} message specifications</a> used by the toolkit and its apps.</p></li>
-      <li><span class="n">Layer 4</span><h3>Trust applications</h3><p>Build something people can use. Explore conditional payments in <a href="${u("/examples/#settle")}">Settle</a>, private collaboration in <a href="${u("/examples/#shared-todo")}">Shared To-Do</a>, and <a href="${u("/examples/")}">more working examples</a> for anonymous speech, agent delegation, and audit trails.</p></li>
-    </ol>
-    <p class="prose small quiet">This toolkit uses <code>did:key</code> identities and a WebSocket relay. The P2P Trust Stack uses other DID methods and libp2p transport. Interoperability between the two implementations has not yet been tested.</p>
   </section>
+
+  <a class="ecosystem-invitation" href="${u("/ecosystem/")}"><div><span class="eyebrow">Beyond this toolkit</span><h2>Find your way around the ecosystem.</h2><p>Coming from ToIP? Meet the related communities and compare their implementation choices.</p></div><span class="ecosystem-invitation__arrow" aria-hidden="true">↗</span></a>
 
   <section class="band" aria-labelledby="toolkit">
     <h2 id="toolkit">The toolkit</h2>
@@ -126,8 +129,8 @@ export function homePage(sample: SealedSample, specCount: number): Page {
   <section class="band" aria-labelledby="involved">
     <h2 id="involved">Get involved</h2>
     <div class="prose">
-      <p>This toolkit began at the <a href="${X.iiw}">Internet Identity Workshop</a> in November 2026, building on specifications developed at the <a href="${X.toip}">Trust over IP Foundation</a>. Help by trying an example, improving an implementation, or <a href="${u("/get-involved/#propose")}">bringing a trust problem of your own</a>.</p>
-      <p><a href="${u("/get-involved/")}">Find a place to contribute</a></p>
+      <p>Report a bug, improve an example, or <a href="${u("/get-involved/#propose")}">propose an application</a>. Protocol work happens at the <a href="${X.toip}">Trust over IP Foundation</a>; this repository focuses on implementations and experiments.</p>
+      <p><a href="${u("/get-involved/")}">Contribution guide</a></p>
     </div>
   </section>
 </div>`;
