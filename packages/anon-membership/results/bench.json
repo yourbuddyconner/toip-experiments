@@ -1,0 +1,45 @@
+{
+  "circuit": "anon-membership/v1/gate-d20",
+  "gates": 5047,
+  "crsPoints": 8192,
+  "runs": 10,
+  "machine": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M1 Max",
+    "cores": 10,
+    "node": "v22.22.2"
+  },
+  "toolchain": {
+    "noir_js": "1.0.0",
+    "bb_js": "6.0.0 (WebAssembly backend)",
+    "verifierTarget": "noir-recursive (ZK)"
+  },
+  "node": {
+    "default threads": {
+      "proverSetupMs": 301.9,
+      "proveMsMedian": 160.8,
+      "verifierSetupMs": 312.4,
+      "verifyMsMedian": 12.4,
+      "proofBytes": 14656
+    },
+    "1 thread": {
+      "proverSetupMs": 154.2,
+      "proveMsMedian": 290,
+      "verifierSetupMs": 151.6,
+      "verifyMsMedian": 12.5,
+      "proofBytes": 14656
+    }
+  },
+  "chromium": {
+    "note": "simple statement (1 group, no predicates); the circuit is the same size for every statement",
+    "proverSetupMs": 469.4,
+    "proveMsMedian": 140.8,
+    "verifierSetupMs": 213,
+    "verifyMsMedian": 14,
+    "threads": 10,
+    "crossOriginIsolated": true,
+    "blockedRequests": 0
+  },
+  "at": "2026-11-07T01:39:05.908Z"
+}

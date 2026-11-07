@@ -1,6 +1,6 @@
 /**
- * The [x]₂ point of Aztec's Ignition CRS, 128 bytes, as bb.js 6.0.0 downloads it from
- * https://crs.aztec-cdn.foundation/g2.dat. A public constant.
+ * The [x]₂ point of Aztec's Ignition CRS, 128 bytes: the g2.dat file bb.js 6.0.0 would download.
+ * A public constant.
  */
 export const G2_POINT_HEX =
   "0118c4d5b837bcc2bc89b5b398b5974e9f5944073b32078b7e231fec938883b0260e01b251f6f1c7e7ff4e580791dee8" +
