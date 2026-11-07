@@ -114,12 +114,16 @@ export const projects: Project[] = [
   {
     slug: "capture",
     name: "Capture",
-    status: "being built",
+    status: "working",
     pitch:
       "Verifiable origins for photos and sensor readings. The design gives each device an identity and a key it can use without exporting. Captures and edits form a signed history that readers can check in a browser. Redaction proofs are designed to show that pixels outside a hidden region still match the original capture.",
     demonstrates: ["Device keys in WebCrypto and passkeys.", "Owner-to-device mandates.", "Key histories that keep old captures verifiable after a rotation."],
     libraries: ["cose", "eventlog", "mandates", "web-vault", "mesh-transport"],
-    coming: "The first implementation is in progress. The design describes device enrollment, capture, editing, and verification.",
+    run: [
+      { what: "The camera, editor, verifier and sensor dashboard on http://localhost:4350, with witnesses and simulated sensors", cmd: "npm run capture" },
+      { what: "One more sensor, sending signed readings over the simulated LoRa radio", cmd: "npm run sensor --workspace projects/capture" },
+      { what: "Capture, a blur edit and verification in a real browser with a fake camera", cmd: "npm run e2e --workspace projects/capture" },
+    ],
   },
   {
     slug: "mesh",
