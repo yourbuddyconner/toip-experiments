@@ -258,6 +258,7 @@ button.quiet.on-dark {
 
 .reading > .notice {
   max-width: 46rem;
+  margin-bottom: 1.75rem;
 }
 
 .count {

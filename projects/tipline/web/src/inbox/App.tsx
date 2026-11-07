@@ -166,7 +166,7 @@ function Desk({ session, onLock }: { session: InboxSession; onLock: () => void }
                 <button className={`story-item ${s.id === storyId && !composing ? "current" : ""}`} aria-current={s.id === storyId && !composing} onClick={() => { setStoryId(s.id); setTipId(null); setComposing(false); }}>
                   <span className="title">{s.title}</span>
                   <span className="meta">
-                    {agent.list().filter((t) => t.story === s.id).length} tips from {agent.sources(s.id)} {agent.sources(s.id) === 1 ? "source" : "sources"}
+                    {plural(agent.list().filter((t) => t.story === s.id).length, "tip")} from {plural(agent.sources(s.id), "source")}
                   </span>
                 </button>
               </li>
@@ -475,4 +475,8 @@ function Attachment({ session, tipId, a }: { session: InboxSession; tipId: strin
       </div>
     </li>
   );
+}
+
+function plural(n: number, word: string): string {
+  return `${n} ${word}${n === 1 ? "" : "s"}`;
 }

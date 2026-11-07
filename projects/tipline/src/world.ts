@@ -1,4 +1,4 @@
-// A whole Tipline world in one Node process, for the integration tests: a real relay, Acme's issuer
+// A whole Tipline world in one Node process, for the integration tests and the terminal demo: a real relay, Acme's issuer
 // serving enroll over TSP, the outlet's mirror, Sam's inbox, members' wallets, and sources. Logs and
 // snapshots are served from memory through a Fetcher, as the platform serves them over HTTP.
 import { mkdtempSync } from "node:fs";
@@ -7,13 +7,13 @@ import { join } from "node:path";
 import { MembershipProver, MembershipVerifier, epochOf, initHashing, loadArtifacts, CIRCUIT_ID } from "@zk-toip/anon-membership";
 import { startRelay, type Relay, type StoredMessage } from "@zk-toip/relay";
 import { DemoClock, Endpoint, RelayTransport, identityFromSeed, seedFrom, toB64u, type Identity } from "@zk-toip/trust-core";
-import { OrgIssuer } from "../src/agents/issuer";
-import { InboxAgent, type InboxState } from "../src/agents/inbox";
-import { Mirror } from "../src/agents/mirror";
-import type { Fetcher } from "../src/agents/logs";
-import { enrollWallet } from "../src/agents/wallet";
-import { signDescriptor, DEFAULT_LIMITS, type Descriptor } from "../src/protocol/descriptor";
-import { FRESHNESS } from "../src/protocol/messages";
+import { OrgIssuer } from "./agents/issuer";
+import { InboxAgent, type InboxState } from "./agents/inbox";
+import { Mirror } from "./agents/mirror";
+import type { Fetcher } from "./agents/logs";
+import { enrollWallet } from "./agents/wallet";
+import { signDescriptor, DEFAULT_LIMITS, type Descriptor } from "./protocol/descriptor";
+import { FRESHNESS } from "./protocol/messages";
 
 export const ACME_URL = "https://acme.example/";
 export const OUTLET_URL = "https://ledger.example/";

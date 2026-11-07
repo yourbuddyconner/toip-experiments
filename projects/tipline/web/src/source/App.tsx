@@ -282,8 +282,8 @@ function NewTip({ d, onDone, onLeave }: { d: Descriptor; onDone: (code: string) 
             <label className="check">
               <input type="checkbox" checked={alsoOrg} onChange={(e) => setAlsoOrg(e.target.checked)} disabled={phase !== "compose"} />
               <span>
-                Also check {ORG_SHORT(group!.label)}'s own copy of its member list. This makes sure The Ledger's copy hasn't been swapped for one built to pick you out.{" "}
-                {ORG_SHORT(group!.label)}'s server sees that someone checked, not who or why.
+                Also check the member list that {ORG_SHORT(group!.label)} publishes itself. This makes sure The Ledger's copy hasn't been swapped for one built to pick you out.
+                The organization's server sees that someone checked, not who or why.
               </span>
             </label>
             {look.busy && !check && <p className="loading">Checking the group…</p>}
@@ -291,7 +291,7 @@ function NewTip({ d, onDone, onLeave }: { d: Descriptor; onDone: (code: string) 
             {view && (
               <p className="verdict good" data-testid="group-ok">
                 Checked: {view.group.label} signed a list of <strong>{view.head.size} members</strong> on {longDate(view.head.epoch)}
-                {view.checkedOrganization ? `, and The Ledger's copy matches ${ORG_SHORT(view.group.label)}'s own.` : "."}
+                {view.checkedOrganization ? `, and The Ledger's copy matches the one ${ORG_SHORT(view.group.label)} publishes.` : "."}
               </p>
             )}
           </>

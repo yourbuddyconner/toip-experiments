@@ -28,7 +28,7 @@ import { findMetadata, stripMetadata } from "../src/sanitize/metadata";
 import { InboxAgent } from "../src/agents/inbox";
 import { buildTip, checkGroup, deliver, findMembership, TipConversation, type GroupView, type Membership } from "../src/agents/source";
 import { checkMembership, enrollWallet, membershipCode, walletCommitment } from "../src/agents/wallet";
-import { ACME_URL, OTHER_STORY, OUTLET_URL, STORY, makeWorld, until, type World } from "./harness";
+import { ACME_URL, OTHER_STORY, OUTLET_URL, STORY, makeWorld, until, type World } from "../src/world";
 import { syntheticJpeg, withExif } from "./fixtures/images";
 
 // Nothing in this file may fetch from the network: in particular, no CRS download for proving.

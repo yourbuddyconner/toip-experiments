@@ -48,7 +48,8 @@ export interface Descriptor {
 export const DEFAULT_LIMITS = { maxAttachments: 8, maxAttachmentBytes: 16 * 1024 * 1024 };
 
 export function signDescriptor(d: Omit<Descriptor, "id" | "type" | "v" | "issuer" | "issuedAt" | "proof">, identity: Identity, clock: Clock): Descriptor {
-  const doc: Descriptor = { id: `urn:uuid:${crypto.randomUUID()}`, type: "tipline/dropbox", v: 1, issuer: identity.did, ...d, issuedAt: clock.iso() };
+  const { proof: _p, ...rest } = d as Partial<Descriptor>;
+  const doc: Descriptor = { ...(rest as Descriptor), id: `urn:uuid:${crypto.randomUUID()}`, type: "tipline/dropbox", v: 1, issuer: identity.did, issuedAt: clock.iso() };
   return signDocument(doc, identity, clock);
 }
 
