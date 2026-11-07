@@ -1,6 +1,6 @@
-import { assertField, fieldFromHex, fieldToHex, type Field } from "./field";
-import { MAX_LIMIT, assertDay, commitmentOf, leafHash, type Leaf } from "./hash";
-import { verifyPath, type MerklePath } from "./tree";
+import { assertField, fieldFromHex, fieldToHex, type Field } from "./field.js";
+import { MAX_LIMIT, assertDay, commitmentOf, leafHash, type Leaf } from "./hash.js";
+import { verifyPath, type MerklePath } from "./tree.js";
 
 export const GROUP_SLOTS = 4;
 export const ATTR_SLOTS = 4;

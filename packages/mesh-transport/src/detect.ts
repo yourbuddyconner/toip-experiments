@@ -5,7 +5,7 @@
  *    (RUI3, or Seeed's LoRa-E5 family). The probes are safe in this order.
  */
 import { createSocket } from "node:dgram";
-import type { SerialPortLike } from "./serial";
+import type { SerialPortLike } from "./serial.js";
 
 export type RadioDetection =
   | { kind: "gwmp-gateway"; eui: string; address: string }
@@ -172,7 +172,7 @@ export async function detectRadios(
   let listPorts = opts.listPorts;
   let openPort = opts.openPort;
   if (!listPorts || !openPort) {
-    const node = await import("./node");
+    const node = await import("./node.js");
     listPorts ??= node.listSerialPorts;
     openPort ??= (path) => node.nodeSerialPort(path, 115200);
   }

@@ -9,9 +9,9 @@
 //   const proof = await client.prove(statement, witness, (p) => show(p));
 //
 // Statements and witnesses hold bigints, which structured cloning carries as they are.
-import { initHashing } from "./hash";
-import { MembershipError, MembershipProver, MembershipVerifier, type BackendOptions, type MembershipProof, type ProveProgress, type VerifyResult } from "./prove";
-import type { Statement, Witness } from "./statement";
+import { initHashing } from "./hash.js";
+import { MembershipError, MembershipProver, MembershipVerifier, type BackendOptions, type MembershipProof, type ProveProgress, type VerifyResult } from "./prove.js";
+import type { Statement, Witness } from "./statement.js";
 
 type Request =
   | { id: number; op: "warm"; options?: BackendOptions }

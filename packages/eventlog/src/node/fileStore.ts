@@ -1,7 +1,7 @@
 /** A LogStore kept in one JSON file. Writes are atomic (temporary file, then rename) within `flushMs` of a change. Node only. */
 import { existsSync, readFileSync, renameSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
-import { MemoryStore, type StoreData } from "../store";
+import { MemoryStore, type StoreData } from "../store.js";
 
 export class JsonFileStore extends MemoryStore {
   private timer?: ReturnType<typeof setTimeout>;

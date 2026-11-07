@@ -2,9 +2,9 @@
  * Frames: what a link sends (design §8.5). The top 4 bits of byte 0 are 0xA. The channel may carry
  * other people's traffic, so a frame that fails any check decodes to null and is dropped.
  */
-import { concat } from "./bytes";
-import { packetId } from "./packet";
-import type { LinkInfo } from "./link";
+import { concat } from "./bytes.js";
+import { packetId } from "./packet.js";
+import type { LinkInfo } from "./link.js";
 
 export const FRAME_HEADER = 8;
 export const MAX_FRAGMENTS = 64;

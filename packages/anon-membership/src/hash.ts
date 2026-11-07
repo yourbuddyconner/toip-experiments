@@ -1,5 +1,5 @@
 import { BackendType, BarretenbergSync } from "@aztec/bb.js";
-import { assertField, fieldFromBytes32, fieldToBytes, type Field } from "./field";
+import { assertField, fieldFromBytes32, fieldToBytes, type Field } from "./field.js";
 
 /** Domain tags, the first input of each hash. The circuit uses the same values. */
 export const TAG = { COMMIT: 1n, NULLIFIER: 2n, NODE: 3n, LEAF: 4n } as const;

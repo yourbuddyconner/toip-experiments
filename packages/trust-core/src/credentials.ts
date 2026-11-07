@@ -6,8 +6,8 @@
 import type { Proof, TrustTaskDocument } from "@openvtc/trust-tasks/runtime";
 import { newUrnUuid } from "@openvtc/trust-tasks-tsp";
 import { DataIntegrityProofVerifier, signTrustTask } from "@openvtc/trust-tasks-proof";
-import type { Clock } from "./clock";
-import type { Identity } from "./identity";
+import type { Clock } from "./clock.js";
+import type { Identity } from "./identity.js";
 
 export interface Credential {
   "@context": string[];

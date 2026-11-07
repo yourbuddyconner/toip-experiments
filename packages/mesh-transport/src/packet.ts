@@ -1,5 +1,5 @@
 /** Packets: what the frame layer carries (design §8.4). Decoders return null for anything malformed. */
-import { concat, h, utf8 } from "./bytes";
+import { concat, h, utf8 } from "./bytes.js";
 
 export type PacketKind = "pair" | "intro" | "via" | "down" | "receipt" | "raw" | "public";
 

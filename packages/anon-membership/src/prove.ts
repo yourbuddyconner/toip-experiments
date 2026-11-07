@@ -1,10 +1,10 @@
 import { BackendType, Barretenberg, UltraHonkBackend, UltraHonkVerifierBackend } from "@aztec/bb.js";
 import { Noir } from "@noir-lang/noir_js";
 import { fromB64u, toB64u } from "@toip-tools/trust-core";
-import { loadArtifacts, type CircuitArtifacts } from "./artifacts";
-import { resolveCrs, type CrsSource } from "./crs";
-import { fieldFromHex, fieldToHex, type Field } from "./field";
-import { nullifierOf } from "./hash";
+import { loadArtifacts, type CircuitArtifacts } from "./artifacts.js";
+import { resolveCrs, type CrsSource } from "./crs.js";
+import { fieldFromHex, fieldToHex, type Field } from "./field.js";
+import { nullifierOf } from "./hash.js";
 import {
   checkStatement,
   circuitInputs,
@@ -16,7 +16,7 @@ import {
   type Statement,
   type StatementJson,
   type Witness,
-} from "./statement";
+} from "./statement.js";
 
 /** UltraHonk in its zero-knowledge mode, with a Poseidon2 transcript. The only mode this library uses. */
 export const PROOF_SYSTEM = "ultrahonk-zk/noir-recursive";

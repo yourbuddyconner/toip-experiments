@@ -1,6 +1,6 @@
 /** Step 1 of §8.2: the shape of mandates, constraints and actions. Anything odd is malformed. */
-import { getProfile } from "./profiles";
-import { OPS, PERIODS, type Action, type Mandate, type Profile, type Reason } from "./types";
+import { getProfile } from "./profiles.js";
+import { OPS, PERIODS, type Action, type Mandate, type Profile, type Reason } from "./types.js";
 
 export const MAX_LINKS = 5;
 export const MAX_DIMENSIONS = 32;

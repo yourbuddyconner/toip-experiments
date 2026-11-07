@@ -3,7 +3,7 @@
 // Runs in Node and in browsers; nothing here imports Node built-ins.
 
 // Fields and hashing
-export { FIELD_MODULUS, fieldFromBytes, fieldFromBytes32, fieldFromHex, fieldToBytes, fieldToHex, toField, type Field } from "./field";
+export { FIELD_MODULUS, fieldFromBytes, fieldFromBytes32, fieldFromHex, fieldToBytes, fieldToHex, toField, type Field } from "./field.js";
 export {
   MAX_LIMIT,
   NEVER_EXPIRES,
@@ -17,7 +17,7 @@ export {
   plainLeaf,
   poseidon2,
   type Leaf,
-} from "./hash";
+} from "./hash.js";
 export {
   dayFromIso,
   dayOf,
@@ -31,10 +31,10 @@ export {
   messageOf,
   scopeOf,
   type ScopePart,
-} from "./encode";
+} from "./encode.js";
 
 // The tree
-export { DEPTH, GroupTree, verifyPath, zeroHashes, type Depth, type MerklePath } from "./tree";
+export { DEPTH, GroupTree, verifyPath, zeroHashes, type Depth, type MerklePath } from "./tree.js";
 
 // Root documents and the log
 export {
@@ -48,7 +48,7 @@ export {
   treeFromRoot,
   type GroupRoot,
   type RootLogCheck,
-} from "./roots";
+} from "./roots.js";
 
 // The issuer
 export {
@@ -63,7 +63,7 @@ export {
   type GroupIssuerState,
   type LeafFields,
   type LeafJson,
-} from "./issuer";
+} from "./issuer.js";
 
 // Statements, proving and verifying
 export {
@@ -77,9 +77,9 @@ export {
   type Statement,
   type StatementJson,
   type Witness,
-} from "./statement";
-export { CIRCUIT_ID, loadArtifacts, vkHashOf, type CircuitArtifacts } from "./artifacts";
-export { bundledCrs, type Crs, type CrsSource } from "./crs";
+} from "./statement.js";
+export { CIRCUIT_ID, loadArtifacts, vkHashOf, type CircuitArtifacts } from "./artifacts.js";
+export { bundledCrs, type Crs, type CrsSource } from "./crs.js";
 export {
   MembershipError,
   MembershipProver,
@@ -90,9 +90,9 @@ export {
   type MembershipProof,
   type ProveProgress,
   type VerifyResult,
-} from "./prove";
-export { membershipInputs, type MembershipInputsOptions } from "./member";
+} from "./prove.js";
+export { membershipInputs, type MembershipInputsOptions } from "./member.js";
 
 // Acceptance and nullifiers
-export { acceptMembership, type AcceptPolicy, type AcceptReason, type Acceptance } from "./accept";
-export { NullifierBook, type NullifierBookState } from "./nullifiers";
+export { acceptMembership, type AcceptPolicy, type AcceptReason, type Acceptance } from "./accept.js";
+export { NullifierBook, type NullifierBookState } from "./nullifiers.js";

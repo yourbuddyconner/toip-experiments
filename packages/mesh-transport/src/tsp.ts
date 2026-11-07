@@ -5,7 +5,7 @@
  */
 import { ed25519 } from "@noble/curves/ed25519.js";
 import { cesr, decodeEnvelope, encodeEnvelope } from "@openvtc/vti-tsp-js";
-import { concat, equal } from "./bytes";
+import { concat, equal } from "./bytes.js";
 
 export interface TspParts {
   senderVid: string;

@@ -6,9 +6,9 @@
  * only after it has been processed, so nothing is lost if the device stops mid-way.
  */
 import { ed25519 } from "@noble/curves/ed25519.js";
-import { fromB64u, toB64u, utf8 } from "./encoding";
-import type { Identity } from "./identity";
-import type { Delivery, Transport } from "./transport";
+import { fromB64u, toB64u, utf8 } from "./encoding.js";
+import type { Identity } from "./identity.js";
+import type { Delivery, Transport } from "./transport.js";
 
 export type RelayStatus = "connecting" | "connected" | "offline";
 

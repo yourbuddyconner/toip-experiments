@@ -3,12 +3,12 @@
  * lose them to half-duplex, collisions (with a capture effect), loss models and injected faults,
  * and every link enforces its region's rules. With a VirtualScheduler it runs fast and repeats exactly.
  */
-import { AirtimeBudget, loraAirtimeMs, type AirtimePolicy, type LoRaSetting } from "./airtime";
-import { seeded } from "./bytes";
-import { LinkEvents, type Link, type LinkInfo, type LinkState, type ReceivedFrame } from "./link";
-import type { Scheduler } from "./scheduler";
+import { AirtimeBudget, loraAirtimeMs, type AirtimePolicy, type LoRaSetting } from "./airtime.js";
+import { seeded } from "./bytes.js";
+import { LinkEvents, type Link, type LinkInfo, type LinkState, type ReceivedFrame } from "./link.js";
+import type { Scheduler } from "./scheduler.js";
 
-export { VirtualScheduler } from "./scheduler";
+export { VirtualScheduler } from "./scheduler.js";
 
 /** Thrown when a link breaks its airtime rules. Tests assert it never is. */
 export class RegulatoryViolation extends Error {

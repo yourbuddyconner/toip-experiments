@@ -1,9 +1,9 @@
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { canonicalJson, verifyDocument, type Clock } from "@toip-tools/trust-core";
-import { groupFieldOf } from "./encode";
-import { fieldFromHex, fieldToHex } from "./field";
-import { GroupTree } from "./tree";
+import { groupFieldOf } from "./encode.js";
+import { fieldFromHex, fieldToHex } from "./field.js";
+import { GroupTree } from "./tree.js";
 
 export const ROOT_TYPE = "anon-membership/root";
 export const DAY_SECONDS = 86_400;

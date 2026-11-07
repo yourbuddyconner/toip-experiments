@@ -9,7 +9,7 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { hpke } from "@openvtc/vti-tsp-js";
 import { didKeyFromPublicKey } from "@openvtc/trust-tasks-proof";
 import { resolveDidKey } from "@toip-tools/trust-core";
-import { concat, h, utf8 } from "./bytes";
+import { concat, h, utf8 } from "./bytes.js";
 
 export interface PeerKeys {
   signingKey: Uint8Array;

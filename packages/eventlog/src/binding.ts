@@ -1,9 +1,9 @@
 /** DID bindings: a did:key and an AID, each committing to the other (trail design §5.5, §7.6). */
 import { canonicalJson, signDocument, verifyDocument, type Clock, type Identity } from "@toip-tools/trust-core";
-import { digest } from "./cesr";
-import { isDigestSeal, sealsOf, type KelResult } from "./kel";
-import type { Problem, Qb64, Seal } from "./types";
-import { problem } from "./types";
+import { digest } from "./cesr.js";
+import { isDigestSeal, sealsOf, type KelResult } from "./kel.js";
+import type { Problem, Qb64, Seal } from "./types.js";
+import { problem } from "./types.js";
 
 export interface DidBinding {
   type: "trail/did-binding";

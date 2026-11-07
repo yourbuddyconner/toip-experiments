@@ -1,4 +1,4 @@
-import { fieldToHex, type Field } from "./field";
+import { fieldToHex, type Field } from "./field.js";
 
 export interface NullifierBookState {
   v: 1;

@@ -3,9 +3,9 @@
  * `serveMandateTasks` mounts handlers on a trust-core Endpoint; they check what they can and call back.
  */
 import { ourSpec, verifyDocument, type Clock, type Endpoint, type StatusListDoc } from "@toip-tools/trust-core";
-import { defaultEngine, type MandateEngine } from "./engine";
-import { actionHash, jcsHash } from "./hash";
-import type { Action, Approval, Decision, Mandate, Reason, StatusResolver } from "./types";
+import { defaultEngine, type MandateEngine } from "./engine.js";
+import { actionHash, jcsHash } from "./hash.js";
+import type { Action, Approval, Decision, Mandate, Reason, StatusResolver } from "./types.js";
 
 export type SpecPolicy = ReturnType<typeof ourSpec>;
 

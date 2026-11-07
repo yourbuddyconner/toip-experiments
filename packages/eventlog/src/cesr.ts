@@ -4,9 +4,9 @@
  */
 import { blake3 } from "@noble/hashes/blake3.js";
 import { fromB64u, toB64u, utf8 } from "@toip-tools/trust-core";
-import type { IndexedSig, IndexedSigCode, KeyRefSig, Qb64 } from "./types";
+import type { IndexedSig, IndexedSigCode, KeyRefSig, Qb64 } from "./types.js";
 
-export type { Qb64 } from "./types";
+export type { Qb64 } from "./types.js";
 
 export const Code = {
   Ed25519: "D",

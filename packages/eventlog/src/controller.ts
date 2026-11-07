@@ -1,16 +1,16 @@
 /** The writing side: a controller's KEL and its trails (trail design §8, §9.3, §13.2). */
 import { utf8, type Clock, type Identity } from "@toip-tools/trust-core";
-import { bindingSeal, makeBinding, type DidBinding } from "./binding";
-import { nextKeyDigest } from "./cesr";
-import { WitnessError, withTimeout, type WitnessClient } from "./client";
-import { buildIcp, buildIxn, buildRot, KelProcessor, type KeyState } from "./kel";
-import { curveOf, keyQb64, signWith, verifyCouple, type ColdKeys, type SigOptions, type Signer } from "./keys";
-import { makeBody } from "./said";
-import { fromStored, receiptMessage, type LogStore, type StoredMessage } from "./store";
-import { attachmentsOf, fromStream, toStream } from "./stream";
-import { buildTcl, buildTen, buildTin, TrailProcessor } from "./trail";
-import { toStoredReceipt } from "./receipts";
-import type { Body, DuplicityEvidence, IndexedSig, IndexedSigCode, Qb64, Seal, SignedMessage } from "./types";
+import { bindingSeal, makeBinding, type DidBinding } from "./binding.js";
+import { nextKeyDigest } from "./cesr.js";
+import { WitnessError, withTimeout, type WitnessClient } from "./client.js";
+import { buildIcp, buildIxn, buildRot, KelProcessor, type KeyState } from "./kel.js";
+import { curveOf, keyQb64, signWith, verifyCouple, type ColdKeys, type SigOptions, type Signer } from "./keys.js";
+import { makeBody } from "./said.js";
+import { fromStored, receiptMessage, type LogStore, type StoredMessage } from "./store.js";
+import { attachmentsOf, fromStream, toStream } from "./stream.js";
+import { buildTcl, buildTen, buildTin, TrailProcessor } from "./trail.js";
+import { toStoredReceipt } from "./receipts.js";
+import type { Body, DuplicityEvidence, IndexedSig, IndexedSigCode, Qb64, Seal, SignedMessage } from "./types.js";
 
 export interface InceptOptions {
   /** Current keys. */

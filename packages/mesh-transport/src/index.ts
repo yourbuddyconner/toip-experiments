@@ -1,7 +1,7 @@
 // "@toip-tools/mesh-transport": runs in browsers and Node. Node-only adapters are under ./gwmp, ./node and ./detect.
-export { realScheduler, VirtualScheduler, type Scheduler } from "./scheduler";
-export type { Link, LinkInfo, LinkState, ReceivedFrame } from "./link";
-export { LinkEvents } from "./link";
+export { realScheduler, VirtualScheduler, type Scheduler } from "./scheduler.js";
+export type { Link, LinkInfo, LinkState, ReceivedFrame } from "./link.js";
+export { LinkEvents } from "./link.js";
 export {
   AirtimeBudget,
   loraAirtimeMs,
@@ -15,7 +15,7 @@ export {
   type ChannelPlan,
   type LoRaSetting,
   type TrafficClass,
-} from "./airtime";
+} from "./airtime.js";
 export {
   MeshTransport,
   memoryContacts,
@@ -29,11 +29,11 @@ export {
   type MeshOutboxStore,
   type MeshStats,
   type ViaArrival,
-} from "./mesh";
-export { ChallengeBeacon } from "./beacon";
-export { MeshGateway, memoryGatewayStore, type GatewayStore, type RelayLike } from "./gateway";
-export { exportBundle, openBundle, postBundle, type BundleItem } from "./bundle";
-export { joinTsp, splitTsp, tspSignatureValid, type TspParts } from "./tsp";
-export { decodePacket, encodePacket, packetId, custodyMessage, type Packet, type PacketKind } from "./packet";
-export { decodeFrame, encodeFrame, fragment, estimate, FRAME_HEADER, MAX_FRAGMENTS, type Frame } from "./frame";
-export { addressTag, ackMac, keyHint, pairKeys, receiptMac, receiptTag, sealSender, openSender, sealRoute, openRoute, vidForm, readVidForm } from "./keys";
+} from "./mesh.js";
+export { ChallengeBeacon } from "./beacon.js";
+export { MeshGateway, memoryGatewayStore, type GatewayStore, type RelayLike } from "./gateway.js";
+export { exportBundle, openBundle, postBundle, type BundleItem } from "./bundle.js";
+export { joinTsp, splitTsp, tspSignatureValid, type TspParts } from "./tsp.js";
+export { decodePacket, encodePacket, packetId, custodyMessage, type Packet, type PacketKind } from "./packet.js";
+export { decodeFrame, encodeFrame, fragment, estimate, FRAME_HEADER, MAX_FRAGMENTS, type Frame } from "./frame.js";
+export { addressTag, ackMac, keyHint, pairKeys, receiptMac, receiptTag, sealSender, openSender, sealRoute, openRoute, vidForm, readVidForm } from "./keys.js";

@@ -3,9 +3,9 @@
  * Serialization matches Python's json.dumps(sad, separators=(",", ":"), ensure_ascii=False).
  */
 import { canonicalJson, utf8 } from "@toip-tools/trust-core";
-import { digest, encode, isQb64 } from "./cesr";
-import type { Body, MessageType, Problem, Qb64 } from "./types";
-import { problem } from "./types";
+import { digest, encode, isQb64 } from "./cesr.js";
+import type { Body, MessageType, Problem, Qb64 } from "./types.js";
+import { problem } from "./types.js";
 
 export type Protocol = "KERI" | "ZKTR";
 

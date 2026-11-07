@@ -1,7 +1,7 @@
 import { fromB64u } from "@toip-tools/trust-core";
 import bundled from "../artifacts/crs.json" with { type: "json" };
 
-export { G2_POINT_HEX } from "./g2";
+export { G2_POINT_HEX } from "./g2.js";
 
 /** Setup data for proving and verifying: uncompressed BN254 G1 points (64 bytes each) and the G2 point. */
 export interface Crs {

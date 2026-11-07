@@ -1,6 +1,6 @@
 /** Spend state, kept by the delegate (the guard): what each mandate has spent, and which approvals were used. */
-import { isUnits } from "./shape";
-import { PERIODS, type Mandate, type Period, type Reason, type Units } from "./types";
+import { isUnits } from "./shape.js";
+import { PERIODS, type Mandate, type Period, type Reason, type Units } from "./types.js";
 
 const DAY = 86_400_000;
 const WINDOW: Record<Period, number> = { P1D: DAY, P7D: 7 * DAY, P30D: 30 * DAY, total: Infinity };

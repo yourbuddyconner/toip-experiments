@@ -1,13 +1,13 @@
 /** Making and reading witness receipts and endorsements. */
 import { ed25519 } from "@noble/curves/ed25519.js";
 import { utf8, type Identity } from "@toip-tools/trust-core";
-import { nonTransferableAid } from "./cesr";
-import { buildRct } from "./kel";
-import { signWith, type Signer } from "./keys";
-import { buildTrc } from "./trail";
-import { attachmentsOf } from "./stream";
-import type { StoredReceipt } from "./store";
-import type { SignedMessage } from "./types";
+import { nonTransferableAid } from "./cesr.js";
+import { buildRct } from "./kel.js";
+import { signWith, type Signer } from "./keys.js";
+import { buildTrc } from "./trail.js";
+import { attachmentsOf } from "./stream.js";
+import type { StoredReceipt } from "./store.js";
+import type { SignedMessage } from "./types.js";
 
 /** A non-transferable (B) signer's AID. Witnesses and did:key endorsers have one. */
 export function signerAid(s: Signer): string {

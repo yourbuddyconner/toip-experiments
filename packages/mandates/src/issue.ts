@@ -1,11 +1,11 @@
 /** Issuing a root mandate, and delegating a narrower one (agents design §7). */
 import { signDocument, type Clock, type Identity } from "@toip-tools/trust-core";
-import { newId } from "./approval";
-import { narrows } from "./engine";
-import { mandateHash } from "./hash";
-import { getProfile } from "./profiles";
-import { checkMandate, checkRoot } from "./shape";
-import type { Constraint, Mandate, MandateSubject, Reason, StatusEntry } from "./types";
+import { newId } from "./approval.js";
+import { narrows } from "./engine.js";
+import { mandateHash } from "./hash.js";
+import { getProfile } from "./profiles.js";
+import { checkMandate, checkRoot } from "./shape.js";
+import type { Constraint, Mandate, MandateSubject, Reason, StatusEntry } from "./types.js";
 
 function build(issuer: Identity, clock: Clock, subject: MandateSubject, validUntil: string, status: StatusEntry): Mandate {
   const s: MandateSubject = { ...subject };

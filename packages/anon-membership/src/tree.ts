@@ -1,5 +1,5 @@
-import { fieldFromBytes32, fieldToBytes, type Field } from "./field";
-import { nodeHash } from "./hash";
+import { fieldFromBytes32, fieldToBytes, type Field } from "./field.js";
+import { nodeHash } from "./hash.js";
 
 /** The compiled circuit's depth. GroupTree takes others for tests and future circuits. */
 export const DEPTH = 20;

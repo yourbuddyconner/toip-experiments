@@ -5,8 +5,8 @@
 import { chacha20poly1305 } from "@noble/ciphers/chacha.js";
 import { randomBytes } from "@noble/hashes/utils.js";
 import { openBase, sealBase } from "@openvtc/vti-tsp-js/hpke";
-import { fromB64u, fromUtf8, toB64u, utf8 } from "./encoding";
-import type { Identity } from "./identity";
+import { fromB64u, fromUtf8, toB64u, utf8 } from "./encoding.js";
+import type { Identity } from "./identity.js";
 
 export interface SealedText {
   nonce: string;

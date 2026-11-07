@@ -4,9 +4,9 @@
  * `+EVT:RXP2P:<rssi>:<snr>:<hex>`. On a split plan (us915-b) the module retunes once per burst.
  * Runs wherever a SerialPortLike does (Node or Web Serial).
  */
-import { loraAirtimeMs, type ChannelPlan, type LoRaSetting } from "./airtime";
-import { LinkEvents, type Link, type LinkInfo, type LinkState, type ReceivedFrame } from "./link";
-import type { SerialPortLike } from "./serial";
+import { loraAirtimeMs, type ChannelPlan, type LoRaSetting } from "./airtime.js";
+import { LinkEvents, type Link, type LinkInfo, type LinkState, type ReceivedFrame } from "./link.js";
+import type { SerialPortLike } from "./serial.js";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const toHex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("").toUpperCase();

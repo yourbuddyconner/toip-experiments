@@ -3,14 +3,14 @@
  * Supported: non-delegated self-addressing AIDs, Ed25519 and P-256 keys, integer thresholds, traits [] or ["DND"].
  */
 import { utf8 } from "@toip-tools/trust-core";
-import { DUAL_CODES, decode, isQb64, nextKeyDigest } from "./cesr";
-import { verifyCouple, verifyKeySig, type SigOptions } from "./keys";
-import { buildMessage, hexNumber } from "./said";
-import type { LogStore } from "./store";
-import { fromStream } from "./stream";
+import { DUAL_CODES, decode, isQb64, nextKeyDigest } from "./cesr.js";
+import { verifyCouple, verifyKeySig, type SigOptions } from "./keys.js";
+import { buildMessage, hexNumber } from "./said.js";
+import type { LogStore } from "./store.js";
+import { fromStream } from "./stream.js";
 import type { Clock } from "@toip-tools/trust-core";
-import type { DuplicityEvidence, IndexedSig, Problem, Qb64, Seal, SignedMessage } from "./types";
-import { problem } from "./types";
+import type { DuplicityEvidence, IndexedSig, Problem, Qb64, Seal, SignedMessage } from "./types.js";
+import { problem } from "./types.js";
 
 export const MAX_KEYS = 64;
 const KEY_CODES = ["D", "1AAJ"] as const;

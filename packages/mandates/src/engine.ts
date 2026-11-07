@@ -4,11 +4,11 @@
  * mandates/check/1 decides narrowing, the action against every link, approvals, requirements and the outcome.
  */
 import { Policies, isRevokedIn, verifyDocument, type Clock, type Credential, type StatusListDoc } from "@toip-tools/trust-core";
-import { verifyApproval } from "./approval";
-import { actionHash, mandateHash, sha256Tag } from "./hash";
-import { checkAction, checkMandate, checkRoot, MAX_LINKS } from "./shape";
-import { getProfile } from "./profiles";
-import type { Action, Approval, Constraint, Decision, Mandate, Outcome, Period, Presentation, Reason, Requirements, SpendStatement, StatusResolver, Units } from "./types";
+import { verifyApproval } from "./approval.js";
+import { actionHash, mandateHash, sha256Tag } from "./hash.js";
+import { checkAction, checkMandate, checkRoot, MAX_LINKS } from "./shape.js";
+import { getProfile } from "./profiles.js";
+import type { Action, Approval, Constraint, Decision, Mandate, Outcome, Period, Presentation, Reason, Requirements, SpendStatement, StatusResolver, Units } from "./types.js";
 
 export const POLICY_ID = "mandates/check/1";
 const DECISION = "mandates/check/decision";
