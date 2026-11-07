@@ -34,7 +34,7 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "toip-relay": "./dist/bin.js"
+    "toip-relay": "dist/bin.js"
   },
   "files": [
     "dist",
