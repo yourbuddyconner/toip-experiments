@@ -7,6 +7,7 @@
     "packages/cose",
     "packages/web-vault",
     "packages/relay",
+    "packages/mandates",
     "projects/shared-todo",
     "projects/settle"
   ],
