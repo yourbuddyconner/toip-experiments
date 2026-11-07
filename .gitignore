@@ -4,3 +4,4 @@ policies/bundle.tar.gz
 *.tsbuildinfo
 .data
 *.db
+.claude/worktrees
