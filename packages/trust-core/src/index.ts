@@ -10,3 +10,5 @@ export * from "./policy";
 export * from "./encoding";
 export * from "./knowledge";
 export * from "./relayTransport";
+export * from "./compact";
+export * from "./replayGuard";

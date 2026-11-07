@@ -20,7 +20,8 @@
     "@open-policy-agent/opa-wasm": "1.10.0",
     "@openvtc/trust-tasks": "0.28.17",
     "@openvtc/trust-tasks-proof": "0.1.6",
-    "@openvtc/trust-tasks-tsp": "0.1.2"
+    "@openvtc/trust-tasks-tsp": "0.1.2",
+    "@openvtc/vti-tsp-js": "0.2.0"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
