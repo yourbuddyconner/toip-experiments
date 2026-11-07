@@ -4,12 +4,19 @@
   "description": "Browser storage for identity seeds and account data, encrypted with a passkey or passphrase.",
   "keywords": [
     "toip",
-    "vault",
-    "indexeddb",
-    "webauthn",
+    "trust-over-ip",
+    "decentralized-identity",
+    "ssi",
+    "typescript",
+    "webcrypto",
+    "key-storage",
+    "wallet",
     "passkey",
+    "webauthn",
     "prf",
-    "browser"
+    "indexeddb",
+    "browser",
+    "vault"
   ],
   "homepage": "https://toip.tools/toolkit/web-vault/",
   "bugs": {

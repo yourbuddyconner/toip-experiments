@@ -1,15 +1,23 @@
 {
   "name": "@toip-tools/eventlog",
   "version": "0.1.0",
-  "description": "KERI key histories and witnessed audit trails that make tampering detectable.",
+  "description": "KERI key event logs and witnessed audit trails in TypeScript: rotate keys with pre-rotation and make tampering, forks and stolen keys detectable.",
   "keywords": [
     "toip",
+    "trust-over-ip",
+    "decentralized-identity",
+    "ssi",
+    "typescript",
     "keri",
+    "key-event-receipt-infrastructure",
     "kel",
     "cesr",
     "witness",
-    "audit-log",
-    "did-keri"
+    "audit-trail",
+    "tamper-evident",
+    "transparency-log",
+    "did-keri",
+    "audit-log"
   ],
   "homepage": "https://toip.tools/toolkit/eventlog/",
   "bugs": {

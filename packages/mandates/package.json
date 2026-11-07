@@ -1,15 +1,23 @@
 {
   "name": "@toip-tools/mandates",
   "version": "0.1.0",
-  "description": "Revocable delegation with spending limits, policy checks, and approvals.",
+  "description": "Delegation credentials for people and AI agents: bounded, revocable authority with spending limits, chains that can only narrow, policy checks and human approvals.",
   "keywords": [
     "toip",
-    "mandates",
+    "trust-over-ip",
+    "decentralized-identity",
+    "ssi",
+    "typescript",
+    "ai-agents",
+    "agent-authorization",
     "delegation",
+    "delegated-authority",
+    "spending-limits",
     "authorization",
     "verifiable-credentials",
+    "rego",
     "opa",
-    "rego"
+    "mandates"
   ],
   "homepage": "https://toip.tools/toolkit/mandates/",
   "bugs": {

@@ -1,13 +1,20 @@
 {
   "name": "@toip-tools/relay",
   "version": "0.1.0",
-  "description": "A WebSocket mailbox that stores and delivers encrypted TSP messages.",
+  "description": "A WebSocket mailbox for TSP (Trust Spanning Protocol) messages: stores and delivers end-to-end encrypted messages between DIDs it can't read.",
   "keywords": [
     "toip",
+    "trust-over-ip",
+    "decentralized-identity",
+    "ssi",
+    "typescript",
+    "trust-spanning-protocol",
+    "message-relay",
+    "store-and-forward",
+    "websocket",
     "tsp",
     "relay",
     "mailbox",
-    "websocket",
     "did"
   ],
   "homepage": "https://toip.tools/toolkit/relay/",

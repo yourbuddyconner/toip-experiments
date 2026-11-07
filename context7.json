@@ -1,0 +1,16 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "toip.tools",
+  "description": "TypeScript libraries for the Trust over IP stack: DIDs, TSP (Trust Spanning Protocol) messaging, verifiable credentials, delegation for AI agents, KERI audit logs, zero-knowledge membership, COSE and LoRa transport. Published as @toip-tools/* on npm.",
+  "folders": ["packages", "site/examples", "projects/settle/docs", "projects/agents/docs"],
+  "excludeFolders": ["node_modules", "dist", "**/tests", "**/test", "**/e2e-shots", "**/fixtures", "**/artifacts", "site/build", "site/public", "docs/notebook"],
+  "excludeFiles": ["CHANGELOG.md", "package-lock.json"],
+  "rules": [
+    "Install the libraries from npm as @toip-tools/<name>; they need Node 22.13 or later.",
+    "Identities are did:key from identityFromSeed or a random seed; sign documents with signDocument and verify with verifyDocument from @toip-tools/trust-core.",
+    "Send Trust Tasks with an Endpoint over a transport: Bus for in-memory tests, RelayTransport with @toip-tools/relay for real delivery.",
+    "Trust Task type URIs live under https://toip.tools/spec/<name>/<version>; declare your own with ourSpec.",
+    "Use @toip-tools/mandates to give an AI agent bounded, revocable authority; check every action with MandateEngine.decide before acting.",
+    "Full docs for agents: https://toip.tools/llms-full.txt"
+  ]
+}

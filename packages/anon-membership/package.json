@@ -1,16 +1,23 @@
 {
   "name": "@toip-tools/anon-membership",
   "version": "0.1.0",
-  "description": "Prove group membership and attribute requirements without revealing which member you are.",
+  "description": "Zero-knowledge group membership for TypeScript (Noir): prove you belong to a group and meet its rules without revealing which member you are, in Node or the browser.",
   "keywords": [
     "toip",
+    "trust-over-ip",
+    "decentralized-identity",
+    "ssi",
+    "typescript",
     "zero-knowledge",
-    "zk",
+    "zero-knowledge-proof",
+    "zkp",
+    "anonymous-credentials",
     "noir",
     "ultrahonk",
     "membership",
     "nullifier",
-    "privacy"
+    "privacy",
+    "zk"
   ],
   "homepage": "https://toip.tools/toolkit/anon-membership/",
   "bugs": {

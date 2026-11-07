@@ -1,15 +1,22 @@
 {
   "name": "@toip-tools/mesh-transport",
   "version": "0.1.0",
-  "description": "Deliver TSP messages over LoRa radio or portable files when the internet is unavailable.",
+  "description": "Trust Tasks and TSP (Trust Spanning Protocol) messages over LoRa radio or carried files, for when the internet isn't there.",
   "keywords": [
     "toip",
+    "trust-over-ip",
+    "decentralized-identity",
+    "ssi",
+    "typescript",
+    "trust-spanning-protocol",
     "tsp",
     "lora",
+    "lorawan",
     "mesh",
     "offline",
+    "off-grid",
     "delay-tolerant",
-    "lorawan"
+    "sneakernet"
   ],
   "homepage": "https://toip.tools/toolkit/mesh-transport/",
   "bugs": {
