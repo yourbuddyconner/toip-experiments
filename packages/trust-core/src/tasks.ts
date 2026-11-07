@@ -1,5 +1,6 @@
 import {
   InMemoryReplayGuard,
+  type ReplayGuard,
   TRUST_TASK_ERROR_TYPE_URI,
   rejectWith,
   respondWith,
@@ -8,12 +9,14 @@ import {
   type SpecPolicy,
   type TrustTaskDocument,
 } from "@openvtc/trust-tasks/runtime";
-import { TspConsumer, advertisedSender, newUrnUuid, packTrustTask, unpackTrustTask } from "@openvtc/trust-tasks-tsp";
+import { TspConsumer, TspEnvelopeError, TspTransport, advertisedSender, newUrnUuid, packTrustTask, type Unpacked } from "@openvtc/trust-tasks-tsp";
+import { pack as packTsp, unpack as unpackTsp, type UnpackKeys } from "@openvtc/vti-tsp-js";
 import { DataIntegrityProofVerifier, signTrustTask } from "@openvtc/trust-tasks-proof";
 import type { WireRecord } from "./bus";
 import type { Clock } from "./clock";
 import type { Delivery, Transport } from "./transport";
 import { resolveDidKey, type Identity } from "./identity";
+import { BodyError, decodeBody, encodeBody, type BodyCodec } from "./compact";
 
 /** A handler returns this to refuse a request. It becomes a signed trust-task-error. */
 export class Refusal {
@@ -85,6 +88,7 @@ export class Endpoint {
   private readonly verifier: DataIntegrityProofVerifier;
   private readonly handlers = new Map<string, { spec: SpecPolicy; handler: Handler<any, any> }>();
   private readonly pending = new Map<string, Pending>();
+  private readonly bodyCodecFor?: (to: string) => BodyCodec | undefined;
 
   constructor(opts: {
     identity: Identity;
@@ -93,6 +97,10 @@ export class Endpoint {
     timeoutMs?: number;
     freshness?: FreshnessPolicy;
     onTraffic?: (t: Traffic) => void;
+    /** The body format to seal for `to`. Undefined (the default) means the standard JSON body. Every Endpoint reads both. */
+    bodyCodecFor?: (to: string) => BodyCodec | undefined;
+    /** The duplicate-execution record. Defaults to one in memory; a PersistentReplayGuard keeps it across restarts. */
+    replayGuard?: ReplayGuard;
   }) {
     this.identity = opts.identity;
     this.vid = opts.identity.did;
@@ -100,13 +108,14 @@ export class Endpoint {
     this.onTraffic = opts.onTraffic;
     this.clock = opts.clock;
     this.timeoutMs = opts.timeoutMs ?? 3000;
+    this.bodyCodecFor = opts.bodyCodecFor;
     this.verifier = new DataIntegrityProofVerifier({ now: () => this.clock.now() });
     this.consumer = new TspConsumer({
       recipientVid: this.vid,
       decryptionKey: this.identity.encryptionSecret,
       signingKey: this.identity.signingSecret,
       resolveSender: (vid) => resolveDidKey(vid),
-      guard: new InMemoryReplayGuard(),
+      guard: opts.replayGuard ?? new InMemoryReplayGuard(),
       proofVerifier: this.verifier,
       now: () => this.clock.now(),
       ...(opts.freshness ? { freshness: opts.freshness } : {}),
@@ -136,13 +145,14 @@ export class Endpoint {
     return delivery;
   }
 
-  async request<P, R>(to: string, spec: SpecPolicy, payload: P): Promise<TrustTaskDocument<R>> {
+  /** Sends a request and waits for its response. `opts.timeoutMs` overrides the endpoint's default for this call. */
+  async request<P, R>(to: string, spec: SpecPolicy, payload: P, opts?: { timeoutMs?: number }): Promise<TrustTaskDocument<R>> {
     const { doc, wire } = await this.build(to, spec, payload);
     const answer = new Promise<TrustTaskDocument<unknown>>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(doc.id);
         reject(new TaskError("timeout", `no reply to ${spec.typeUri}`));
-      }, this.timeoutMs);
+      }, opts?.timeoutMs ?? this.timeoutMs);
       this.pending.set(doc.id, { to, resolve, reject, timer });
     });
     if ((await this.post(to, wire, doc)) === "undelivered") {
@@ -175,7 +185,17 @@ export class Endpoint {
     return { doc: signed, wire };
   }
 
-  private pack(doc: TrustTaskDocument<unknown>, to: string): Promise<Uint8Array> {
+  private async pack(doc: TrustTaskDocument<unknown>, to: string): Promise<Uint8Array> {
+    const codec = this.bodyCodecFor?.(to);
+    if (codec) {
+      const body = encodeBody(doc, { sender: this.vid, receiver: to }, codec);
+      const keys = {
+        senderSigningKey: this.identity.signingSecret,
+        senderEncryptionKey: this.identity.encryptionSecret,
+        receiverEncryptionKey: this.recipientKey(to),
+      };
+      return (await packTsp(body, this.vid, to, keys)).bytes;
+    }
     return packTrustTask(doc as Record<string, unknown>, {
       senderVid: this.vid,
       receiverVid: to,
@@ -209,13 +229,10 @@ export class Endpoint {
     try {
       if (!sender) throw new Error("no sender");
       const keys = resolveDidKey(sender);
-      unpacked = await unpackTrustTask(wire, {
-        recipientVid: this.vid,
-        keys: {
-          receiverDecryptionKey: this.identity.encryptionSecret,
-          senderEncryptionKey: keys.encryptionKey,
-          senderSigningKey: keys.signingKey,
-        },
+      unpacked = await this.open(wire, {
+        receiverDecryptionKey: this.identity.encryptionSecret,
+        senderEncryptionKey: keys.encryptionKey,
+        senderSigningKey: keys.signingKey,
       });
     } catch (e) {
       if (rec) {
@@ -252,8 +269,30 @@ export class Endpoint {
     });
     if (received.reply !== undefined) {
       const reply = JSON.parse(new TextDecoder().decode(received.reply)) as TrustTaskDocument<unknown>;
-      await this.post(sender, await this.consumer.packReply(received), reply);
+      const replyWire = this.bodyCodecFor?.(sender) ? await this.pack(reply, sender) : await this.consumer.packReply(received);
+      await this.post(sender, replyWire, reply);
     }
+  }
+
+  /** unpackTrustTask, except that the body may be JSON or CTT1 (chosen by its first byte). The same failures. */
+  private async open(wire: Uint8Array, keys: UnpackKeys): Promise<Unpacked<unknown>> {
+    let message;
+    try {
+      message = await unpackTsp(wire, keys);
+    } catch (cause) {
+      throw new TspEnvelopeError("notForThisReceiver", String(cause), undefined, { cause });
+    }
+    if (message.messageType !== "direct") {
+      throw new TspEnvelopeError("notFinalRecipient", `message is ${message.messageType}, not a Direct Trust Task envelope`, message.sender);
+    }
+    let document: TrustTaskDocument<unknown>;
+    try {
+      document = decodeBody(message.payload, { sender: message.sender, receiver: message.receiver });
+    } catch (e) {
+      if (e instanceof BodyError) throw new TspEnvelopeError(e.failure, e.message, message.sender, { cause: e });
+      throw e;
+    }
+    return { document, transport: new TspTransport(message.receiver || this.vid, message.sender) };
   }
 
   /** Lets the in-memory Bus tell its listeners that a record it holds was opened or refused. */
