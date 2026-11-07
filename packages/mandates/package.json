@@ -13,11 +13,11 @@
   ],
   "homepage": "https://toip.tools/toolkit/mandates/",
   "bugs": {
-    "url": "https://github.com/yourbuddyconner/toip-experiments/issues"
+    "url": "https://github.com/yourbuddyconner/toip-tools/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourbuddyconner/toip-experiments.git",
+    "url": "git+https://github.com/yourbuddyconner/toip-tools.git",
     "directory": "packages/mandates"
   },
   "license": "Apache-2.0",

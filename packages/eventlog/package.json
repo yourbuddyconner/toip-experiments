@@ -13,11 +13,11 @@
   ],
   "homepage": "https://toip.tools/toolkit/eventlog/",
   "bugs": {
-    "url": "https://github.com/yourbuddyconner/toip-experiments/issues"
+    "url": "https://github.com/yourbuddyconner/toip-tools/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourbuddyconner/toip-experiments.git",
+    "url": "git+https://github.com/yourbuddyconner/toip-tools.git",
     "directory": "packages/eventlog"
   },
   "license": "Apache-2.0",
