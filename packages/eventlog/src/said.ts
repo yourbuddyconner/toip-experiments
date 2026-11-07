@@ -149,7 +149,9 @@ export function parseMessage(raw: string): { ok: true; msg: ParsedMessage } | { 
     return { ok: false, problem: problem("badFields", `${type} fields must be ${want.join(",")}`, logId, s) };
   if (serialize(body) !== raw) return { ok: false, problem: problem("badFields", "raw bytes are not canonical", logId, s) };
   if (s === undefined) return { ok: false, problem: problem("badFields", "s must be lowercase hex", logId) };
-  const saidFields = SAID_FIELDS[type];
+  let saidFields = SAID_FIELDS[type];
+  // a basic-prefix inception (i is a key, not a SAID) has only d dummied; it is parsed so it can be rejected as unsupported
+  if (type === "icp" && typeof body.i === "string" && body.i.length > 0 && body.i[0] !== "E") saidFields = ["d"];
   if (saidFields.length) {
     const copy: Record<string, unknown> = { ...body };
     for (const f of saidFields) copy[f] = DUMMY;

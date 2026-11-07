@@ -178,7 +178,16 @@ function qbList(v: unknown, codes: readonly string[], label: string, logId: Qb64
   if (v.length > MAX_KEYS) return problem("unsupported", `more than ${MAX_KEYS} ${label}`, logId, s);
   for (const x of v) {
     if (typeof x !== "string") return problem("badFields", `${label} must hold strings`, logId, s);
-    if (!isQb64(x)) return problem("badFields", `${label} holds a bad primitive`, logId, s);
+    if (!isQb64(x)) {
+      let why = "";
+      try {
+        decode(x);
+      } catch (e) {
+        why = e instanceof Error ? e.message : "";
+      }
+      if (why.startsWith("unsupported")) return problem("unsupported", `unsupported code in ${label}: ${x.slice(0, 4)}`, logId, s);
+      return problem("badFields", `${label} holds a bad primitive`, logId, s);
+    }
     if (!isQb64(x, codes)) return problem("unsupported", `unsupported code in ${label}: ${x.slice(0, 4)}`, logId, s);
   }
   if (new Set(v).size !== v.length) return problem("badFields", `${label} has duplicates`, logId, s);
