@@ -25,6 +25,16 @@ import { CaptureGateway, type HeardFrame } from "../src/sensors/gateway";
 import { SensorNode, simulatedChannels } from "../src/sensors/node";
 
 const ID = "did:keri:ESensorRiverside4";
+/** xorshift, so a simulation repeats exactly. */
+const seededRandom = (seed: number) => {
+  let s = seed >>> 0 || 1;
+  return () => {
+    s ^= s << 13;
+    s ^= s >>> 17;
+    s ^= s << 5;
+    return (s >>> 0) / 2 ** 32;
+  };
+};
 const signerFor = (label: string) => seedSigner(seedFrom(label), utf8(label));
 
 function sensor(label = "riverside-4", id = ID) {
@@ -216,7 +226,7 @@ describe("readings over the simulated LoRa link to the gateway", () => {
       },
       onFrame: (h) => heard.push(h),
     });
-    const node = new SensorNode(s.chain, { link: sLink, scheduler: sched, channels: simulatedChannels(3), intervalMs: 60_000, sealEvery: 10 });
+    const node = new SensorNode(s.chain, { link: sLink, scheduler: sched, channels: simulatedChannels(3), intervalMs: 60_000, sealEvery: 10, random: seededRandom(11) });
     await gw.start();
     await node.start();
     if (opts.evil) gw.evil = true;

@@ -54,6 +54,8 @@ export class SensorNode {
   private off?: () => void;
   private beacon?: { round: number; prefix: Uint8Array };
   private sinceSeal = 0;
+  private stopped = false;
+  private readonly timers = new Set<unknown>();
   stats = { readings: 0, seals: 0, backfilled: 0, beaconsHeard: 0 };
 
   constructor(
@@ -69,6 +71,8 @@ export class SensorNode {
       clockSkewMs?: number;
       /** When the first reading is taken; stagger sensors so they don't talk over each other. */
       startDelayMs?: number;
+      /** Where the seal repeat's random delay comes from; seed it in simulations. Default Math.random. */
+      random?: () => number;
       /** Called after each change, so the caller can persist the chain. */
       onChange?: (chain: ReadingChain) => void;
       log?: (line: string) => void;
@@ -82,6 +86,7 @@ export class SensorNode {
   }
 
   async start(): Promise<void> {
+    this.stopped = false;
     await this.o.link.open();
     this.off = this.o.link.onFrame((f) => this.heard(f.bytes));
     const tick = () => {
@@ -91,12 +96,25 @@ export class SensorNode {
     this.timer = this.o.scheduler.setTimeout(tick, this.o.startDelayMs ?? Math.min(1000, this.o.intervalMs));
   }
 
+  /** Stops taking readings and cancels every pending send (seal repeats, backfill answers). */
   stop(): void {
+    this.stopped = true;
     this.off?.();
     if (this.timer !== undefined) this.o.scheduler.clearTimeout(this.timer);
+    for (const t of this.timers) this.o.scheduler.clearTimeout(t);
+    this.timers.clear();
+  }
+
+  private later(fn: () => void, ms: number): void {
+    const h = this.o.scheduler.setTimeout(() => {
+      this.timers.delete(h);
+      if (!this.stopped) fn();
+    }, ms);
+    this.timers.add(h);
   }
 
   async takeReading(): Promise<void> {
+    if (this.stopped) return;
     const now = this.o.scheduler.now();
     const t = Math.floor((now + (this.o.clockSkewMs ?? 0)) / 1000);
     const tag = this.beacon ? beaconTag(this.beacon.round, this.beacon.prefix) : undefined;
@@ -109,6 +127,7 @@ export class SensorNode {
   }
 
   async sealNow(): Promise<void> {
+    if (this.stopped) return; // the next run seals these readings: firstUnsealed is saved
     const seal = await this.chain.seal(this.beacon);
     if (!seal) return;
     this.sinceSeal = 0;
@@ -117,7 +136,7 @@ export class SensorNode {
     await this.queue.send(seal);
     // a lost seal leaves a whole batch pending, so send it again a little later, at a random moment (a
     // repeat is a duplicate, which verifiers ignore)
-    this.o.scheduler.setTimeout(() => void this.queue.send(seal), Math.round(this.o.intervalMs * (0.3 + 0.4 * Math.random())));
+    this.later(() => void this.queue.send(seal), Math.round(this.o.intervalMs * (0.3 + 0.4 * (this.o.random ?? Math.random)())));
   }
 
   private heard(bytes: Uint8Array): void {
@@ -135,7 +154,7 @@ export class SensorNode {
       this.stats.backfilled += frames.length;
       this.o.log?.(`backfill ${f.fromSeq}–${f.toSeq}: resending ${frames.length} frames`);
       // wait for the gateway to finish sending its requests: it can't hear while it transmits
-      this.o.scheduler.setTimeout(() => {
+      this.later(() => {
         for (const fr of frames) void this.queue.send(fr);
       }, BACKFILL_HOLDOFF_MS);
     }

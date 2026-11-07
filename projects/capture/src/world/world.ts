@@ -57,6 +57,9 @@ export interface WorldOptions {
   sensorIntervalMs?: number;
   sealEvery?: number;
   beaconEveryMs?: number;
+  /** Simulated frame collisions between sensors (default true). */
+  collisions?: boolean;
+  radioSeed?: number;
   log?: (line: string) => void;
 }
 
@@ -274,7 +277,8 @@ export async function startWorld(opts: WorldOptions): Promise<World> {
 
   // ---------------------------------------------------------------- the radio: medium, gateway, sensors
   const sched = realScheduler;
-  const medium = new SimMedium({ scheduler: sched, seed: Date.now() & 0xffff });
+  // collisions: two nodes that transmit at once lose the weaker frame, as on a real channel. Tests turn them off, so what they check doesn't depend on timing luck.
+  const medium = new SimMedium({ scheduler: sched, seed: opts.radioSeed ?? Date.now() & 0xffff, captureDb: opts.collisions === false ? -1e9 : 6 });
   const radio = { setting: plans["us915-a"].tx, mtu: 250, budget: regions.us915 };
   const gwSecret = seed(secrets.gateway);
   const gatewayId = `gateway:${hex(sha256(ed25519.getPublicKey(gwSecret))).slice(0, 12)}`;

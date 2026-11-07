@@ -14,6 +14,7 @@ import {
   verifyAsset,
   verifySensorFeed,
   withoutStore,
+  type SensorCheck,
   type TrustEntry,
 } from "../src/core";
 import { openSensor, type Enrollment } from "../src/sensors/device";
@@ -28,9 +29,30 @@ let config: { owner: { did: string; name: string }; maker: { did: string }; gate
 let trust: TrustEntry[];
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** Polls until `ok` holds, or fails after `ms` with what it was waiting for. Real time on a loaded machine varies; the outcome mustn't. */
+async function waitFor<T>(what: string, get: () => Promise<T>, ok: (v: T) => boolean, ms = 45_000): Promise<T> {
+  const end = Date.now() + ms;
+  let last: T | undefined;
+  for (;;) {
+    last = await get();
+    if (ok(last)) return last;
+    if (Date.now() > end) throw new Error(`timed out after ${ms / 1000} s waiting for ${what}`);
+    await sleep(750);
+  }
+}
+
+const post = async (path: string, body: unknown) => (await fetch(`${world.url}${path}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) })).json();
+
+async function feed(): Promise<SensorCheck[]> {
+  const s = await (await fetch(`${world.url}/api/sensors`)).json();
+  const f = await (await fetch(`${world.url}/api/sensors/frames`)).json();
+  return verifySensorFeed({ sensors: s.sensors, frames: f.frames, rounds: f.rounds, gateway: s.gateway }, { chains: [chainFromJson(config.drand.chain)], keyLog: httpFetcher(world.url).keyLog, trust, now: Date.now() });
+}
+
 beforeAll(async () => {
   dir = mkdtempSync(join(tmpdir(), "capture-world-"));
-  world = await startWorld({ port: 0, dataDir: dir, drand: "dev", web: "none", sensorIntervalMs: 1000, sealEvery: 3, beaconEveryMs: 1500 });
+  // no collisions between the sensors, and a fixed loss seed: what's lost is decided by the test, not by timing
+  world = await startWorld({ port: 0, dataDir: dir, drand: "dev", web: "none", sensorIntervalMs: 1000, sealEvery: 3, beaconEveryMs: 1500, collisions: false, radioSeed: 1 });
   config = await (await fetch(`${world.url}/api/config`)).json();
   trust = [
     { did: config.owner.did, name: config.owner.name, trustedFor: ["owner", "editor", "installer"] },
@@ -77,43 +99,38 @@ describe("the world, over HTTP", () => {
     const r3 = await verifyAsset(embedStore(file, shot.store), null, { ...ctx, now: Date.now() });
     expect(r3.verdict).toBe("verified");
     expect(codes(r3, "ok")).toContain("key.retiredAfter");
-  });
+  }, 120_000);
 
-  it("built-in sensors stream readings over the simulated radio; the dashboard's checks verify them; loss, evil and backfill work", async () => {
-    await sleep(6000);
-    const feed = async () => {
-      const s = await (await fetch(`${world.url}/api/sensors`)).json();
-      const f = await (await fetch(`${world.url}/api/sensors/frames`)).json();
-      return verifySensorFeed({ sensors: s.sensors, frames: f.frames, rounds: f.rounds, gateway: s.gateway }, { chains: [chainFromJson(config.drand.chain)], keyLog: httpFetcher(world.url).keyLog, trust, now: Date.now() });
-    };
-    const checks = await feed();
+  it("built-in sensors stream readings over the simulated radio; the dashboard's checks verify them; a dishonest gateway is caught", async () => {
+    const verified = (c: SensorCheck) => c.readings.readings.filter((x) => x.status === "verified");
+    const rooftopProven = (cs: SensorCheck[]) => verified(cs.find((c) => c.sensor.label === "Rooftop 2")!).filter((x) => x.notBefore !== undefined);
+    const checks = await waitFor(
+      "both built-in sensors to have more than 3 verified readings, and Rooftop 2 one with a beacon",
+      feed,
+      (cs) => cs.length === 2 && cs.every((c) => verified(c).length > 3) && rooftopProven(cs).length > 0,
+    );
     expect(checks.map((c) => c.sensor.label).sort()).toEqual(["Riverside 4", "Rooftop 2"]);
     for (const c of checks) {
       expect(c.keyLog).toBe("ok");
       expect(c.installation?.ok).toBe(true);
-      expect(c.readings.readings.filter((x) => x.status === "verified").length).toBeGreaterThan(3);
       expect(c.readings.readings.some((x) => x.status === "invalid")).toBe(false);
+      expect(c.readings.equivocation).toBe(false);
     }
     // Rooftop 2's clock is a day behind
-    const rooftop = checks.find((c) => c.sensor.label === "Rooftop 2")!;
     // (a reading made before the sensor heard its first beacon has no lower bound, so a slow clock can't be shown there)
-    const proven = rooftop.readings.readings.filter((x) => x.status === "verified" && x.notBefore !== undefined);
-    expect(proven.length).toBeGreaterThan(0);
-    expect(proven.every((x) => x.clockWrong)).toBe(true);
+    expect(rooftopProven(checks).every((x) => x.clockWrong)).toBe(true);
     const riverside = checks.find((c) => c.sensor.label === "Riverside 4")!;
-    expect(riverside.readings.readings.filter((x) => x.status === "verified").some((x) => x.clockWrong)).toBe(false);
+    expect(verified(riverside).some((x) => x.clockWrong)).toBe(false);
 
-    // an evil gateway: the next reading it hears becomes invalid
-    await fetch(`${world.url}/api/sensors/evil`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ on: true }) });
-    await sleep(3500);
-    const evil = await feed();
-    expect(evil.some((c) => c.readings.readings.some((x) => x.status === "invalid"))).toBe(true);
-  });
+    // a dishonest gateway: the next reading it hears is changed, and becomes invalid once its seal arrives
+    await post("/api/sensors/evil", { on: true });
+    await waitFor("a reading changed by the gateway to show as invalid", feed, (cs) => cs.some((c) => c.readings.readings.some((x) => x.status === "invalid")));
+  }, 120_000);
 
   it("an external sensor process joins over the radio bridge, and keeps its chain across a restart", async () => {
+    await post("/api/sensors/evil", { on: false });
     const sdir = join(dir, "ext-sensor");
     const clock = new SystemClock();
-    const post = async (path: string, body: unknown) => (await fetch(`${world.url}${path}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) })).json();
     const open = () =>
       openSensor({
         dir: sdir,
@@ -125,42 +142,52 @@ describe("the world, over HTTP", () => {
           if (r.error) throw new Error(r.error);
         },
       });
-    const harborCheck = async () => {
-      const s = await (await fetch(`${world.url}/api/sensors`)).json();
-      const f = await (await fetch(`${world.url}/api/sensors/frames`)).json();
-      const checks = await verifySensorFeed({ sensors: s.sensors, frames: f.frames, rounds: f.rounds, gateway: s.gateway }, { chains: [chainFromJson(config.drand.chain)], keyLog: httpFetcher(world.url).keyLog, trust, now: Date.now() });
-      return checks.find((c) => c.sensor.label === "Harbor 1")!;
-    };
-    const run = async (ms: number, during?: () => Promise<void>) => {
+    const harborCheck = async () => (await feed()).find((c) => c.sensor.label === "Harbor 1");
+    const start = async () => {
       const ident = await open();
       const link = new RemoteSimLink(world.url, "harbor-1");
       const node = new SensorNode(ident.chain, { link, scheduler: realScheduler, channels: simulatedChannels(9), intervalMs: 1000, startDelayMs: 300, sealEvery: 3, onChange: () => ident.save() });
       await node.start();
-      await sleep(ms);
-      await during?.();
-      node.stop();
-      await link.close();
-      ident.save();
-      return ident;
+      const stop = async () => {
+        node.stop();
+        await link.close();
+        ident.save();
+      };
+      return { ident, node, stop };
     };
-    const first = await run(6000);
-    const seqAfterFirst = first.chain.state.seq;
-    expect(seqAfterFirst).toBeGreaterThan(3);
-    // the second run also answers a backfill request that comes down the bridge, for frames lost to collisions
-    const second = await run(4000, async () => {
-      const { backfillRanges, b64 } = await import("../src/core");
-      for (let i = 0; i < 3; i++) {
+
+    // first run: some readings, then stop (the last ones may not be sealed yet)
+    const first = await start();
+    await waitFor("the sensor's first run to take 6 readings", async () => first.ident.chain.state.seq, (n) => n >= 6);
+    await first.stop();
+    const seqAfterFirst = first.ident.chain.state.seq;
+
+    // second run: the same identity and chain from disk; two of its readings are lost on the air, on purpose
+    world.medium.inject({ kind: "drop", from: "harbor-1", match: (b) => b[0] === 1, count: 2 });
+    const second = await start();
+    expect(second.ident.did).toBe(first.ident.did);
+    expect(second.ident.chain.state.seq).toBe(seqAfterFirst);
+    const { backfillRanges, b64 } = await import("../src/core");
+    // ask for backfill over the bridge until every sealed reading is linked, across the restart
+    const harbor = await waitFor(
+      "Harbor 1's readings on both sides of the restart to verify, with the lost ones backfilled",
+      async () => {
         const h = await harborCheck();
+        if (!h) return undefined;
         const ranges = backfillRanges(h.readings);
-        if (!ranges.length) break;
-        await fetch(`${world.url}/api/sensors/backfill`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ dev: b64(first.chain.state.dev), ranges }) });
-        await sleep(2500);
-      }
-    });
-    expect(second.did).toBe(first.did);
-    expect(second.chain.state.seq).toBeGreaterThan(seqAfterFirst);
-    const harbor = await harborCheck();
-    expect(harbor.readings.readings.filter((x) => x.status === "verified").length).toBeGreaterThan(3);
-    expect(harbor.readings.equivocation).toBe(false);
-  });
+        if (ranges.length) await post("/api/sensors/backfill", { dev: b64(first.ident.chain.state.dev), ranges });
+        return { h, ranges };
+      },
+      (x) => {
+        if (!x || x.ranges.length) return false;
+        const v = new Set(x.h.readings.readings.filter((r) => r.status === "verified").map((r) => r.seq));
+        // the last reading before the restart and the first after it link up: one chain, no fork
+        return v.size > 3 && v.has(seqAfterFirst - 1) && v.has(seqAfterFirst) && second.ident.chain.state.seq >= seqAfterFirst + 6;
+      },
+    );
+    await second.stop();
+    expect(second.node.stats.backfilled).toBeGreaterThan(0);
+    expect(harbor!.h.readings.equivocation).toBe(false);
+    expect(harbor!.h.readings.readings.some((r) => r.status === "invalid" || r.status === "equivocation")).toBe(false);
+  }, 120_000);
 });
