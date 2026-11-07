@@ -13,13 +13,15 @@
     "packages/mesh-transport",
     "projects/shared-todo",
     "projects/settle",
-    "projects/trail"
+    "projects/trail",
+    "projects/agora"
   ],
   "scripts": {
     "test": "npm test --workspaces --if-present",
     "licenses": "node scripts/check-licenses.mjs",
     "dev": "node scripts/dev.mjs",
     "settle": "npm run app --workspace @zk-toip/settle",
-    "trail": "npm run app --workspace @zk-toip/trail"
+    "trail": "npm run app --workspace @zk-toip/trail",
+    "agora": "npm run app --workspace @zk-toip/agora"
   }
 }

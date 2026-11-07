@@ -1062,3 +1062,41 @@ The open questions above were settled by the assistant, at the convener's reques
 - **Moderators** are not anonymous. They act under their own DIDs, and their actions are signed and logged.
 - **Escrowed thread pseudonyms** (deanonymization by a threshold of trustees) stay out of the design, as an anti-goal.
 - **Reading** is public in the MVP. Only posting and voting are gated.
+
+## Implementation notes
+
+The MVP was built on 2026-11-06. It runs the demo script in section 12.3 end to end, in browsers and in the terminal. These notes say where it differs from this design, and why.
+
+**Shared libraries**
+- The circuit, trees, roots, proving and the worker are `packages/anon-membership`, unchanged except for one additive change. `admit()` may return a `Refusal` with its own code, such as `alreadyMember`. An enroll request may set `replace: true`, which is how a member rotates.
+- So joining is the library's `anon-membership/enroll` task, with the credential in the request, not `agora/group/join`. Rotating is the same task with `replace`. `agora/group/receipt` is new: after a restore from a backup code, the client asks each registrar for its receipt. `agora/group/leave` is built, with no page in the app.
+- Scopes and signals use the library's `scopeOf` and `messageOf` (SHA-256 over JCS), and its domain tags. Section 5's `T_*` tags are not used.
+- The identity secret is `deriveSecret(seed, "agora/v1/identity-secret")`, an HMAC. A rotation moves to the next generation of the secret. After a restore, the client finds the generation by matching commitments.
+- The feed is a trail in `packages/eventlog`, one per forum, signed by the host's AID. The AID's KEL is bound to the host's did:key. There is no separate `agora/feed-head` document: the trail's head is the head. A reader keeps the last head it saw, and warns if the entry there changed.
+- A hidden or deleted post keeps its trail header. The host stops serving its body. It lists hidden entries with the post's id, thread and nym, so readers can show "Removed by a moderator" in place. The nym was public before.
+- Accounts use `packages/web-vault` with the prefix `agora`. The wallet (credentials, receipts, session keys) is one sealed blob.
+
+**Groups and roots**
+- Groups are issuer-run, as decided. Each demo issuer runs its own registrar under its own DID. One HTTP server answers the public reads for all three.
+- Root documents are the library's `GroupRoot`. `added`, `removed` and `counts` are in its `ext`. There is no `leavesHash`.
+- Clients sync the whole snapshot behind a root, not leaf updates since a sequence number. The library checks each snapshot against its signed root.
+- A registrar publishes a root when the tree changed and the current hour has none yet. So the first change in an hour shows at once, and later ones wait for the next hour.
+- `validUntilDay` comes from the credential's `validUntil`. The demo credentials are valid for 2 years (nursing) or 1 year (residency).
+
+**The host**
+- The host's state is replayed from its feed on start. Storage is node:sqlite, one row per log message and per body.
+- Root grace is measured from when a root was replaced, by the issuedAt of the root that replaced it. The library's `acceptMembership` measures age from a root's own epoch, which doesn't fit roots published only on change. So the host checks roots itself and calls the library's verifier with the statement it compiled.
+- Votes: the last vote counts while a poll is open, as decided. Sending the same choice again is refused with `nullifierUsed`. Another choice replaces the earlier vote.
+- A poll's groups must be the forum's. Only moderators open polls.
+- Moderators don't sign in with a challenge. Every moderation document is signed by the moderator's DID, and the host checks it against the policy. The moderator view is open to any account the policy names.
+- Reports are feed entries, signed by session keys, so they are public. They count against the reporter's rate limit.
+- Extra error codes: `malformed`, `notFound`, `duplicate` and `notOwner`.
+
+**The client**
+- The client proves a pass when the person selects Post, not when they focus the compose box. Focusing it, and opening a forum, warm the prover. Proofs take under a second in Chromium, so this costs little.
+- A reader checks that every root a proof uses is in the registrar's signed log. It doesn't check root freshness: that is a rule for the host at write time.
+- The ports are 4320 to 4323, not 4400 to 4403. The web app is at http://localhost, which answers on 127.0.0.1 and ::1, so passkeys work.
+
+**Measured.** On an Apple M1 Max, proving a pass and sending the first post takes about 0.8 s in Chromium and 0.35 s in Node. These are inside the section 10.2 budgets. Phones were not measured.
+
+**A correction.** 2026-11-06 is day 20763 since 1970-01-01, not 20398 as the examples in sections 7.4 and 7.6 say.
