@@ -177,6 +177,23 @@ code,
   font-weight: 700;
 }
 
+@media (max-width: 640px) {
+  .masthead-inner {
+    gap: 0.5rem 1rem;
+  }
+  .masthead nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+  }
+  .masthead nav ul {
+    flex-wrap: nowrap;
+  }
+  .masthead nav a {
+    white-space: nowrap;
+  }
+}
+
 main {
   max-width: 1120px;
   margin: 0 auto;

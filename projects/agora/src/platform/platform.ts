@@ -92,7 +92,7 @@ export async function startPlatform(opts: PlatformOptions = {}): Promise<Platfor
   const distDir = join(WEB_DIR, "dist");
   if (opts.web === "dev" || opts.web === undefined) {
     const { createServer } = await import("vite");
-    vite = await createServer({ root: WEB_DIR, configFile: join(WEB_DIR, "vite.config.ts"), appType: "spa", server: { middlewareMode: true, hmr: false }, logLevel: "warn" });
+    vite = await createServer({ root: WEB_DIR, configFile: join(WEB_DIR, "vite.config.ts"), appType: "spa", server: { middlewareMode: true, hmr: false }, logLevel: "error" });
   } else if (opts.web === "static" && !existsSync(join(distDir, "index.html"))) {
     throw new Error("the web app isn't built: run `npm run build:web --workspace @zk-toip/agora`");
   }

@@ -163,6 +163,7 @@ export function Composer({ view, member, thread, parent, onPosted }: { view: For
         : c.startThread({ forum: view.forumId, title, body, nymScope: ownScope ? "thread" : "forum", onProgress }),
     );
     if (post) {
+      if (!needsPass) proving.reset();
       setTitle("");
       setBody("");
       bump();
