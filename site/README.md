@@ -41,7 +41,7 @@ No framework. `build/build.ts` renders TypeScript template functions (`src/pages
 
 ## Deploying, and switching on toip.tools
 
-`.github/workflows/pages.yml` builds and deploys on every push to `main` that touches `site/`, `packages/` or a project's `src/`. The base path comes from whether `site/public/CNAME` exists: without it, the site is built for `/toip-experiments/`; with it, for `/`.
+`.github/workflows/pages.yml` builds and deploys on every push to `main` that touches `site/`, `packages/` or a project's `src/`. The base path comes from whether `site/public/CNAME` exists: without it, the site is built for `/toip-tools/`; with it, for `/`.
 
 Once, in the repository's **Settings → Pages**, set **Source** to **GitHub Actions**.
 

@@ -1,5 +1,5 @@
 // Where the site is served. SITE_BASE wins; otherwise a CNAME in public/ means the custom domain at "/",
-// and no CNAME means GitHub Pages' project path, /toip-experiments/.
+// and no CNAME means GitHub Pages' project path, /toip-tools/.
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -18,13 +18,13 @@ function normalizeBase(b: string): string {
   return s;
 }
 
-export const BASE = normalizeBase(process.env.SITE_BASE ?? (cname ? "/" : "/toip-experiments/"));
+export const BASE = normalizeBase(process.env.SITE_BASE ?? (cname ? "/" : "/toip-tools/"));
 export const ORIGIN = process.env.SITE_ORIGIN ?? (cname ? `https://${cname}` : "https://yourbuddyconner.github.io");
 
 /** The domain the spec URIs live under, whatever the site is served from today. */
 export const SPEC_ORIGIN = "https://toip.tools";
 
-export const REPO = "https://github.com/yourbuddyconner/toip-experiments";
+export const REPO = "https://github.com/yourbuddyconner/toip-tools";
 export const CLONE = `${REPO}.git`;
 
 /** A site-internal URL, with the base path. */

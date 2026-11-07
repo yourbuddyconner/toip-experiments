@@ -27,7 +27,7 @@ export function quickstartPage(): Page {
   <section class="prose" aria-labelledby="before">
     <h2 id="before">Before you start</h2>
     <p>You'll need Node 22.5 or later and Git. Every part of this tutorial runs on your machine, including the relay, so you can start without creating an account or setting up a remote server.</p>
-    ${code(`git clone ${CLONE}\ncd toip-experiments\nnpm install`, "bash", { caption: "Get the code" })}
+    ${code(`git clone ${CLONE}\ncd toip-tools\nnpm install`, "bash", { caption: "Get the code" })}
     <p>Run the commands below from the repository root. The examples import libraries from <a href="${REPO}/tree/main/packages"><code>packages/</code></a> using names such as <code>@toip-tools/trust-core</code>. The <code>--tsconfig</code> option points to <a href="${gh("site/tsconfig.json")}">the configuration</a> that resolves those names to the local source.</p>
   </section>
 

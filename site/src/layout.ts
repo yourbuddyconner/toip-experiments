@@ -64,7 +64,7 @@ ${p.body}
 <footer class="site-foot">
   <div class="wrap">
     <a class="mark" href="${u("/")}">toip.tools</a>
-    <p>Independent TypeScript libraries and examples for verifiable trust. Source in <a href="${REPO}">toip-experiments</a>. Unaffiliated with the Trust over IP Foundation.</p>
+    <p>Independent TypeScript libraries and examples for verifiable trust. Source in <a href="${REPO}">toip-tools</a>. Unaffiliated with the Trust over IP Foundation.</p>
     <ul>
       <li><a href="${u("/quickstart/")}">Quickstart</a></li>
       <li><a href="${u("/spec/")}">Trust Task types</a></li>

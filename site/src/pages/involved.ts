@@ -22,7 +22,7 @@ export function involvedPage(): Page {
     <p>This project started at the <a href="${X.iiw}">Internet Identity Workshop</a> in November 2026.</p>
 
     <h2 id="repo">This repository</h2>
-    <p>The code and this site live in <a href="${REPO}">toip-experiments</a>. Run <code>npm test</code> at the repository root, or open <a href="${REPO}/issues">an issue</a> with a question, bug report, or correction.</p>
+    <p>The code and this site live in <a href="${REPO}">toip-tools</a>. Run <code>npm test</code> at the repository root, or open <a href="${REPO}/issues">an issue</a> with a question, bug report, or correction.</p>
 
     <h2 id="propose">Propose a new example</h2>
     <p>To add an example:</p>
