@@ -197,7 +197,8 @@ Behavior worth knowing:
 - An entry under a retired key that directly follows an entry under a newer key fails `staleKeyState`. Other entries past a rotation's seal are `cut`.
 - A rotation seals every open trail, and every closed trail whose last message is in the outgoing epoch.
 - An identical copy of a message in a stream is merged, not reported.
-- A witness refuses an entry that a rotation it holds has cut.
+- A witness refuses an entry that a rotation it holds has cut. Its head skips cut entries, so after a recovery the head is the entry that replaced them.
+- A watcher's poll fetches from the last place it holds. So a version handed to it directly shows as duplicity when the witnesses hold another.
 - Bundles carry the whole KEL, including superseded events, so a recovery is visible.
 
 Not done yet:

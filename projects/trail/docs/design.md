@@ -964,3 +964,35 @@ The open questions above were settled by the assistant, at the convener's reques
 3. **KERI version.** 1.0. Moving to 2.0 is deferred.
 4. **keri-ts** is revisited at its 1.1 release.
 5. **KERI delegation** for agents and **Merkle batching** for capture are deferred.
+
+## Implementation notes (2026-11-06)
+
+The MVP of section 14.2 is built. These notes say where it differs from the design, and why.
+
+**Layout and ports**
+
+- The service runs at http://localhost:4340, not 4500. Ports 4340 to 4349 are this project's range. Each witness also has its own port (4341 to 4344).
+- `npm run trail` runs it. `npm run demo --workspace @zk-toip/trail` runs the ten steps in the terminal.
+- There is a fourth witness from the start. It joins Scout's list at step 6.
+- The KERIpy check uses the library's `packages/eventlog/interop/keripy_check.py`. There is no copy in this project.
+- The explorer verifies everything in the browser with the library. The service only hands over bundles and evidence.
+
+**The demo**
+
+- KEL sequence numbers are one higher than section 15 says. The DID binding names the AID, and the AID is the inception's SAID, so the library seals the binding in an `ixn` at KEL 1. So the checkpoint is at KEL 2, Ada's first rotation at KEL 3, and the thief's checkpoint and the recovery at KEL 4.
+- Ada rotates alone, with her rotation key. For Scout to keep working after that, the rotation names Scout's next key as a current key that doesn't sign. The library gained `RotateOptions.extraKeys` for this. KERIpy accepts these rotations.
+- Ada's watcher flags the thief's tool calls with a policy it can apply to headers alone: every tool call must cite the mandate entry in `x`. Scout's tool calls do; the thief's don't.
+- In step 6, witness 2 first sees version B of entry 8. It refuses every later entry, because they chain to version A. Witnesses 1 and 4 still meet the threshold of 2. The explorer says so.
+- Tampering has four layers, not three. Layer 3 changes the header and keeps the old signature: `signatureInvalid`. Layer 4 re-signs with Scout's own key: `sealMismatch`. The third layer of section 15 lists both codes.
+- Bram checks Mallory's entry 9 against the KEL he gets from a witness. With Mallory's copy of the KEL alone, the entry is `pending`, not `cut`.
+- The camera rotates with its own cold keys. It has no owner rotation key.
+
+**Library changes** (small, additive, with tests)
+
+- `RotateOptions.extraKeys`, for a principal rotating alone (above).
+- `Watcher.poll` fetches from the last place it holds, not the one after. Before, a version handed to a watcher directly was seen only as a broken chain, not as duplicity.
+- A witness's head skips cut entries. Before, after a recovery, the head stayed on the last cut entry. Watchers then missed the new entry, and bundles compared with witnesses showed a false `truncated`.
+
+**Not built**
+
+- Authentication on the service, a real model, a browser witness, a browser store, and the Trust Task transport in the demo (section 14.2 lists these).
