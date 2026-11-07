@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { MandateEngine, StatusRegistry } from "@zk-toip/mandates";
+import { MandateEngine, StatusRegistry } from "@toip-tools/mandates";
 import { embedStore, fromHex, makeCapture, QUICKNET, randomnessOf, roundAt, roundTime, verifyAsset, verifyBeaconClaim, verifyRound, verifyRounds } from "../src/core";
 import { cameraMandate, mandateChecker } from "../src/core/mandate";
 import { codes, jpegPhoto, testWorld } from "./helpers";

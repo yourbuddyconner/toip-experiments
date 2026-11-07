@@ -13,7 +13,7 @@
  *
  * Losing the passkey (or passphrase) loses the account, unless its backup code was kept.
  */
-import { fromB64u, identityFromSeed, toB64u } from "@zk-toip/trust-core";
+import { fromB64u, identityFromSeed, toB64u } from "@toip-tools/trust-core";
 
 export interface Sealed {
   iv: string;

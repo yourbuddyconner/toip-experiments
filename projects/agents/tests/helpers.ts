@@ -1,9 +1,9 @@
 /** Test fixtures: a Settle party spy, a fake TSP endpoint and hub, local witnesses, and a guard built on them. */
-import { ed25519Signer, localWitnessClient, MemoryStore, Witness, type WitnessClient } from "@zk-toip/eventlog";
-import { defaultEngine, issueMandate, StatusRegistry, type Constraint, type Mandate, type MandateEngine, type StatusResolver } from "@zk-toip/mandates";
-import { DemoClock, identityFromSeed, issueCredential, seedFrom, signDocument, type Clock, type Credential, type Identity, type StatusListDoc } from "@zk-toip/trust-core";
-import type { Checkout, PaymentLink } from "@zk-toip/settle/src/agents/party";
-import type { PaymentState } from "@zk-toip/settle/src/agents/base";
+import { ed25519Signer, localWitnessClient, MemoryStore, Witness, type WitnessClient } from "@toip-tools/eventlog";
+import { defaultEngine, issueMandate, StatusRegistry, type Constraint, type Mandate, type MandateEngine, type StatusResolver } from "@toip-tools/mandates";
+import { DemoClock, identityFromSeed, issueCredential, seedFrom, signDocument, type Clock, type Credential, type Identity, type StatusListDoc } from "@toip-tools/trust-core";
+import type { Checkout, PaymentLink } from "@toip-tools/settle/src/agents/party";
+import type { PaymentState } from "@toip-tools/settle/src/agents/base";
 import { createAgentTrail, type EventlogSink } from "../src/audit/sink";
 import { Guard, type GuardOptions, type SettlePort } from "../src/guard/guard";
 import { signProfile, type HubPort, type WorkerProfile } from "../src/hub/client";
@@ -191,7 +191,7 @@ export function rootConstraints(o: { perTx?: number; perDay?: number; total?: nu
     attesters: { attr: "attester", anyOf: [people.ci.did, people.conner.did], when: ["settle/pay"] },
     arbiters: { attr: "arbiter", anyOf: [people.arbiter.did], when: ["settle/pay"] },
     minWindow: { attr: "disputeWindowSeconds", min: 0, when: ["settle/pay"] },
-    tasks: { attr: "task", within: ["https://zk-toip.example/spec/settle/*", "https://zk-toip.example/spec/agents/*", "https://zk-toip.example/spec/mandates/*"] },
+    tasks: { attr: "task", within: ["https://toip.tools/spec/settle/*", "https://toip.tools/spec/agents/*", "https://toip.tools/spec/mandates/*"] },
   };
 }
 

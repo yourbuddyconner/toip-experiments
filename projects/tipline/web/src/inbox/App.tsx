@@ -1,8 +1,8 @@
 // Sam's inbox: the drop box runs here, in this browser. Tips are verified here, labeled by nullifier,
 // and stored sealed with the passkey. No server holds them in the clear.
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { PasskeyUnsupported, type Account } from "@zk-toip/web-vault";
-import { initHashing, type GroupRoot } from "@zk-toip/anon-membership";
+import { PasskeyUnsupported, type Account } from "@toip-tools/web-vault";
+import { initHashing, type GroupRoot } from "@toip-tools/anon-membership";
 import type { AttachmentRecord, GroupStatus, TipRecord } from "../../../src/agents/inbox";
 import { REASON_TEXT } from "../../../src/protocol/messages";
 import { ServerClock, getJson, hourOf, longDate, shortDid } from "../common/net";

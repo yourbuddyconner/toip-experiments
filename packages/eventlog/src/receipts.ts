@@ -1,6 +1,6 @@
 /** Making and reading witness receipts and endorsements. */
 import { ed25519 } from "@noble/curves/ed25519.js";
-import { utf8, type Identity } from "@zk-toip/trust-core";
+import { utf8, type Identity } from "@toip-tools/trust-core";
 import { nonTransferableAid } from "./cesr";
 import { buildRct } from "./kel";
 import { signWith, type Signer } from "./keys";

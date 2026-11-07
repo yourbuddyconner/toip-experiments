@@ -1,4 +1,4 @@
-# @zk-toip/mandates
+# @toip-tools/mandates
 
 Delegation credentials. A principal (a person, an organization, a device owner) gives a delegate (an agent, a sub-agent, a device) a bounded authority. The delegate may pass on a narrower one. Anyone can check an action against the whole chain, on their own, and get a decision with reasons and plain sentences.
 
@@ -64,7 +64,7 @@ The compiled policy is `policy/policy.wasm`, with its hash in `policy/policy.sha
 import {
   MandateEngine, StatusRegistry, SpendLedger, issueMandate, delegate, narrows, approve, verifyApproval,
   present, explain, actionHash, staticStatusResolver, httpStatusResolver,
-} from "@zk-toip/mandates";
+} from "@toip-tools/mandates";
 
 // The principal keeps a status list and issues a root mandate.
 const status = new StatusRegistry(principal, clock);
@@ -129,7 +129,7 @@ Names, by area:
 
 ### Trust Tasks
 
-All five are one-way, in our namespace (`https://zk-toip.example/spec/mandates/…/0.1`). Mount the handlers a role needs:
+All five are one-way, in our namespace (`https://toip.tools/spec/mandates/…/0.1`). Mount the handlers a role needs:
 
 ```ts
 serveMandateTasks(endpoint, {

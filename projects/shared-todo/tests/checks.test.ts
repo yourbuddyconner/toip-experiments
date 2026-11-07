@@ -140,7 +140,7 @@ describe("checkOp v2 (design 4.5)", () => {
 describe("review fixes: timestamps (I2)", () => {
   it("refuses an op whose time isn't strict UTC ISO", async () => {
     const { f, check } = await setup();
-    const { signDocument } = await import("@zk-toip/trust-core");
+    const { signDocument } = await import("@toip-tools/trust-core");
     const body = { id: "x1", type: "todo/op", issuer: f.people.bob.did, list: f.list.did, kind: "add", itemId: "z", text: "Z", membershipId: f.memberships.bob.id };
     for (const at of [new Date(f.clock.now()).toUTCString(), "2026-11-05T14:30:00+14:00", "2026-11-05 14:30:00Z"]) {
       const o = signDocument({ ...body, id: `x-${at}`, at }, f.people.bob, f.clock);

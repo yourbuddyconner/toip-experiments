@@ -1,5 +1,5 @@
 /** A mandate in plain words, for the console and the terminal. Browser-safe. */
-import type { Constraint, Mandate } from "@zk-toip/mandates";
+import type { Constraint, Mandate } from "@toip-tools/mandates";
 import { DIMENSION_LABELS } from "./config";
 
 const usdc = (u: string | number) => `${(Number(u) / 1e6).toFixed(2)} USDC`;

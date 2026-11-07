@@ -97,9 +97,9 @@ export function summarize(e: AuditEntry, name: (did: string) => string): Pick<Au
     case "agent/control":
       return { summary: `Control from ${name(b.from)}: ${b.op}`, tone: "normal" };
     case "agent/message-sent":
-      return { summary: `Sent ${String(b.type).replace("https://zk-toip.example/spec/", "").replace("/0.1", "")} to ${name(b.peer)}`, tone: "normal" };
+      return { summary: `Sent ${String(b.type).replace("https://toip.tools/spec/", "").replace("/0.1", "")} to ${name(b.peer)}`, tone: "normal" };
     case "agent/message-received":
-      return { summary: `Received ${String(b.type).replace("https://zk-toip.example/spec/", "").replace("/0.1", "")} from ${name(b.peer)}`, tone: "normal" };
+      return { summary: `Received ${String(b.type).replace("https://toip.tools/spec/", "").replace("/0.1", "")} from ${name(b.peer)}`, tone: "normal" };
     default:
       return { summary: e.kind, tone: "normal" };
   }
@@ -360,7 +360,7 @@ export async function startApp(w: World, o: { port?: number; host?: string; web?
     const { createServer: createVite } = await import("vite");
     vite = await createVite({ root: WEB_DIR, configFile: join(WEB_DIR, "vite.config.ts"), appType: "spa", server: { middlewareMode: true, hmr: { server } }, logLevel: "warn" });
   } else if (o.web === "static" && !existsSync(join(distDir, "index.html"))) {
-    throw new Error("the web app isn't built: run `npm run build:web --workspace @zk-toip/agents`");
+    throw new Error("the web app isn't built: run `npm run build:web --workspace @toip-tools/agents`");
   }
   await new Promise<void>((resolve, reject) => server.once("error", reject).listen(o.port ?? 0, host, () => resolve()));
   const port = (server.address() as { port: number }).port;

@@ -2,7 +2,7 @@
  * KERIpy computes the same key state from our KELs.
  * Runs when KERIPY_PYTHON points at a Python with keri 1.3.x installed, for example:
  *   python3.12 -m venv ~/.cache/zk-toip-keripy/venv && ~/.cache/zk-toip-keripy/venv/bin/pip install "keri==1.3.*"
- *   KERIPY_PYTHON=~/.cache/zk-toip-keripy/venv/bin/python npm test --workspace @zk-toip/eventlog
+ *   KERIPY_PYTHON=~/.cache/zk-toip-keripy/venv/bin/python npm test --workspace @toip-tools/eventlog
  * Otherwise every case is skipped.
  */
 import { describe, expect, it } from "vitest";

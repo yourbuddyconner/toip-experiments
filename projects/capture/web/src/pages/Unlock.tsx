@@ -1,6 +1,6 @@
 /** Making or unlocking an account in the vault: a passkey when the browser can, a passphrase otherwise. */
 import { useState } from "react";
-import { PasskeyUnsupported, type Unlocked } from "@zk-toip/web-vault";
+import { PasskeyUnsupported, type Unlocked } from "@toip-tools/web-vault";
 import { vault } from "../app";
 
 export function useRoleAccount(role: "camera" | "editor") {

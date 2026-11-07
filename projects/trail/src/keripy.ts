@@ -7,7 +7,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { toStream, verifyKel, type SignedMessage } from "@zk-toip/eventlog";
+import { toStream, verifyKel, type SignedMessage } from "@toip-tools/eventlog";
 import type { KeripyOutcome } from "./world";
 
 export const KERIPY_SCRIPT = fileURLToPath(new URL("../../../packages/eventlog/interop/keripy_check.py", import.meta.url));

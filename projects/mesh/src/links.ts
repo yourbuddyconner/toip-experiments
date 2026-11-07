@@ -2,10 +2,10 @@
  * `--link` for the CLI: `sim`, `gwmp[:PORT]` (a LoRaWAN gateway's packet forwarder, such as the RAK
  * miner's, sending to this machine) or `rak:PATH` (a RAK3172 on USB serial, stock RUI3 AT firmware).
  */
-import { plans, type ChannelPlan, type Link } from "@zk-toip/mesh-transport";
-import { GwmpServer, nodeSerialPort } from "@zk-toip/mesh-transport/node";
-import { RakP2PLink } from "@zk-toip/mesh-transport/rak";
-import type { SerialPortLike } from "@zk-toip/mesh-transport/serial";
+import { plans, type ChannelPlan, type Link } from "@toip-tools/mesh-transport";
+import { GwmpServer, nodeSerialPort } from "@toip-tools/mesh-transport/node";
+import { RakP2PLink } from "@toip-tools/mesh-transport/rak";
+import type { SerialPortLike } from "@toip-tools/mesh-transport/serial";
 
 export class UsageError extends Error {
   constructor(message: string) {

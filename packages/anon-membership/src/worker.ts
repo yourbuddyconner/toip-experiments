@@ -1,7 +1,7 @@
 // Proving in a Web Worker, so the page stays responsive.
 //
 //   // prover.worker.ts
-//   import { serveMembershipWorker } from "@zk-toip/anon-membership/worker";
+//   import { serveMembershipWorker } from "@toip-tools/anon-membership/worker";
 //   serveMembershipWorker();
 //
 //   // the page

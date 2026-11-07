@@ -1,4 +1,4 @@
-# @zk-toip/anon-membership
+# @toip-tools/anon-membership
 
 Anonymous membership proofs. A member proves "I am in one of these groups, my attributes meet these predicates, and this is my nullifier for this scope", bound to one signal. The proof does not say which member, or which group.
 
@@ -41,7 +41,7 @@ The circuit checks:
 import {
   GroupIssuer, MembershipProver, MembershipVerifier, acceptMembership, NullifierBook,
   initHashing, memberSecret, enroll, membershipInputs, treeFromRoot, scopeOf, messageOf, dayOf,
-} from "@zk-toip/anon-membership";
+} from "@toip-tools/anon-membership";
 
 await initHashing();
 
@@ -75,7 +75,7 @@ In a browser, prove in a Web Worker:
 
 ```ts
 // prover.worker.ts
-import { serveMembershipWorker } from "@zk-toip/anon-membership/worker";
+import { serveMembershipWorker } from "@toip-tools/anon-membership/worker";
 serveMembershipWorker();
 
 // page
@@ -97,7 +97,7 @@ Serve the page with `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-
 - **Statements:** `Statement`, `Witness`, `Predicate`, `simpleStatement`, `checkStatement`, `whyUnsatisfied`, `encodeStatement`, `decodeStatement`, `sameStatement`, `membershipInputs`.
 - **Proving:** `MembershipProver` (`create`, `prove`, `destroy`), `MembershipVerifier` (`create`, `verify`, `vkHashes`, `destroy`), `MembershipProof`, `parseMembershipProof`, `MembershipError`, `PROOF_SYSTEM`, `loadArtifacts`, `CIRCUIT_ID`, `vkHashOf`, `bundledCrs`, `CrsSource`.
 - **Acceptance:** `acceptMembership`, `AcceptPolicy`, `Acceptance`, `NullifierBook`.
-- **Worker** (`@zk-toip/anon-membership/worker`): `serveMembershipWorker`, `MembershipWorkerClient`.
+- **Worker** (`@toip-tools/anon-membership/worker`): `serveMembershipWorker`, `MembershipWorkerClient`.
 
 Verifiers pin `vkHash`, the SHA-256 of the verification key.
 

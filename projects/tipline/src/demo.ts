@@ -1,5 +1,5 @@
 /**
- * The demo script (design §11) in a terminal: npm run demo --workspace @zk-toip/tipline.
+ * The demo script (design §11) in a terminal: npm run demo --workspace @toip-tools/tipline.
  * Real relay, real proofs, every party in this process. The browser version is web/e2e.ts.
  */
 import { newTipCode } from "./protocol/codes";
@@ -132,7 +132,7 @@ try {
   ] as const) {
     note(`${what}: ${state.includes(needle) ? "in Acme's roster" : "not in Acme's state"}; ${relaySeen.includes(needle) ? "in the relay's records (enrollment)" : "not in the relay's records"}.`);
   }
-  console.log(`\n${bold("Done.")} The browser version: npm run e2e --workspace @zk-toip/tipline\n`);
+  console.log(`\n${bold("Done.")} The browser version: npm run e2e --workspace @toip-tools/tipline\n`);
 } finally {
   await w.close();
 }

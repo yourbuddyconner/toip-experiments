@@ -2,7 +2,7 @@
  * The demo, step by step (design §15). Each step drives the actors and the attacks over HTTP,
  * then reports what happened and what verification found, in plain sentences.
  */
-import { fromB64u } from "@zk-toip/trust-core";
+import { fromB64u } from "@toip-tools/trust-core";
 import {
   Controller,
   decodeKeyRefSig,
@@ -15,7 +15,7 @@ import {
   verifyTrail,
   type MemoryStore,
   type Problem,
-} from "@zk-toip/eventlog";
+} from "@toip-tools/eventlog";
 import { adaRotates, birth, MANDATE, POLICY, scoutTrail, work } from "./agentSim";
 import { copyLogs, forkAt, handedStream, tamperLayers } from "./attacks";
 import { capture, captureWithRetiredKey, provision } from "./cameraSim";

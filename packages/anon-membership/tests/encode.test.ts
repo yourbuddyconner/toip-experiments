@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { hmac } from "@noble/hashes/hmac.js";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { canonicalJson } from "@zk-toip/trust-core";
+import { canonicalJson } from "@toip-tools/trust-core";
 import { toField } from "../src/field";
 import {
   dayFromIso,

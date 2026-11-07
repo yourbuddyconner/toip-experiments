@@ -2,10 +2,10 @@
  * The web app's services: the platform's config, a clock that follows the host's dev clock, one Web
  * Worker that proves and verifies, a reader anyone can use, and the signed-in account.
  */
-import { MembershipWorkerClient } from "@zk-toip/anon-membership/worker";
-import { initHashing, type ProveProgress } from "@zk-toip/anon-membership";
-import { Endpoint, RelayTransport, identityFromSeed, type Clock } from "@zk-toip/trust-core";
-import { createVault, type Unlocked } from "@zk-toip/web-vault";
+import { MembershipWorkerClient } from "@toip-tools/anon-membership/worker";
+import { initHashing, type ProveProgress } from "@toip-tools/anon-membership";
+import { Endpoint, RelayTransport, identityFromSeed, type Clock } from "@toip-tools/trust-core";
+import { createVault, type Unlocked } from "@toip-tools/web-vault";
 import { AgoraClient, type WalletState } from "../../src/client/client";
 import { HostApi, RegistrarApi } from "../../src/client/http";
 import { ForumReader, type KeyValue } from "../../src/client/reader";

@@ -5,9 +5,9 @@
  */
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { MembershipVerifier, commitmentOf, deriveSecret, initHashing } from "@zk-toip/anon-membership";
-import { MemoryStore, type LogStore } from "@zk-toip/eventlog";
-import { Bus, Endpoint, RelayTransport, identityFromSeed, seedFrom, toB64u, fromB64u, type Transport } from "@zk-toip/trust-core";
+import { MembershipVerifier, commitmentOf, deriveSecret, initHashing } from "@toip-tools/anon-membership";
+import { MemoryStore, type LogStore } from "@toip-tools/eventlog";
+import { Bus, Endpoint, RelayTransport, identityFromSeed, seedFrom, toB64u, fromB64u, type Transport } from "@toip-tools/trust-core";
 import { ForumHost, type GroupSource } from "../host/host";
 import { serveHost, type HostServer } from "../host/server";
 import { SqliteLogStore } from "../host/sqliteStore";

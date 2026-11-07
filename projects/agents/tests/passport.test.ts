@@ -1,6 +1,6 @@
 /** Passports (design §6.2), the guard's own reason sentences, and mandates in plain words. */
 import { describe, expect, it } from "vitest";
-import { DemoClock } from "@zk-toip/trust-core";
+import { DemoClock } from "@toip-tools/trust-core";
 import { decisionView, GUARD_SENTENCES } from "../src/guard/explain";
 import { issuePassport, verifyPassport } from "../src/passport";
 import { mandateLines } from "../src/mandate-text";

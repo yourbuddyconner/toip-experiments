@@ -32,7 +32,7 @@ Try this:
 4. **Settle a dispute.** Pay a second link, and select **Report a problem** instead of confirming. Open the setup link the platform printed when it first started (`/console?setup=…`), and sign in with one of your accounts. That account becomes the platform's operator. Rule a split as Settle Arbitration: the arbiter's signature, plus one party's, carries out the ruling.
 5. **Have someone else confirm.** Make a link that a third person confirms, with a dispute window. Use **Skip ahead** in the sidebar to move the network's clock past the window. The payer's device signs as soon as its policy allows.
 
-To serve the built app instead of the dev server, run `npm run build:web --workspace @zk-toip/settle`, then `npm run app --workspace @zk-toip/settle -- --static`. Settings:
+To serve the built app instead of the dev server, run `npm run build:web --workspace @toip-tools/settle`, then `npm run app --workspace @toip-tools/settle -- --static`. Settings:
 - **Ports:** `PORT`, `RELAY_PORT` and `RPC_PORT` (defaults 4300, 4301 and 4302).
 - **Where it listens:** `HOST`, default this machine only. If you change it, put the platform behind TLS.
 - **Where it keeps its data:** `--data <dir>` or `SETTLE_DATA`.
@@ -47,8 +47,8 @@ The **Operator view** (`/console`) shows the arbiter's cases and the processor's
 ### On Solana devnet
 
 ```bash
-npm run deploy --workspace @zk-toip/settle -- --cluster devnet          # once: deploys the program
-npm run app --workspace @zk-toip/settle -- --cluster devnet             # the platform, on devnet
+npm run deploy --workspace @toip-tools/settle -- --cluster devnet          # once: deploys the program
+npm run app --workspace @toip-tools/settle -- --cluster devnet             # the platform, on devnet
 ```
 
 On a real cluster, the platform's **treasury** key pays for the test-USDC mint, the processor's network fees and the gas station. The deploy also comes from it, so the treasury needs about 1.5 SOL to deploy and 0.3 SOL to run. Devnet's RPC faucet is closed, so the first run prints the treasury's address. Send it SOL from https://faucet.solana.com, then run the command again. The treasury's key is in `.data/devnet/platform.json`.
@@ -58,7 +58,7 @@ On devnet, clocks keep real time, so **Skip ahead** is hidden. `--cluster localn
 The public devnet endpoint rate-limits each IP address. The client waits and retries, re-sends transactions until they're confirmed, and reads each party's accounts in one request per tick. Even so, a payment takes about a minute when everything runs from one machine. For more speed, use your own RPC provider's devnet URL with `--cluster <url>`. To run the real-cluster tests on devnet:
 
 ```bash
-SETTLE_CLUSTER=devnet SETTLE_DATA=.data/devnet npm run test:cluster --workspace @zk-toip/settle
+SETTLE_CLUSTER=devnet SETTLE_DATA=.data/devnet npm run test:cluster --workspace @toip-tools/settle
 ```
 
 ## For developers: the whole integration
@@ -66,7 +66,7 @@ SETTLE_CLUSTER=devnet SETTLE_DATA=.data/devnet npm run test:cluster --workspace 
 A party is one person's or one business's device. It holds its own keys, talks to the other parties over TSP, checks everything against the chain, and signs only what its own policy allows. Connecting one takes a few lines:
 
 ```ts
-import { identityFromSeed } from "@zk-toip/trust-core";
+import { identityFromSeed } from "@toip-tools/trust-core";
 import { SettleApi, encodeLink, decodeLink } from "./src/client/client";
 import { SettlePolicy } from "./src/protocol/policy";
 
@@ -105,7 +105,7 @@ Other calls:
 | `src/agents/roles.ts` | The network's services: the processor (sponsors transactions, collects signatures, keeps the log) and the arbiter (holds disputed escrows, rules). |
 | `src/platform/` | The platform: the whole network in one process.<br>• `platform.ts`: a REST API (config, faucet, gas station, verify, directory, operator sign-in and views, public log, dev clock) that also serves the web app.<br>• `cluster.ts`: the local cluster or a real one.<br>• `state.ts`: the data directory.<br>• `operators.ts`: operator sign-in.<br>• `deploy.ts`: deploys the program to a real cluster. |
 | `src/client/client.ts` | `SettleApi`: connects a party to a platform. Used by the web app and the tests alike. |
-| `web/` | The web app (React):<br>• a dashboard, payment links and a hosted checkout at `/pay/:link`;<br>• payment pages with the three seals;<br>• a wallet, verification, and the operator view at `/console`;<br>• `src/vault.ts` sets up `@zk-toip/web-vault`, which seals each account's key with a passkey (WebAuthn PRF) or a passphrase;<br>• `web/e2e.ts` drives all of it in a real browser, with virtual passkeys. |
+| `web/` | The web app (React):<br>• a dashboard, payment links and a hosted checkout at `/pay/:link`;<br>• payment pages with the three seals;<br>• a wallet, verification, and the operator view at `/console`;<br>• `src/vault.ts` sets up `@toip-tools/web-vault`, which seals each account's key with a passkey (WebAuthn PRF) or a passphrase;<br>• `web/e2e.ts` drives all of it in a real browser, with virtual passkeys. |
 | `src/world.ts`, `src/demo.ts` | The repair job's cast, and the narrated terminal demo (`npm run demo`). |
 
 ## How it fits together
@@ -120,11 +120,11 @@ Other calls:
 ## Tests
 
 ```bash
-npm test --workspace @zk-toip/settle        # 53 tests (and 3 that need a real cluster, skipped)
-npm run e2e --workspace @zk-toip/settle     # the app in a real browser: 4 jobs, 5 people, passkeys, operators; screenshots in web/e2e-shots/
-SETTLE_CLUSTER=localnet npm run test:cluster --workspace @zk-toip/settle   # against solana-test-validator, or devnet (deploy first)
-npm run build:program --workspace @zk-toip/settle   # rebuild the program (needs Rust and Agave's cargo-build-sbf)
-npm run policies --workspace @zk-toip/settle        # recompile the Rego (needs opa)
+npm test --workspace @toip-tools/settle        # 53 tests (and 3 that need a real cluster, skipped)
+npm run e2e --workspace @toip-tools/settle     # the app in a real browser: 4 jobs, 5 people, passkeys, operators; screenshots in web/e2e-shots/
+SETTLE_CLUSTER=localnet npm run test:cluster --workspace @toip-tools/settle   # against solana-test-validator, or devnet (deploy first)
+npm run build:program --workspace @toip-tools/settle   # rebuild the program (needs Rust and Agave's cargo-build-sbf)
+npm run policies --workspace @toip-tools/settle        # recompile the Rego (needs opa)
 ```
 
 The tests cover:

@@ -4,8 +4,8 @@
  * QuickFix's quote, approves Errands agent's payment to Dana, confirms the delivery, reviews the trails and
  * revokes the sub-agent. Dana quotes and delivers in her own window.
  *
- *   npm run e2e --workspace @zk-toip/agents             # Vite dev server
- *   npm run e2e --workspace @zk-toip/agents -- --static # the built pages (npm run build:web first)
+ *   npm run e2e --workspace @toip-tools/agents             # Vite dev server
+ *   npm run e2e --workspace @toip-tools/agents -- --static # the built pages (npm run build:web first)
  *   add --headed to watch
  *
  * Screenshots land in web/e2e-shots/.

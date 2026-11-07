@@ -3,9 +3,9 @@
  * moves; escalations ask the principal; approvals bind to one exact action; chains only narrow.
  */
 import { describe, expect, it } from "vitest";
-import { approve, mandateHash } from "@zk-toip/mandates";
-import { APPROVAL_GRANT, APPROVAL_DENY } from "@zk-toip/mandates";
-import { signDocument } from "@zk-toip/trust-core";
+import { approve, mandateHash } from "@toip-tools/mandates";
+import { APPROVAL_GRANT, APPROVAL_DENY } from "@toip-tools/mandates";
+import { signDocument } from "@toip-tools/trust-core";
 import { USDC } from "../src/config";
 import { narrowingRows } from "../src/mandate-text";
 import { fixture, people, trailBodies, until, verified } from "./helpers";

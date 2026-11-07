@@ -1,5 +1,5 @@
 import { pack } from "@openvtc/vti-tsp-js";
-import { identityFromSeed, resolveDidKey, seedFrom, type Identity } from "@zk-toip/trust-core";
+import { identityFromSeed, resolveDidKey, seedFrom, type Identity } from "@toip-tools/trust-core";
 import { regions, type AirtimePolicy, type LoRaSetting } from "../src/airtime";
 import { seeded } from "../src/bytes";
 import { MeshTransport, type MeshEvent, type MeshOptions } from "../src/mesh";

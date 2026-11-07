@@ -18,8 +18,8 @@ import {
   dayOf,
   rootDocHash,
   type GroupRoot,
-} from "@zk-toip/anon-membership";
-import { TaskError, fromB64u, identityFromSeed, seedFrom, toB64u, CoarseClock, Endpoint } from "@zk-toip/trust-core";
+} from "@toip-tools/anon-membership";
+import { TaskError, fromB64u, identityFromSeed, seedFrom, toB64u, CoarseClock, Endpoint } from "@toip-tools/trust-core";
 import { newTipCode, tipKeys } from "../src/protocol/codes";
 import { SUBMIT, tipScope, tipSignal, type SubmitPayload } from "../src/protocol/messages";
 import { SOURCE_WIRE_BYTES, sealPadded, sourceSize } from "../src/protocol/padding";
@@ -290,7 +290,7 @@ describe("refusals", () => {
 
   it("ignores the same sealed document sent twice (replay guard)", async () => {
     const before = { tips: tipsNow(), refused: refusedNow() };
-    const t = new (await import("@zk-toip/trust-core")).RelayTransport({ url: w.relay.url, identity: tipKeys(firstTip.code).identity });
+    const t = new (await import("@toip-tools/trust-core")).RelayTransport({ url: w.relay.url, identity: tipKeys(firstTip.code).identity });
     t.start();
     await until(() => t.status === "connected");
     await t.post(firstTip.did, w.sam.did, sent[0]);

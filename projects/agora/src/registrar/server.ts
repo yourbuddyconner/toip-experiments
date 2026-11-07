@@ -4,7 +4,7 @@
  * here: it goes over TSP from the member's DID.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { toB64u } from "@zk-toip/trust-core";
+import { toB64u } from "@toip-tools/trust-core";
 import type { DemoIssuer } from "../issuers/issuers";
 import { CORS, HttpError, listen, sendJson } from "../platform/net";
 

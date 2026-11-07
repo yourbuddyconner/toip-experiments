@@ -4,8 +4,8 @@
  * It can't forge readings: its "evil" switch changes one reading's value, and the verifier shows it.
  */
 import { ed25519 } from "@noble/curves/ed25519.js";
-import type { Link } from "@zk-toip/mesh-transport";
-import type { Scheduler } from "@zk-toip/mesh-transport";
+import type { Link } from "@toip-tools/mesh-transport";
+import type { Scheduler } from "@toip-tools/mesh-transport";
 import { concat } from "../core/bytes";
 import { decodeFrame, encodeBackfill, encodeBeacon, FRAME, readingBody } from "../core/frames";
 import { gatewayReceiptMessage, type GatewayReceipt } from "../core/readings";

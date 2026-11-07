@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { utf8 } from "@zk-toip/trust-core";
+import { utf8 } from "@toip-tools/trust-core";
 import { digest, nextKeyDigest } from "../src/cesr";
 import { Controller } from "../src/controller";
 import { buildRot, verifyKel } from "../src/kel";

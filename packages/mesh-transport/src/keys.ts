@@ -8,7 +8,7 @@ import { hmac } from "@noble/hashes/hmac.js";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { hpke } from "@openvtc/vti-tsp-js";
 import { didKeyFromPublicKey } from "@openvtc/trust-tasks-proof";
-import { resolveDidKey } from "@zk-toip/trust-core";
+import { resolveDidKey } from "@toip-tools/trust-core";
 import { concat, h, utf8 } from "./bytes";
 
 export interface PeerKeys {

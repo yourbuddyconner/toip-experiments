@@ -6,11 +6,11 @@
  * No chain is needed for that check, so none runs here.
  */
 import { sha256 } from "@noble/hashes/sha2.js";
-import { DemoClock, Endpoint, ctt1, utf8, type Clock, type Identity, type Transport } from "@zk-toip/trust-core";
+import { DemoClock, Endpoint, ctt1, utf8, type Clock, type Identity, type Transport } from "@toip-tools/trust-core";
 import { member } from "./cast";
-import { attest, bindPaymentKey, derivePaymentKey, hexHash, termsHash, verifySigned, type Attestation, type Terms } from "@zk-toip/settle/src/protocol/documents";
-import { ESCROW_ATTEST } from "@zk-toip/settle/src/protocol/specs";
-import { bytesAddress } from "@zk-toip/settle/src/chain/escrow";
+import { attest, bindPaymentKey, derivePaymentKey, hexHash, termsHash, verifySigned, type Attestation, type Terms } from "@toip-tools/settle/src/protocol/documents";
+import { ESCROW_ATTEST } from "@toip-tools/settle/src/protocol/specs";
+import { bytesAddress } from "@toip-tools/settle/src/chain/escrow";
 
 export { ESCROW_ATTEST, attest, type Attestation, type Terms };
 

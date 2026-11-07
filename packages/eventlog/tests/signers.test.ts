@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { p256 } from "@noble/curves/nist.js";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { toB64u, utf8 } from "@zk-toip/trust-core";
+import { toB64u, utf8 } from "@toip-tools/trust-core";
 import { nextKeyDigest } from "../src/cesr";
 import { Controller } from "../src/controller";
 import { verifyKel } from "../src/kel";

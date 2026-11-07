@@ -16,8 +16,8 @@ import {
   type GroupIssuerState,
   type GroupRoot,
   type LeafFields,
-} from "@zk-toip/anon-membership";
-import { Refusal, signDocument, verifyCredential, type Clock, type Credential, type Endpoint, type Identity } from "@zk-toip/trust-core";
+} from "@toip-tools/anon-membership";
+import { Refusal, signDocument, verifyCredential, type Clock, type Credential, type Endpoint, type Identity } from "@toip-tools/trust-core";
 import type { GroupDescriptor, GroupReceipt, SlotSpec } from "../protocol/documents";
 import { leafFieldsFromCredential, schemaFieldOf } from "../protocol/gate";
 import { GROUP_LEAVE, GROUP_RECEIPT } from "../protocol/specs";

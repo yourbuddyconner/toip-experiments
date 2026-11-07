@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { checkRootLog, commitmentOf, enroll, fieldToHex, initHashing, type GroupRoot } from "@zk-toip/anon-membership";
-import { Bus, DemoClock, Endpoint, identityFromSeed, issueCredential, seedFrom, signDocument } from "@zk-toip/trust-core";
+import { checkRootLog, commitmentOf, enroll, fieldToHex, initHashing, type GroupRoot } from "@toip-tools/anon-membership";
+import { Bus, DemoClock, Endpoint, identityFromSeed, issueCredential, seedFrom, signDocument } from "@toip-tools/trust-core";
 import { DemoIssuer, ISSUER_KINDS } from "../src/issuers/issuers";
 import { fieldOfText } from "../src/protocol/gate";
 import { GROUP_RECEIPT } from "../src/protocol/specs";

@@ -1,5 +1,5 @@
 {
-  "name": "@zk-toip/cose",
+  "name": "@toip-tools/cose",
   "version": "0.0.0",
   "private": true,
   "type": "module",

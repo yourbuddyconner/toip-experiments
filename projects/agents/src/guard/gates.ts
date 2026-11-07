@@ -3,13 +3,13 @@
  * payment link; before agreeing terms, check the terms match the presented action. Used by people (Dana's
  * view) and by worker agents alike. HTTP and CPU only: these run inside Settle's handlers.
  */
-import { checkTrailRef, endorse, toStream, type WitnessClient } from "@zk-toip/eventlog";
-import { jcsHash, type Decision, type MandateEngine, type Presentation, type Requirements, type StatusResolver } from "@zk-toip/mandates";
-import type { Clock, Identity } from "@zk-toip/trust-core";
-import type { PayeeGates, PaymentLink } from "@zk-toip/settle/src/agents/party";
-import type { Terms } from "@zk-toip/settle/src/protocol/documents";
-import { termsHash } from "@zk-toip/settle/src/protocol/documents";
-import { hex } from "@zk-toip/settle/src/agents/base";
+import { checkTrailRef, endorse, toStream, type WitnessClient } from "@toip-tools/eventlog";
+import { jcsHash, type Decision, type MandateEngine, type Presentation, type Requirements, type StatusResolver } from "@toip-tools/mandates";
+import type { Clock, Identity } from "@toip-tools/trust-core";
+import type { PayeeGates, PaymentLink } from "@toip-tools/settle/src/agents/party";
+import type { Terms } from "@toip-tools/settle/src/protocol/documents";
+import { termsHash } from "@toip-tools/settle/src/protocol/documents";
+import { hex } from "@toip-tools/settle/src/agents/base";
 import { decisionView } from "./explain";
 import type { DecisionView } from "./api";
 

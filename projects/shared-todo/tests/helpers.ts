@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { DemoClock, Policies, identityFromSeed, issueCredential, seedFrom, type Credential, type Identity } from "@zk-toip/trust-core";
+import { DemoClock, Policies, identityFromSeed, issueCredential, seedFrom, type Credential, type Identity } from "@toip-tools/trust-core";
 import type { Role } from "../src/todo/checks";
 import { signRoster, type RosterMember } from "../src/todo/roster";
 

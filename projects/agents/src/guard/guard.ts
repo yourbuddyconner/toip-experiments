@@ -22,13 +22,13 @@ import {
   type Requirements,
   type StatusRegistry,
   type StatusResolver,
-} from "@zk-toip/mandates";
-import { verifyCredential, type Clock, type Credential, type Handler, type Identity, type Traffic } from "@zk-toip/trust-core";
-import type { Checkout, PayeeGates, PaymentLink } from "@zk-toip/settle/src/agents/party";
-import { verifyLink } from "@zk-toip/settle/src/agents/party";
-import type { PaymentState, AgentEvent } from "@zk-toip/settle/src/agents/base";
-import { hex } from "@zk-toip/settle/src/agents/base";
-import { termsHash } from "@zk-toip/settle/src/protocol/documents";
+} from "@toip-tools/mandates";
+import { verifyCredential, type Clock, type Credential, type Handler, type Identity, type Traffic } from "@toip-tools/trust-core";
+import type { Checkout, PayeeGates, PaymentLink } from "@toip-tools/settle/src/agents/party";
+import { verifyLink } from "@toip-tools/settle/src/agents/party";
+import type { PaymentState, AgentEvent } from "@toip-tools/settle/src/agents/base";
+import { hex } from "@toip-tools/settle/src/agents/base";
+import { termsHash } from "@toip-tools/settle/src/protocol/documents";
 import { APPROVAL_REQUEST_TTL_SECONDS, parseUsdc, taskUri, usdc } from "../config";
 import type { AuditSink } from "../audit/sink";
 import type { HubPort, WorkerProfile } from "../hub/client";
@@ -376,7 +376,7 @@ export class Guard implements GuardApi {
 
   /** Sends the principal a bundle of the whole trail, bodies included (trail/disclose). */
   async discloseTo(to: string): Promise<void> {
-    const { disclose } = await import("@zk-toip/eventlog");
+    const { disclose } = await import("@toip-tools/eventlog");
     await this.o.audit.flush();
     const bundle = await this.o.audit.bundle();
     await disclose(this.settle.endpoint as never, to, bundle).catch((e) => this.note(`couldn't disclose its trail: ${String(e?.message ?? e)}`));
@@ -390,7 +390,7 @@ export class Guard implements GuardApi {
     reg.revoke(it.mandate.credentialStatus);
     const list = reg.sign();
     await this.o.hub.putStatus(list);
-    const { notifyRevoked } = await import("@zk-toip/mandates");
+    const { notifyRevoked } = await import("@toip-tools/mandates");
     await notifyRevoked(this.settle.endpoint as never, it.to, { mandate: id, statusList: list });
     await this.log("agent/mandate-revoked-issued", { mandate: id, subject: it.to, at: by, statusList: jcsHash(list) });
     this.note(`revoked the mandate it gave ${this.nameOf(it.to)}, as its principal asked`);

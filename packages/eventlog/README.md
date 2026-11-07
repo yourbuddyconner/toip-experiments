@@ -1,4 +1,4 @@
-# @zk-toip/eventlog
+# @toip-tools/eventlog
 
 Append-only, signed event logs whose writer can't quietly change them.
 
@@ -11,7 +11,7 @@ Witnesses receipt the first version they see at each place in a log. Watchers co
 
 The design is `projects/trail/docs/design.md`. Section 13 is the API.
 
-The core runs in browsers and Node. `JsonFileStore`, `serveHttp` and `startWitness` are Node only, in `@zk-toip/eventlog/node`.
+The core runs in browsers and Node. `JsonFileStore`, `serveHttp` and `startWitness` are Node only, in `@toip-tools/eventlog/node`.
 
 ## KERI compatibility
 
@@ -53,7 +53,7 @@ These use KERI's SAID rules and CESR primitives. A KEL with only Ed25519 or plai
 ## Quick start
 
 ```ts
-import { Controller, MemoryStore, coldKeysFromSeed, signerFromIdentity, localWitnessClient, Witness, exportBundle, verifyBundle } from "@zk-toip/eventlog";
+import { Controller, MemoryStore, coldKeysFromSeed, signerFromIdentity, localWitnessClient, Witness, exportBundle, verifyBundle } from "@toip-tools/eventlog";
 
 const controller = await Controller.incept({
   hot: [signerFromIdentity(agentIdentity)],
@@ -211,7 +211,7 @@ Not done yet:
 ## Tests
 
 ```
-npm test --workspace @zk-toip/eventlog
+npm test --workspace @toip-tools/eventlog
 ```
 
 The KERIpy interop tests are skipped unless `KERIPY_PYTHON` is set:
@@ -219,7 +219,7 @@ The KERIpy interop tests are skipped unless `KERIPY_PYTHON` is set:
 ```
 python3.12 -m venv ~/.cache/zk-toip-keripy/venv
 ~/.cache/zk-toip-keripy/venv/bin/pip install "keri==1.3.*"
-KERIPY_PYTHON=~/.cache/zk-toip-keripy/venv/bin/python npm test --workspace @zk-toip/eventlog
+KERIPY_PYTHON=~/.cache/zk-toip-keripy/venv/bin/python npm test --workspace @toip-tools/eventlog
 ```
 
 KERIpy needs libsodium. `interop/keripy_make.py` rebuilds the KERIpy fixtures.

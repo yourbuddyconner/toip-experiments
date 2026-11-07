@@ -1,6 +1,6 @@
 /** Accounts in this browser: create one with a passkey, unlock one, or restore one from a backup code. */
 import { useState } from "react";
-import { PasskeyUnsupported } from "@zk-toip/web-vault";
+import { PasskeyUnsupported } from "@toip-tools/web-vault";
 import { vault } from "../services";
 import { navigate } from "../router";
 import { useApp } from "../state";

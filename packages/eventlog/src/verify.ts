@@ -1,7 +1,7 @@
 /** Signatures made outside the log, bundles, and trailRef checks (trail design §11.3, §11.4, §12.1). */
 import { sha256 } from "@noble/hashes/sha2.js";
 import { blake3 } from "@noble/hashes/blake3.js";
-import { utf8, type Clock } from "@zk-toip/trust-core";
+import { utf8, type Clock } from "@toip-tools/trust-core";
 import { verifyBinding, type DidBinding } from "./binding";
 import { encode, isQb64 } from "./cesr";
 import type { WitnessClient } from "./client";

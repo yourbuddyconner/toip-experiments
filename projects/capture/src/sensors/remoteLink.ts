@@ -3,7 +3,7 @@
  * medium through this link. Frames go up as POSTs and come down as server-sent events. The world puts
  * them on the air for this node, with the medium's loss, airtime and collisions.
  */
-import { loraAirtimeMs, plans, regions, type Link, type LinkInfo, type LinkState, type ReceivedFrame } from "@zk-toip/mesh-transport";
+import { loraAirtimeMs, plans, regions, type Link, type LinkInfo, type LinkState, type ReceivedFrame } from "@toip-tools/mesh-transport";
 import { b64, fromB64 } from "../core";
 
 export class RemoteSimLink implements Link {

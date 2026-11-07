@@ -4,7 +4,7 @@ import "@fontsource/atkinson-hyperlegible/400.css";
 import "@fontsource/atkinson-hyperlegible/700.css";
 import "./styles.css";
 import policyUrl from "../../policies/policy.wasm?url";
-import { Policies, SystemClock } from "@zk-toip/trust-core";
+import { Policies, SystemClock } from "@toip-tools/trust-core";
 import { Device } from "../todo/device";
 import { App } from "./App";
 import { IndexedDBStore } from "./idbStore";

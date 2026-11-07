@@ -4,7 +4,7 @@
  * browser profile has a virtual passkey authenticator with PRF, so accounts are sealed with passkeys.
  * Proofs are real, made in each page's Web Worker.
  *
- *   npm run e2e --workspace @zk-toip/agora              # builds the web app, then runs
+ *   npm run e2e --workspace @toip-tools/agora              # builds the web app, then runs
  *   add --headed to watch
  *
  * Screenshots land in web/e2e-shots/. Proof times go to results/e2e-times.json.

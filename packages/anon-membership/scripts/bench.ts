@@ -1,6 +1,6 @@
 // Measures proving and verification for the depth-20 gate circuit, in Node and in Chromium.
 //
-//   npm run bench --workspace @zk-toip/anon-membership [-- --runs 10]
+//   npm run bench --workspace @toip-tools/anon-membership [-- --runs 10]
 //
 // Writes results/bench.json. Numbers are for the machine it runs on.
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -18,7 +18,7 @@ import {
   loadArtifacts,
   membershipInputs,
 } from "../src/index";
-import { fromB64u } from "@zk-toip/trust-core";
+import { fromB64u } from "@toip-tools/trust-core";
 const fromB64uLength = (s: string) => fromB64u(s).length;
 import { buildPage, chromiumAvailable, runInChromium, servePage } from "../tests/browser/harness";
 

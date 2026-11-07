@@ -4,8 +4,8 @@
  */
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import type { GroupRoot, MembershipProof } from "@zk-toip/anon-membership";
-import { canonicalJson } from "@zk-toip/trust-core";
+import type { GroupRoot, MembershipProof } from "@toip-tools/anon-membership";
+import { canonicalJson } from "@toip-tools/trust-core";
 
 /** The app label for scopes and signals: scopeOf(APP, …) and messageOf(APP, …). */
 export const APP = "agora/v1";

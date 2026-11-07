@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Endpoint, ctt1, ourSpec, type Identity } from "@zk-toip/trust-core";
+import { Endpoint, ctt1, ourSpec, type Identity } from "@toip-tools/trust-core";
 import { regions } from "../src/airtime";
 import { utf8 } from "../src/bytes";
 import { decodeFrame } from "../src/frame";

@@ -7,7 +7,7 @@
  * rebuild the exact TSP bytes, check the TSP signature, and hand them to the attached Endpoint.
  */
 import { ed25519 } from "@noble/curves/ed25519.js";
-import { resolveDidKey, type Delivery, type Identity, type Transport } from "@zk-toip/trust-core";
+import { resolveDidKey, type Delivery, type Identity, type Transport } from "@toip-tools/trust-core";
 import { AirtimeBudget, type TrafficClass } from "./airtime";
 import { concat, equal, hex, Lru, utf8 } from "./bytes";
 import { BEACON_BYTES, FRAME_HEADER, MAX_FRAGMENTS, ackLength, beaconSigned, decodeFrame, encodeFrame, estimate as estimateFrames, fragment, type Frame } from "./frame";

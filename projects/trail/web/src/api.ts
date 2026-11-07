@@ -1,5 +1,5 @@
 /** Talking to the Trail service. Every verification happens here in the page, with the same library. */
-import { evidenceFromJson, httpWitnessClient, type Bundle, type DuplicityEvidence } from "@zk-toip/eventlog";
+import { evidenceFromJson, httpWitnessClient, type Bundle, type DuplicityEvidence } from "@toip-tools/eventlog";
 import { buildView, type IdentifierView } from "../../src/view";
 
 export interface Line {

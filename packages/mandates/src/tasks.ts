@@ -2,7 +2,7 @@
  * The mandates/* Trust Tasks (agents design §10.1, §9.3): one-way, signed, sealed in TSP Direct messages.
  * `serveMandateTasks` mounts handlers on a trust-core Endpoint; they check what they can and call back.
  */
-import { ourSpec, verifyDocument, type Clock, type Endpoint, type StatusListDoc } from "@zk-toip/trust-core";
+import { ourSpec, verifyDocument, type Clock, type Endpoint, type StatusListDoc } from "@toip-tools/trust-core";
 import { defaultEngine, type MandateEngine } from "./engine";
 import { actionHash, jcsHash } from "./hash";
 import type { Action, Approval, Decision, Mandate, Reason, StatusResolver } from "./types";

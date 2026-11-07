@@ -6,8 +6,8 @@
  * `tamper` is for the demo: the organization colluding with the outlet's web host to serve a
  * different root. The mirror then serves that, and stops refreshing, until `untamper`.
  */
-import { checkRootLog, snapshotMatches, type GroupRoot } from "@zk-toip/anon-membership";
-import type { Clock } from "@zk-toip/trust-core";
+import { checkRootLog, snapshotMatches, type GroupRoot } from "@toip-tools/anon-membership";
+import type { Clock } from "@toip-tools/trust-core";
 import type { Fetcher } from "./logs";
 
 export interface MirrorStatus {

@@ -1,6 +1,6 @@
 import { hmac } from "@noble/hashes/hmac.js";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { canonicalJson } from "@zk-toip/trust-core";
+import { canonicalJson } from "@toip-tools/trust-core";
 import { fieldFromBytes, fieldToHex, toField, type Field } from "./field";
 
 const enc = new TextEncoder();

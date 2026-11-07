@@ -1,4 +1,4 @@
-import { canonicalJson } from "@zk-toip/trust-core";
+import { canonicalJson } from "@toip-tools/trust-core";
 import { opKey, type Op } from "./ops";
 
 export interface Item {

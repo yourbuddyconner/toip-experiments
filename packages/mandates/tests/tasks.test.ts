@@ -1,4 +1,4 @@
-import { Bus, Endpoint, type Identity } from "@zk-toip/trust-core";
+import { Bus, Endpoint, type Identity } from "@toip-tools/trust-core";
 import { describe, expect, it } from "vitest";
 import {
   APPROVAL_DENY,
@@ -28,11 +28,11 @@ function net() {
 
 describe("mandates/* Trust Tasks (§10.1)", () => {
   it("names the types in our namespace", () => {
-    expect(MANDATE_ISSUE.typeUri).toBe("https://zk-toip.example/spec/mandates/issue/0.1");
-    expect(MANDATE_REVOKED.typeUri).toBe("https://zk-toip.example/spec/mandates/revoked/0.1");
-    expect(APPROVAL_REQUEST.typeUri).toBe("https://zk-toip.example/spec/mandates/approval/request/0.1");
-    expect(APPROVAL_GRANT.typeUri).toBe("https://zk-toip.example/spec/mandates/approval/grant/0.1");
-    expect(APPROVAL_DENY.typeUri).toBe("https://zk-toip.example/spec/mandates/approval/deny/0.1");
+    expect(MANDATE_ISSUE.typeUri).toBe("https://toip.tools/spec/mandates/issue/0.1");
+    expect(MANDATE_REVOKED.typeUri).toBe("https://toip.tools/spec/mandates/revoked/0.1");
+    expect(APPROVAL_REQUEST.typeUri).toBe("https://toip.tools/spec/mandates/approval/request/0.1");
+    expect(APPROVAL_GRANT.typeUri).toBe("https://toip.tools/spec/mandates/approval/grant/0.1");
+    expect(APPROVAL_DENY.typeUri).toBe("https://toip.tools/spec/mandates/approval/deny/0.1");
   });
 
   it("mandates/issue: the delegate receives a mandate whose chain verifies, and refuses a widened one", async () => {

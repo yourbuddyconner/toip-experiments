@@ -1,6 +1,6 @@
 import { createSocket, type Socket } from "node:dgram";
 import { afterEach, describe, expect, it } from "vitest";
-import type { SerialPortLike } from "@zk-toip/mesh-transport/serial";
+import type { SerialPortLike } from "@toip-tools/mesh-transport/serial";
 import { formatReport, runDoctor } from "../src/doctor";
 
 const EUI = Buffer.from("AA555A0000000001", "hex");

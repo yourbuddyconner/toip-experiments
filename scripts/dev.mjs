@@ -4,8 +4,8 @@ import { mkdirSync } from "node:fs";
 
 mkdirSync(".data", { recursive: true });
 const procs = [
-  ["relay", ["run", "start", "--workspace", "@zk-toip/relay"], { RELAY_DB: `${process.cwd()}/.data/relay.db`, PORT: process.env.RELAY_PORT ?? "8787" }],
-  ["web", ["run", "dev", "--workspace", "@zk-toip/shared-todo"], {}],
+  ["relay", ["run", "start", "--workspace", "@toip-tools/relay"], { RELAY_DB: `${process.cwd()}/.data/relay.db`, PORT: process.env.RELAY_PORT ?? "8787" }],
+  ["web", ["run", "dev", "--workspace", "@toip-tools/shared-todo"], {}],
 ].map(([name, args, env]) => {
   const p = spawn("npm", args, { env: { ...process.env, ...env }, stdio: ["ignore", "pipe", "pipe"] });
   const tag = (chunk) =>

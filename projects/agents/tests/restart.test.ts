@@ -3,7 +3,7 @@
  * approval once, not twice. Its budgets and used approvals survive.
  */
 import { describe, expect, it } from "vitest";
-import { APPROVAL_GRANT, approve } from "@zk-toip/mandates";
+import { APPROVAL_GRANT, approve } from "@toip-tools/mandates";
 import { Guard } from "../src/guard/guard";
 import { USDC } from "../src/config";
 import { fixture, people, until, verified } from "./helpers";

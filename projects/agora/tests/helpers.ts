@@ -1,5 +1,5 @@
-import { MembershipProver, MembershipVerifier } from "@zk-toip/anon-membership";
-import { Bus, DemoClock, Endpoint, identityFromSeed, seedFrom } from "@zk-toip/trust-core";
+import { MembershipProver, MembershipVerifier } from "@toip-tools/anon-membership";
+import { Bus, DemoClock, Endpoint, identityFromSeed, seedFrom } from "@toip-tools/trust-core";
 import { AgoraClient, MemoryWallet } from "../src/client/client";
 import { HostApi, RegistrarApi } from "../src/client/http";
 import { ForumReader, MemoryKeyValue } from "../src/client/reader";

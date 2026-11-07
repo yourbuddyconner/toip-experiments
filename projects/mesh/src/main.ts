@@ -1,8 +1,8 @@
 /**
  * Starts the visualizer.
  *
- *   npm run app --workspace @zk-toip/mesh              # Vite, with hot reload
- *   npm run app --workspace @zk-toip/mesh -- --static  # the built app (npm run build:web first)
+ *   npm run app --workspace @toip-tools/mesh              # Vite, with hot reload
+ *   npm run app --workspace @toip-tools/mesh -- --static  # the built app (npm run build:web first)
  *
  * Environment: PORT (default 4360), HOST (default 127.0.0.1).
  */

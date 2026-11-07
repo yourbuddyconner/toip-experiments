@@ -6,17 +6,17 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { coldKeysFromSeed } from "@zk-toip/eventlog";
-import { defaultEngine, httpStatusResolver, issueMandate, StatusRegistry, type Mandate, type MandateEngine, type StatusResolver } from "@zk-toip/mandates";
-import { identityFromSeed, SystemClock, type Clock, type Identity } from "@zk-toip/trust-core";
-import { startPlatform, type Platform } from "@zk-toip/settle/src/platform/platform";
-import { SettleApi } from "@zk-toip/settle/src/client/client";
-import { loadPolicy } from "@zk-toip/settle/src/protocol/policyFile";
-import type { Party } from "@zk-toip/settle/src/agents/party";
+import { coldKeysFromSeed } from "@toip-tools/eventlog";
+import { defaultEngine, httpStatusResolver, issueMandate, StatusRegistry, type Mandate, type MandateEngine, type StatusResolver } from "@toip-tools/mandates";
+import { identityFromSeed, SystemClock, type Clock, type Identity } from "@toip-tools/trust-core";
+import { startPlatform, type Platform } from "@toip-tools/settle/src/platform/platform";
+import { SettleApi } from "@toip-tools/settle/src/client/client";
+import { loadPolicy } from "@toip-tools/settle/src/protocol/policyFile";
+import type { Party } from "@toip-tools/settle/src/agents/party";
 import { DEFAULT_PORTS, USDC } from "./config";
 import { startHub, type Hub } from "./hub/hub";
 import { HubClient, signProfile } from "./hub/client";
-import { httpWitnessClient } from "@zk-toip/eventlog";
+import { httpWitnessClient } from "@toip-tools/eventlog";
 import { makeBareRepo, Workspace } from "./guard/workspace";
 import { createAgent, type AgentHandle } from "./roles/agent";
 import { PrincipalDevice } from "./roles/principal";
@@ -235,7 +235,7 @@ export async function createWorld(o: WorldOptions = {}): Promise<World> {
         priceMax: { attr: "price", max: USDC(100).toString(), when: ["settle/get-paid"] },
         categories: { attr: "category", within: ["software.*"], when: ["settle/get-paid"] },
         spendTotal: { attr: "spend", budget: "0", period: "total" },
-        tasks: { attr: "task", within: ["https://zk-toip.example/spec/agents/*", "https://zk-toip.example/spec/settle/*"] },
+        tasks: { attr: "task", within: ["https://toip.tools/spec/agents/*", "https://toip.tools/spec/settle/*"] },
       },
       delegation: { maxDepth: 0 },
       revocation: { maxAgeSeconds: 3600 },

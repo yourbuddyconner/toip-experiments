@@ -2,9 +2,9 @@
  * The verifier (design §14): a pure function of the file, the store, the trust list, the clock and an
  * optional fetcher. Nothing it is handed is trusted; every signature, hash, path and receipt is redone here.
  */
-import { verifyCose1, type CoseAlg, type PublicKey } from "@zk-toip/cose";
-import { anchoredIn, keyAt, retiredAt, type KelResult } from "@zk-toip/eventlog";
-import { resolveDidKey, verifyCredential, isRevokedIn, verifyDocument, type Clock, type Credential, type StatusListDoc } from "@zk-toip/trust-core";
+import { verifyCose1, type CoseAlg, type PublicKey } from "@toip-tools/cose";
+import { anchoredIn, keyAt, retiredAt, type KelResult } from "@toip-tools/eventlog";
+import { resolveDidKey, verifyCredential, isRevokedIn, verifyDocument, type Clock, type Credential, type StatusListDoc } from "@toip-tools/trust-core";
 import { equal, hex, sha } from "./bytes";
 import { credentialKind, type TrustEntry } from "./credentials";
 import { randomnessOf, roundTime, verifyRound, type DrandChain } from "./drand";

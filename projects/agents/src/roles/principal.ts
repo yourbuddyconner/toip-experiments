@@ -3,7 +3,7 @@
  * approves or denies exact actions, confirms physical work, witnesses its agents' trails, and reviews them.
  * In the MVP it runs in Node; the console web page is its screen.
  */
-import { ed25519Signer, httpWitnessClient, localWitnessClient, MemoryStore, onDisclose, serveWitnessTasks, verifyBundle, Witness, type Bundle } from "@zk-toip/eventlog";
+import { ed25519Signer, httpWitnessClient, localWitnessClient, MemoryStore, onDisclose, serveWitnessTasks, verifyBundle, Witness, type Bundle } from "@toip-tools/eventlog";
 import {
   approve,
   denyApproval,
@@ -19,9 +19,9 @@ import {
   type Decision,
   type Mandate,
   type MandateEngine,
-} from "@zk-toip/mandates";
-import type { Clock, Identity } from "@zk-toip/trust-core";
-import type { Party } from "@zk-toip/settle/src/agents/party";
+} from "@toip-tools/mandates";
+import type { Clock, Identity } from "@toip-tools/trust-core";
+import type { Party } from "@toip-tools/settle/src/agents/party";
 import { CONTROL, REPORT, TASK, type ControlOp, type Report } from "../protocol/tasks";
 import { decisionView } from "../guard/explain";
 import type { DecisionView } from "../guard/api";
@@ -147,7 +147,7 @@ export class PrincipalDevice {
       attesters: { attr: "attester", anyOf: o.attesters, when: ["settle/pay"] },
       arbiters: { attr: "arbiter", anyOf: [o.arbiter], when: ["settle/pay"] },
       minWindow: { attr: "disputeWindowSeconds", min: 0, when: ["settle/pay"] },
-      tasks: { attr: "task", within: ["https://zk-toip.example/spec/settle/*", "https://zk-toip.example/spec/agents/*", "https://zk-toip.example/spec/mandates/*"] },
+      tasks: { attr: "task", within: ["https://toip.tools/spec/settle/*", "https://toip.tools/spec/agents/*", "https://toip.tools/spec/mandates/*"] },
     };
     const m = issueMandate(this.identity, this.o.clock, {
       subject: o.agent,
@@ -165,7 +165,7 @@ export class PrincipalDevice {
   }
 
   async sendMandate(m: Mandate): Promise<void> {
-    const { sendMandate } = await import("@zk-toip/mandates");
+    const { sendMandate } = await import("@toip-tools/mandates");
     await this.publishStatus();
     await sendMandate(this.party.endpoint, m.credentialSubject.id, { mandate: m, chain: [] });
     this.note(`issued a mandate to ${this.o.names(m.credentialSubject.id)}`);

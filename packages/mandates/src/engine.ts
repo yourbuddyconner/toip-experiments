@@ -3,7 +3,7 @@
  * and structural (steps 1 to 8, approvals' signatures) and turns it into facts; the Rego policy
  * mandates/check/1 decides narrowing, the action against every link, approvals, requirements and the outcome.
  */
-import { Policies, isRevokedIn, verifyDocument, type Clock, type Credential, type StatusListDoc } from "@zk-toip/trust-core";
+import { Policies, isRevokedIn, verifyDocument, type Clock, type Credential, type StatusListDoc } from "@toip-tools/trust-core";
 import { verifyApproval } from "./approval";
 import { actionHash, mandateHash, sha256Tag } from "./hash";
 import { checkAction, checkMandate, checkRoot, MAX_LINKS } from "./shape";

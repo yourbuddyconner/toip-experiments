@@ -3,9 +3,9 @@
 import { hmac } from "@noble/hashes/hmac.js";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { utf8ToBytes } from "@noble/hashes/utils.js";
-import { CIRCUIT_ID, MembershipVerifier, loadArtifacts } from "@zk-toip/anon-membership";
-import { RelayTransport, identityFromSeed, type Identity } from "@zk-toip/trust-core";
-import { createVault, type Unlocked } from "@zk-toip/web-vault";
+import { CIRCUIT_ID, MembershipVerifier, loadArtifacts } from "@toip-tools/anon-membership";
+import { RelayTransport, identityFromSeed, type Identity } from "@toip-tools/trust-core";
+import { createVault, type Unlocked } from "@toip-tools/web-vault";
 import { InboxAgent, type FileStore, type InboxState } from "../../../src/agents/inbox";
 import { httpFetcher } from "../../../src/agents/logs";
 import { DEFAULT_LIMITS, signDescriptor, type Descriptor, type Story } from "../../../src/protocol/descriptor";

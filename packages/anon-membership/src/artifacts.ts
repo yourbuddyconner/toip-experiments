@@ -1,7 +1,7 @@
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import type { CompiledCircuit } from "@noir-lang/noir_js";
-import { fromB64u } from "@zk-toip/trust-core";
+import { fromB64u } from "@toip-tools/trust-core";
 import circuit from "../artifacts/gate_d20.json" with { type: "json" };
 import meta from "../artifacts/gate_d20.meta.json" with { type: "json" };
 

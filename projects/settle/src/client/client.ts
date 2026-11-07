@@ -7,7 +7,7 @@
  *   await settle.addFunds(party, 500_000_000n);
  *   const link = await party.createLink({ title: "Fix the sink", units: 120_000_000n, release: "payer-confirms" });
  */
-import { signDocument, SystemClock, type Clock, type Credential, type Identity, type OutboxStore, type Traffic } from "@zk-toip/trust-core";
+import { signDocument, SystemClock, type Clock, type Credential, type Identity, type OutboxStore, type Traffic } from "@toip-tools/trust-core";
 import { Chain } from "../chain/chain";
 import type { SettlePolicy } from "../protocol/policy";
 import { Party, type PartySnapshot } from "../agents/party";

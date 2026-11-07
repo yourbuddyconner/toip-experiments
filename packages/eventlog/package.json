@@ -1,5 +1,5 @@
 {
-  "name": "@zk-toip/eventlog",
+  "name": "@toip-tools/eventlog",
   "version": "0.0.0",
   "private": true,
   "license": "UNLICENSED",
@@ -17,7 +17,7 @@
   "dependencies": {
     "@noble/curves": "2.4.0",
     "@noble/hashes": "2.4.0",
-    "@zk-toip/trust-core": "0.0.0",
+    "@toip-tools/trust-core": "0.0.0",
     "cborg": "6.2.1"
   },
   "devDependencies": {

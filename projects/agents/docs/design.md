@@ -263,7 +263,7 @@ A **mandate** is a VC-shaped credential issued by a delegator (the principal, or
       "attesters":   { "attr": "attester", "anyOf": ["did:key:<CI attester>", "did:key:<principal>"], "when": ["settle/pay"] },
       "arbiters":    { "attr": "arbiter", "anyOf": ["did:key:<Settle arbiter>"], "when": ["settle/pay"] },
       "minWindow":   { "attr": "disputeWindowSeconds", "min": 0, "when": ["settle/pay"] },
-      "tasks":       { "attr": "task", "within": ["https://zk-toip.example/spec/settle/*", "https://zk-toip.example/spec/agents/*", "https://zk-toip.example/spec/mandates/*"] }
+      "tasks":       { "attr": "task", "within": ["https://toip.tools/spec/settle/*", "https://toip.tools/spec/agents/*", "https://toip.tools/spec/mandates/*"] }
     },
     "delegation": { "maxDepth": 1 },
     "escalation": { "approvable": ["spendPerTx", "spendPerDay", "categories"], "approvalTtlSeconds": 3600 },
@@ -344,7 +344,7 @@ An **action** is what the guard is about to do, written down before it does it:
     "disputeWindowSeconds": 0,
     "link": "sha256:<hash of the signed payment link>",
     "job": "job-91c…",
-    "task": "https://zk-toip.example/spec/settle/checkout/start/0.1",
+    "task": "https://toip.tools/spec/settle/checkout/start/0.1",
     "purpose": "Pick up a parcel at the post office on Main St"
   }
 }
@@ -367,7 +367,7 @@ The `settle/1` action types and their attributes:
 | `agents/job/deliver` | delivering work | 0 | `counterparty`, `job` | `agents/job/deliver` |
 | `mandates/delegate` | issuing a sub-mandate and funding it | the funding | `counterparty` (the sub-agent), `child` (hash of the child mandate), `asset` | `mandates/issue` |
 
-**How attributes are looked up.** `attr: "type"` reads `action.type`. Every other name reads `action.attrs[name]`. The `task` column is shorthand for the full `ourSpec` URI, for example `https://zk-toip.example/spec/settle/checkout/start/0.1`.
+**How attributes are looked up.** `attr: "type"` reads `action.type`. Every other name reads `action.attrs[name]`. The `task` column is shorthand for the full `ourSpec` URI, for example `https://toip.tools/spec/settle/checkout/start/0.1`.
 
 A constraint without `when` applies to every action type, so it must name an attribute every action has (`type`, `spend`, `task`), or every action would fail with `attr.missing`. That's why the demo mandate scopes `asset`, `categories` and `attesters` with `when`.
 
@@ -592,7 +592,7 @@ The worker receives the approval in the presentation and checks it like the guar
 
 ## 10. Protocol: Trust Tasks
 
-All types live in our namespace through the trust core's `ourSpec(name)`, as `https://zk-toip.example/spec/<name>/0.1`. Like Settle's, every message is a signed Trust Task document sealed in a TSP Direct message. Those marked "request" are request/response; the rest are one-way.
+All types live in our namespace through the trust core's `ourSpec(name)`, as `https://toip.tools/spec/<name>/0.1`. Like Settle's, every message is a signed Trust Task document sealed in a TSP Direct message. Those marked "request" are request/response; the rest are one-way.
 
 ### 10.1 Types
 
@@ -963,7 +963,7 @@ If the trail shows duplicity, or a header the console's witness never saw, the c
 
 ### 14.3 The demo (about three minutes)
 
-`npm run demo --workspace @zk-toip/agents`. One command starts the Settle platform (local cluster, or `--cluster devnet`), the relay, the hub, Settle's processor and arbiter, the CI attester, the agents and the scripted workers. It opens the console in the browser twice: as Conner (principal) and as Dana (worker). `--scripted` runs every model from scripts and every human automatically, for a headless run. Without `--scripted`, Ops, Errands and Coder use Claude if credentials are present.
+`npm run demo --workspace @toip-tools/agents`. One command starts the Settle platform (local cluster, or `--cluster devnet`), the relay, the hub, Settle's processor and arbiter, the CI attester, the agents and the scripted workers. It opens the console in the browser twice: as Conner (principal) and as Dana (worker). `--scripted` runs every model from scripts and every human automatically, for a headless run. Without `--scripted`, Ops, Errands and Coder use Claude if credentials are present.
 
 The cast:
 
@@ -1043,7 +1043,7 @@ What the tests must prove, by file. The headline: **over-limit actions are refus
 
 ### 16.1 `packages/mandates`: what it is
 
-General delegation credentials: a principal (person, organization, device owner) gives a delegate (agent, sub-agent, device) a bounded, revocable authority, and anyone can check an action against it. It depends on `@zk-toip/trust-core` (credentials, signing, status lists, policies, `ourSpec`). It knows nothing about Settle except the `settle/1` profile, which is data.
+General delegation credentials: a principal (person, organization, device owner) gives a delegate (agent, sub-agent, device) a bounded, revocable authority, and anyone can check an action against it. It depends on `@toip-tools/trust-core` (credentials, signing, status lists, policies, `ourSpec`). It knows nothing about Settle except the `settle/1` profile, which is data.
 
 ### 16.2 Proposed API
 
@@ -1146,7 +1146,7 @@ export interface Profile { id: string; actions: Record<string, { required: strin
 
 ### 16.4 What we need from `packages/eventlog`
 
-Trail's design proposes `packages/eventlog` (`@zk-toip/eventlog`): KERI key event logs, trails, witnesses, receipts and duplicity evidence (trail design §13). It covers what we need. We'd use it like this:
+Trail's design proposes `packages/eventlog` (`@toip-tools/eventlog`): KERI key event logs, trails, witnesses, receipts and duplicity evidence (trail design §13). It covers what we need. We'd use it like this:
 
 ```ts
 // once, when the agent is created
@@ -1253,7 +1253,7 @@ The open questions above were settled by the assistant, at the convener's reques
 
 ## Implementation notes (2026-11-06)
 
-What was built, and where it differs from the sections above. Everything here runs with `npm run agents` or `npm run demo --workspace @zk-toip/agents`.
+What was built, and where it differs from the sections above. Everything here runs with `npm run agents` or `npm run demo --workspace @toip-tools/agents`.
 
 **Built as designed**
 - The guard (`src/guard/guard.ts`) holds the identity, the Settle party and the trail. The loop reaches it only through `GuardApi` (`src/guard/api.ts`, types only). A test checks the loop's import graph.

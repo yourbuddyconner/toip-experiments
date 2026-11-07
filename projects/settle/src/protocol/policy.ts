@@ -1,5 +1,5 @@
 /** The Settle payment policy, evaluated on each signer's own device. Browser-safe: pass the wasm bytes. */
-import { Policies } from "@zk-toip/trust-core";
+import { Policies } from "@toip-tools/trust-core";
 
 export const ENTRYPOINT = "settle/attested_completion/decision";
 

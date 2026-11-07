@@ -8,7 +8,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSy
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { tmpdir } from "node:os";
 import { extname, join, normalize } from "node:path";
-import { startRelay, type Relay } from "@zk-toip/relay";
+import { startRelay, type Relay } from "@toip-tools/relay";
 import { DevClock, listen } from "./net";
 import { startWorld, type World } from "./world";
 
@@ -94,7 +94,7 @@ export async function startPlatform(opts: PlatformOptions = {}): Promise<Platfor
     const { createServer } = await import("vite");
     vite = await createServer({ root: WEB_DIR, configFile: join(WEB_DIR, "vite.config.ts"), appType: "spa", server: { middlewareMode: true, hmr: false }, logLevel: "error" });
   } else if (opts.web === "static" && !existsSync(join(distDir, "index.html"))) {
-    throw new Error("the web app isn't built: run `npm run build:web --workspace @zk-toip/agora`");
+    throw new Error("the web app isn't built: run `npm run build:web --workspace @toip-tools/agora`");
   }
 
   const serveStatic = (req: IncomingMessage, res: ServerResponse) => {

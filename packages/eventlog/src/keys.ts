@@ -6,7 +6,7 @@ import { ed25519 } from "@noble/curves/ed25519.js";
 import { p256 } from "@noble/curves/nist.js";
 import { hkdf } from "@noble/hashes/hkdf.js";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { fromUtf8, toB64u, utf8, type Identity } from "@zk-toip/trust-core";
+import { fromUtf8, toB64u, utf8, type Identity } from "@toip-tools/trust-core";
 import { decode, encode, nextKeyDigest, sigCurve } from "./cesr";
 import type { IndexedSig, Qb64, WebAuthnWrap } from "./types";
 

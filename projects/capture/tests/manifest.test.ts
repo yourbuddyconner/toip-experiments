@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { encodeCbor, seedSigner, verifyCose1 } from "@zk-toip/cose";
-import { identityFromSeed, seedFrom } from "@zk-toip/trust-core";
+import { encodeCbor, seedSigner, verifyCose1 } from "@toip-tools/cose";
+import { identityFromSeed, seedFrom } from "@toip-tools/trust-core";
 import {
   contentHash,
   decodeStore,

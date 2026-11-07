@@ -2,7 +2,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { PersistentReplayGuard } from "@zk-toip/trust-core";
+import { PersistentReplayGuard } from "@toip-tools/trust-core";
 import { fileGatewayStore, fileOutbox, fileReplayStore, listSerialPorts, mockSerialPort } from "../src/node";
 
 const dir = () => mkdtempSync(join(tmpdir(), "mesh-node-"));

@@ -4,8 +4,8 @@
  * are detected; a presentation's trailRef resolves; the export bundle verifies offline.
  */
 import { describe, expect, it } from "vitest";
-import { checkTrailRef, Controller, fromStream, MemoryStore, signerFromIdentity, toStream, verifyBundle, type Bundle } from "@zk-toip/eventlog";
-import { jcsHash } from "@zk-toip/mandates";
+import { checkTrailRef, Controller, fromStream, MemoryStore, signerFromIdentity, toStream, verifyBundle, type Bundle } from "@toip-tools/eventlog";
+import { jcsHash } from "@toip-tools/mandates";
 import { runSession } from "../src/loop/loop";
 import { ScriptedModel } from "../src/loop/scripted";
 import { fixture, people, trailBodies } from "./helpers";

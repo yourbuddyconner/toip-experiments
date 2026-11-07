@@ -97,7 +97,7 @@ Limits **(our call)**: 256 KiB per message, 5,000 queued messages per recipient,
 
 ### 4.3 Messages
 
-Every message is a Trust Task document (`trust-task/0.6.0` envelope), signed with a Data Integrity proof, sealed as a Direct TSP message, and sent through the relay. All messages are one-way, because either side may be offline. Types are under `https://zk-toip.example/spec/todo/<name>/0.1`.
+Every message is a Trust Task document (`trust-task/0.6.0` envelope), signed with a Data Integrity proof, sealed as a Direct TSP message, and sent through the relay. All messages are one-way, because either side may be offline. Types are under `https://toip.tools/spec/todo/<name>/0.1`.
 
 | Message | From → to | Carries |
 |---|---|---|
@@ -218,7 +218,7 @@ A calm, practical list app that works well on a phone. It must not look like a d
 - Invitations are links carrying an OOBI-style object, not the stack's OOBI format.
 - A list is a community whose key its creator holds. Real VTCs have a governance document and M-of-N signing.
 - The relay is our own WebSocket mailbox, not TSP Routed Mode or the stack's libp2p relays.
-- Our message types and formats are under `https://zk-toip.example/spec/todo/…`.
+- Our message types and formats are under `https://toip.tools/spec/todo/…`.
 - That the OpenVTC libraries interoperate with the P2P Trust Stack's own implementation. This wasn't checked.
 
 ## 8. Testing and done

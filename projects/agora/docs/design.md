@@ -465,7 +465,7 @@ head   = { type: "agora/feed-head", issuer: host DID, forum, seq, hash, at, proo
 
 ### 7.6 Trust Task types
 
-All are under our namespace, made with `ourSpec(name)`, for example `https://zk-toip.example/spec/agora/group/join/0.1`.
+All are under our namespace, made with `ourSpec(name)`, for example `https://toip.tools/spec/agora/group/join/0.1`.
 
 | Task | From → to | Transport in MVP | Payload → response |
 |---|---|---|---|
@@ -702,7 +702,7 @@ Errors are `{ code, message }` with HTTP 400, 403, 409 or 429. Codes: `policyMis
 6. **Moderator view** in the same client, at `/moderate/:forum`.
 7. **Forum creation page**: write a policy from the registrar's groups, choose predicates, sign it and post it to a host.
 8. **Dev clock** with **Skip ahead**, as in Settle, so `minRegisteredDays` and poll windows can be shown.
-9. **Narrated terminal demo** `npm run demo --workspace @zk-toip/agora`, the same story as section 12.3 with real proofs.
+9. **Narrated terminal demo** `npm run demo --workspace @toip-tools/agora`, the same story as section 12.3 with real proofs.
 
 ### 12.2 Deferred
 
@@ -787,7 +787,7 @@ The setup: `npm run agora`, with three browser profiles (Ana, Ben, Cal) and a fo
 - screenshots;
 - proof times written to `results/`.
 
-**Benchmark** (`npm run bench --workspace @zk-toip/agora`):
+**Benchmark** (`npm run bench --workspace @toip-tools/agora`):
 - proving and verification for the gate circuit at depth 20, in Node and in Chrome, cold and warm, with 1 and all threads;
 - written to a JSONL file with hardware and versions, as zk-pdp's results are.
 
@@ -1013,7 +1013,7 @@ Agora seals the seed, credentials, receipts and session keys in it.
 
 ### 14.5 Dependencies Agora proposes
 
-- **Existing:** `@zk-toip/trust-core`, `@zk-toip/relay`, React, Vite, Vitest, tsx, Playwright, `@noble/hashes`, `@noble/curves`.
+- **Existing:** `@toip-tools/trust-core`, `@toip-tools/relay`, React, Vite, Vitest, tsx, Playwright, `@noble/hashes`, `@noble/curves`.
 - **New, through `packages/anon-membership`:**
   - `@noir-lang/noir_js` 1.0.0;
   - Barretenberg's bb.js. zk-pdp uses `@aztec-foundation/bb.js` 6.0.0, aliased as `@aztec/bb.js`.

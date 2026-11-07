@@ -2,7 +2,7 @@
 // lists, and, because Acme operates the relay in this demo, what the relay records. Acme is the
 // adversary in Tipline's threat model; this console shows everything it can see.
 import { useEffect, useState } from "react";
-import type { GroupRoot } from "@zk-toip/anon-membership";
+import type { GroupRoot } from "@toip-tools/anon-membership";
 import type { MemberView } from "../../../src/agents/issuer";
 import type { MirrorStatus } from "../../../src/agents/mirror";
 import { getJson, longDate, postJson, shortDid, shortHex } from "../common/net";

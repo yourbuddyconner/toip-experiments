@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { LogEntry, LogHead } from "../../../src/protocol/log";
 import { Empty, Field } from "../ui";
 import { day, money, short, toUnits, when } from "../model";
-import { identityFromSeed } from "@zk-toip/trust-core";
+import { identityFromSeed } from "@toip-tools/trust-core";
 import type { PlatformConfig } from "../../../src/client/client";
 import { accounts, api } from "../session";
 import { Splash, Wordmark } from "../App";

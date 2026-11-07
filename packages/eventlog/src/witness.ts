@@ -1,5 +1,5 @@
 /** Witnesses: receipt the first version seen at each location (trail design §9). Runs in browsers and Node. */
-import { utf8, type Clock } from "@zk-toip/trust-core";
+import { utf8, type Clock } from "@toip-tools/trust-core";
 import { didKeyOf } from "./cesr";
 import type { Refusal, SubmitResult, WitnessClient } from "./client";
 import { KelProcessor, type KelResult } from "./kel";

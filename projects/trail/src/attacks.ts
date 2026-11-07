@@ -15,9 +15,9 @@ import {
   type LogStore,
   type Signer,
   type SignedMessage,
-} from "@zk-toip/eventlog";
-import { utf8 } from "@zk-toip/trust-core";
-import type { Clock } from "@zk-toip/trust-core";
+} from "@toip-tools/eventlog";
+import { utf8 } from "@toip-tools/trust-core";
+import type { Clock } from "@toip-tools/trust-core";
 
 // ------------------------------------------------------------------ tamper (step 4)
 

@@ -4,7 +4,7 @@
  */
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { fromB64u, identityFromSeed, SystemClock, toB64u, type Clock, type Identity } from "@zk-toip/trust-core";
+import { fromB64u, identityFromSeed, SystemClock, toB64u, type Clock, type Identity } from "@toip-tools/trust-core";
 import {
   coldKeysFromSeed,
   Controller,
@@ -20,10 +20,10 @@ import {
   type Signer,
   type StoreData,
   type WitnessClient,
-} from "@zk-toip/eventlog";
-import { JsonFileStore } from "@zk-toip/eventlog/node";
+} from "@toip-tools/eventlog";
+import { JsonFileStore } from "@toip-tools/eventlog/node";
 import { WitnessService } from "./witnesses";
-import type { Bundle } from "@zk-toip/eventlog";
+import type { Bundle } from "@toip-tools/eventlog";
 
 export interface Line {
   who: string;

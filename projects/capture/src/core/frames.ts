@@ -3,7 +3,7 @@
  * 0x01 reading (unsigned, hash-chained), 0x02 seal (COSE_Sign1 over the chain head), 0x03 signed reading,
  * 0x04 beacon (gateway to sensors), 0x05 backfill request.
  */
-import { decodeCbor, encodeCbor, signCose1, type AsyncSigner } from "@zk-toip/cose";
+import { decodeCbor, encodeCbor, signCose1, type AsyncSigner } from "@toip-tools/cose";
 import { concat, sha, utf8 } from "./bytes";
 
 export const FRAME = { reading: 1, seal: 2, signedReading: 3, beacon: 4, backfill: 5 } as const;

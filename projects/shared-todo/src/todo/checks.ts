@@ -1,4 +1,4 @@
-import { verifyCredential, type Clock, type Credential, type Policies } from "@zk-toip/trust-core";
+import { verifyCredential, type Clock, type Credential, type Policies } from "@toip-tools/trust-core";
 import type { ListModel } from "./model";
 import { opKey, validateOpShape, verifyOp, type Op } from "./ops";
 import { rosterEntry, type RosterDoc } from "./roster";

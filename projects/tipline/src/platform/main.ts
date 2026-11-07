@@ -1,5 +1,5 @@
 /**
- * Runs the Tipline demo: npm run tipline (or npm run app --workspace @zk-toip/tipline).
+ * Runs the Tipline demo: npm run tipline (or npm run app --workspace @toip-tools/tipline).
  *
  *   --no-build   serve web/dist as it is, without building it first
  *   --keep       keep state in projects/tipline/.data between runs (default: a fresh start each time)

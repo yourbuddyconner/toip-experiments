@@ -3,7 +3,7 @@
  * that waits for the door's signed challenge beacon and presents a pass. Both run on any MeshTransport,
  * whatever its link: the simulator, the RAK miner through GWMP, or a RAK3172.
  */
-import { ChallengeBeacon, type BeaconInfo, type MeshTransport } from "@zk-toip/mesh-transport";
+import { ChallengeBeacon, type BeaconInfo, type MeshTransport } from "@toip-tools/mesh-transport";
 import {
   Endpoint,
   PersistentReplayGuard,
@@ -16,7 +16,7 @@ import {
   type Identity,
   type ReplayStore,
   type Transport,
-} from "@zk-toip/trust-core";
+} from "@toip-tools/trust-core";
 import { checkPass, type DoorCache, type GuestPass, type PassVerdict } from "./pass";
 
 /** Request `{credential, challenge}`, response `{open, reason?}` (design §16). */

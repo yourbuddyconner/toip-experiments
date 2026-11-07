@@ -1,6 +1,6 @@
 /** The service's HTTP API, and the witnesses reached through it. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { evidenceFromJson, evidenceToJson, fromStream, httpWitnessClient, type Bundle } from "@zk-toip/eventlog";
+import { evidenceFromJson, evidenceToJson, fromStream, httpWitnessClient, type Bundle } from "@toip-tools/eventlog";
 
 type StoredEvidence = ReturnType<typeof evidenceToJson>;
 import { startService, type Service } from "../src/service";

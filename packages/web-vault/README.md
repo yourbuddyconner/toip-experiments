@@ -1,4 +1,4 @@
-# @zk-toip/web-vault
+# @toip-tools/web-vault
 
 Keeps an account's identity seed in the browser, sealed. It was Settle's `web/src/vault.ts`. Now Settle, Agora, Tipline and Capture can share it.
 
@@ -11,7 +11,7 @@ Keeps an account's identity seed in the browser, sealed. It was Settle's `web/sr
 ## Use
 
 ```ts
-import { createVault, PasskeyUnsupported } from "@zk-toip/web-vault";
+import { createVault, PasskeyUnsupported } from "@toip-tools/web-vault";
 
 const vault = createVault({ prefix: "agora", rpName: "Agora" });
 
@@ -82,7 +82,7 @@ With `prefix: "settle"`, `rpName: "Settle"`, this is the format Settle used befo
 
 ## Tests
 
-`npm test` runs in Node with an in-memory `localStorage`, a fake PRF authenticator and `fake-indexeddb`. They cover sealing and unsealing, a wrong passphrase, blobs swapped between accounts or names, backup codes, two apps on one origin, Settle's format, and CryptoKeys. Settle's browser test (`npm run e2e --workspace @zk-toip/settle`) covers real passkeys with PRF in Chromium.
+`npm test` runs in Node with an in-memory `localStorage`, a fake PRF authenticator and `fake-indexeddb`. They cover sealing and unsealing, a wrong passphrase, blobs swapped between accounts or names, backup codes, two apps on one origin, Settle's format, and CryptoKeys. Settle's browser test (`npm run e2e --workspace @toip-tools/settle`) covers real passkeys with PRF in Chromium.
 
 ## Differences from the design
 

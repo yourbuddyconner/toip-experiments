@@ -9,10 +9,10 @@
  * Then it says what to fix, or what to run next. It uses the library's GWMP server and radio probes.
  */
 import { networkInterfaces } from "node:os";
-import { plans, type ReceivedFrame } from "@zk-toip/mesh-transport";
-import { GwmpServer, listSerialPorts, nodeSerialPort, probeSerial, type GwmpLink, type RadioDetection } from "@zk-toip/mesh-transport/node";
-import { RakP2PLink } from "@zk-toip/mesh-transport/rak";
-import type { SerialPortLike } from "@zk-toip/mesh-transport/serial";
+import { plans, type ReceivedFrame } from "@toip-tools/mesh-transport";
+import { GwmpServer, listSerialPorts, nodeSerialPort, probeSerial, type GwmpLink, type RadioDetection } from "@toip-tools/mesh-transport/node";
+import { RakP2PLink } from "@toip-tools/mesh-transport/rak";
+import type { SerialPortLike } from "@toip-tools/mesh-transport/serial";
 
 export interface DoctorOptions {
   udpPort?: number;

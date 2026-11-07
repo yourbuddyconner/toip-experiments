@@ -1,5 +1,5 @@
 {
-  "name": "@zk-toip/trail",
+  "name": "@toip-tools/trail",
   "version": "0.0.0",
   "private": true,
   "license": "UNLICENSED",
@@ -13,8 +13,8 @@
     "e2e": "tsx web/e2e.ts"
   },
   "dependencies": {
-    "@zk-toip/eventlog": "0.0.0",
-    "@zk-toip/trust-core": "0.0.0",
+    "@toip-tools/eventlog": "0.0.0",
+    "@toip-tools/trust-core": "0.0.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },

@@ -1,6 +1,6 @@
 import { newUrnUuid } from "@openvtc/trust-tasks-tsp";
 import type { Proof } from "@openvtc/trust-tasks/runtime";
-import { openItem, signDocument, verifyDocument, type Clock, type Identity, type SealedText } from "@zk-toip/trust-core";
+import { openItem, signDocument, verifyDocument, type Clock, type Identity, type SealedText } from "@toip-tools/trust-core";
 
 export type OpKind = "add" | "check" | "uncheck" | "edit" | "delete";
 

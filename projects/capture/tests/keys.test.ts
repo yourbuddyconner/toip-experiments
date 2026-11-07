@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { Controller, keyQb64, nextKeyDigest, webCryptoSigner } from "@zk-toip/eventlog";
-import { webCryptoSigner as coseWebCrypto } from "@zk-toip/cose";
+import { Controller, keyQb64, nextKeyDigest, webCryptoSigner } from "@toip-tools/eventlog";
+import { webCryptoSigner as coseWebCrypto } from "@toip-tools/cose";
 import { compactFromStream, embedStore, kidOf, makeCapture, ownerRotate, storeFromStream, utf8, verifyAsset } from "../src/core";
 import { codes, testWorld } from "./helpers";
 

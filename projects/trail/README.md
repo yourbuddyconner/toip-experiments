@@ -3,7 +3,7 @@
 Verifiable audit trails for AI agents, devices and services.
 
 - Design: `docs/design.md`. The notes at its end say how the MVP differs.
-- Library: `packages/eventlog` (`@zk-toip/eventlog`). This project uses it and adds no protocol code of its own.
+- Library: `packages/eventlog` (`@toip-tools/eventlog`). This project uses it and adds no protocol code of its own.
 - Status: MVP built. It runs the design's ten-step demo (section 15) in the terminal and in a web explorer.
 
 ## What it is
@@ -34,8 +34,8 @@ Open the explorer and go to **Demo**. Run the steps in order. Each step links to
 
 Options:
 
-- `npm run app --workspace @zk-toip/trail -- --fresh` forgets everything and starts the demo over. The Demo page also has a button for this.
-- `-- --static` serves the built explorer. Build it first with `npm run build:web --workspace @zk-toip/trail`.
+- `npm run app --workspace @toip-tools/trail -- --fresh` forgets everything and starts the demo over. The Demo page also has a button for this.
+- `-- --static` serves the built explorer. Build it first with `npm run build:web --workspace @toip-tools/trail`.
 - Environment: `TRAIL_PORT` (default 4340), `TRAIL_WITNESS_PORT` (witness 1; the others follow), `HOST` (default 127.0.0.1), `TRAIL_DATA` (default `projects/trail/.data`).
 
 The service listens on this machine only. It answers on both 127.0.0.1 and ::1, so `localhost` always reaches it.
@@ -43,7 +43,7 @@ The service listens on this machine only. It answers on both 127.0.0.1 and ::1, 
 ### The demo in the terminal
 
 ```
-npm run demo --workspace @zk-toip/trail
+npm run demo --workspace @toip-tools/trail
 ```
 
 It runs the ten steps, narrated, over real HTTP witnesses, and keeps nothing.
@@ -95,8 +95,8 @@ The explorer fetches bundles and evidence from the service, but it verifies them
 ## Tests
 
 ```
-npm test --workspace @zk-toip/trail     # Vitest: the API, the actors, every attack, witnesses over HTTP, restart
-npm run e2e --workspace @zk-toip/trail  # Playwright: the explorer through all ten steps
+npm test --workspace @toip-tools/trail     # Vitest: the API, the actors, every attack, witnesses over HTTP, restart
+npm run e2e --workspace @toip-tools/trail  # Playwright: the explorer through all ten steps
 ```
 
 The e2e saves screenshots in `web/e2e-shots/`. Add `--headed` to watch, or `--static` to test the built explorer.

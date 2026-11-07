@@ -2,8 +2,8 @@
  * Fetching and cross-checking root logs: the organization's own copy and the outlet's mirror.
  * Two validly signed roots for one epoch are evidence the organization equivocated (design §6.6).
  */
-import { checkRootLog, findEquivocation, rootDocHash, type GroupRoot } from "@zk-toip/anon-membership";
-import { verifyDocument, type Clock } from "@zk-toip/trust-core";
+import { checkRootLog, findEquivocation, rootDocHash, type GroupRoot } from "@toip-tools/anon-membership";
+import { verifyDocument, type Clock } from "@toip-tools/trust-core";
 
 export interface Fetcher {
   json(url: string): Promise<unknown>;

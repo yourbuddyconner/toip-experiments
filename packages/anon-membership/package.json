@@ -1,5 +1,5 @@
 {
-  "name": "@zk-toip/anon-membership",
+  "name": "@toip-tools/anon-membership",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -20,7 +20,7 @@
     "@aztec/bb.js": "npm:@aztec-foundation/bb.js@6.0.0",
     "@noble/hashes": "2.4.0",
     "@noir-lang/noir_js": "1.0.0",
-    "@zk-toip/trust-core": "0.0.0"
+    "@toip-tools/trust-core": "0.0.0"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

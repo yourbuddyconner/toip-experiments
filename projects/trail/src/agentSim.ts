@@ -2,8 +2,8 @@
  * Scout, a scripted AI agent (no model): its birth, its fixed work script, and the principal's rotations.
  * Every witness call goes over HTTP.
  */
-import { canonicalJson, signDocument } from "@zk-toip/trust-core";
-import { Controller, digest, endorse, keyQb64, toStream, type SignedMessage } from "@zk-toip/eventlog";
+import { canonicalJson, signDocument } from "@toip-tools/trust-core";
+import { Controller, digest, endorse, keyQb64, toStream, type SignedMessage } from "@toip-tools/eventlog";
 import type { World } from "./world";
 
 export const MANDATE = {

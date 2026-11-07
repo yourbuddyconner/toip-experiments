@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { issueCredential, type Credential } from "@zk-toip/trust-core";
+import { issueCredential, type Credential } from "@toip-tools/trust-core";
 import { actionHash, approve, present, staticStatusResolver, type Presentation, type Requirements } from "../src/index";
 import { codes, engine, inDays, payAction, people, twoLinks, usdc, world, zeroSpent, type World } from "./helpers";
 

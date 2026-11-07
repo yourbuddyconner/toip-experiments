@@ -1,8 +1,8 @@
 // The Ledger's tip page (design §7.4). It keeps nothing: no storage, no cookies, no service worker.
 // The membership code and the tip code live in this page's memory until it closes.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MembershipWorkerClient } from "@zk-toip/anon-membership/worker";
-import { initHashing, type GroupRoot } from "@zk-toip/anon-membership";
+import { MembershipWorkerClient } from "@toip-tools/anon-membership/worker";
+import { initHashing, type GroupRoot } from "@toip-tools/anon-membership";
 import { buildTip, checkGroup, deliver, findMembership, loadDescriptor, TipConversation, type GroupCheck, type Membership } from "../../../src/agents/source";
 import { httpFetcher } from "../../../src/agents/logs";
 import { newTipCode, decodeTipCode } from "../../../src/protocol/codes";

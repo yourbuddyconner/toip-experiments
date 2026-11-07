@@ -1,6 +1,6 @@
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { Refusal, fromB64u, ourSpec, signDocument, toB64u, type Clock, type Endpoint, type Identity } from "@zk-toip/trust-core";
+import { Refusal, fromB64u, ourSpec, signDocument, toB64u, type Clock, type Endpoint, type Identity } from "@toip-tools/trust-core";
 import { CIRCUIT_ID } from "./artifacts";
 import { groupFieldOf, groupIdOf } from "./encode";
 import { fieldFromHex, fieldToHex, type Field } from "./field";

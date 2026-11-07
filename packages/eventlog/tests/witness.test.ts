@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Bus, DemoClock, Endpoint, identityFromSeed, seedFrom } from "@zk-toip/trust-core";
+import { Bus, DemoClock, Endpoint, identityFromSeed, seedFrom } from "@toip-tools/trust-core";
 import { Controller } from "../src/controller";
 import { WitnessError, type WitnessClient } from "../src/client";
 import { verifyKel } from "../src/kel";

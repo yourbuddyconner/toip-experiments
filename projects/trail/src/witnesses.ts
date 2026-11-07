@@ -2,9 +2,9 @@
  * The platform's witnesses, each its own HTTP service with its own key and store (design §9).
  * A witness can be switched to "rogue": it then receipts every version it is shown (demo step 6).
  */
-import { type Clock } from "@zk-toip/trust-core";
-import { ed25519Signer, fromStream, makeReceipt, toStream, Witness, witnessHttpHandler, type LogStore, type SignedMessage, type SubmitResult } from "@zk-toip/eventlog";
-import { serveHttp } from "@zk-toip/eventlog/node";
+import { type Clock } from "@toip-tools/trust-core";
+import { ed25519Signer, fromStream, makeReceipt, toStream, Witness, witnessHttpHandler, type LogStore, type SignedMessage, type SubmitResult } from "@toip-tools/eventlog";
+import { serveHttp } from "@toip-tools/eventlog/node";
 
 export class WitnessService {
   readonly witness: Witness;

@@ -1,5 +1,5 @@
 /** Plain-language explanations of verification results. Browser-safe. */
-import type { EntryStatus, ProblemCode } from "@zk-toip/eventlog";
+import type { EntryStatus, ProblemCode } from "@toip-tools/eventlog";
 
 export const PROBLEM_TEXT: Record<ProblemCode, string> = {
   badVersion: "The version string is malformed, or the length it states doesn't match the bytes.",

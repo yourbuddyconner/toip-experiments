@@ -3,7 +3,7 @@
  * find the reading whose hash is the head, and walk the links backwards. Each reading gets one status.
  * Gateways and the server carry frames but can't forge one: a changed reading no longer links.
  */
-import { verifyCose1, type PublicKey } from "@zk-toip/cose";
+import { verifyCose1, type PublicKey } from "@toip-tools/cose";
 import { ed25519 } from "@noble/curves/ed25519.js";
 import { equal, hex, sha, utf8 } from "./bytes";
 import { decodeFrame, type Reading, type Seal } from "./frames";

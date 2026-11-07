@@ -57,7 +57,7 @@ describe("a compromised model can't exceed the mandate", () => {
   });
 
   it("a Trust Task outside the mandate's tasks is refused", async () => {
-    const constraints = { ...rootConstraints(), tasks: { attr: "task", within: ["https://zk-toip.example/spec/settle/*"] } };
+    const constraints = { ...rootConstraints(), tasks: { attr: "task", within: ["https://toip.tools/spec/settle/*"] } };
     const f = await fixture({ constraints });
     const r = await f.guard.offerJob({ worker: people.coder.did, title: "x", description: "x", category: "software.tests", maxPrice: "10", release: "ci", disputeWindowDays: 0 });
     expect(r.ok).toBe(false);

@@ -71,7 +71,7 @@ export async function openCluster(o: ClusterOptions): Promise<Cluster> {
   const chain = await Chain.connect(rpcUrl, programId, { clockCacheMs: REAL_CLOCK_CACHE_MS });
   const program = await chain.rpc.getAccountInfo(programId, { encoding: "base64", commitment: "confirmed" }).send();
   if (!program.value?.executable) {
-    throw new Error(`the Settle program isn't deployed on ${which} at ${programId}. Deploy it with: npm run deploy --workspace @zk-toip/settle -- --cluster ${which}`);
+    throw new Error(`the Settle program isn't deployed on ${which} at ${programId}. Deploy it with: npm run deploy --workspace @toip-tools/settle -- --cluster ${which}`);
   }
   return {
     name: CLUSTERS[which] ? which : rpcUrl,

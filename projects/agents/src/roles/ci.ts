@@ -8,9 +8,9 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import type { Party } from "@zk-toip/settle/src/agents/party";
-import { hex } from "@zk-toip/settle/src/agents/base";
-import { termsHash } from "@zk-toip/settle/src/protocol/documents";
+import type { Party } from "@toip-tools/settle/src/agents/party";
+import { hex } from "@toip-tools/settle/src/agents/base";
+import { termsHash } from "@toip-tools/settle/src/protocol/documents";
 import { JOB_DELIVER, JOB_WATCH, type JobDeliver, type JobWatch } from "../protocol/tasks";
 import { run } from "../guard/workspace";
 

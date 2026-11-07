@@ -20,8 +20,8 @@ import {
   toField,
   type GroupIssuerState,
   type GroupRoot,
-} from "@zk-toip/anon-membership";
-import { identityFromSeed, signDocument, type Clock, type Endpoint, type Identity } from "@zk-toip/trust-core";
+} from "@toip-tools/anon-membership";
+import { identityFromSeed, signDocument, type Clock, type Endpoint, type Identity } from "@toip-tools/trust-core";
 
 export interface Employee {
   did: string;

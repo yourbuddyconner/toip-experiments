@@ -2,7 +2,7 @@
  * Version strings, fixed-order serialization, SAIDs, and JCS bodies.
  * Serialization matches Python's json.dumps(sad, separators=(",", ":"), ensure_ascii=False).
  */
-import { canonicalJson, utf8 } from "@zk-toip/trust-core";
+import { canonicalJson, utf8 } from "@toip-tools/trust-core";
 import { digest, encode, isQb64 } from "./cesr";
 import type { Body, MessageType, Problem, Qb64 } from "./types";
 import { problem } from "./types";

@@ -2,8 +2,8 @@
  * Camera K-7, a scripted device (design §12.2): P-256 keys, a captures trail, photos signed outside the log
  * with a -F group naming the key state, and a scheduled key rotation.
  */
-import { toB64u, utf8 } from "@zk-toip/trust-core";
-import { Controller, digest, encodeKeyRefSig, type KeyRefSig, type Signer } from "@zk-toip/eventlog";
+import { toB64u, utf8 } from "@toip-tools/trust-core";
+import { Controller, digest, encodeKeyRefSig, type KeyRefSig, type Signer } from "@toip-tools/eventlog";
 import type { Capture, World } from "./world";
 
 /** A capture manifest: what a camera signs. The pixels are stand-ins. */

@@ -3,7 +3,7 @@
  * Written from the CESR specification's code tables and checked against KERIpy 1.3.6 output.
  */
 import { blake3 } from "@noble/hashes/blake3.js";
-import { fromB64u, toB64u, utf8 } from "@zk-toip/trust-core";
+import { fromB64u, toB64u, utf8 } from "@toip-tools/trust-core";
 import type { IndexedSig, IndexedSigCode, KeyRefSig, Qb64 } from "./types";
 
 export type { Qb64 } from "./types";

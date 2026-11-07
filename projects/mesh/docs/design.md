@@ -205,7 +205,7 @@ CTT1 is lossless. Decoding gives back the same JSON values, so the canonical for
 **Dictionaries.** Fixed lists, frozen per format byte. A new list means a new format byte (`0x02`), never edits to `0x01`. The seed lists, to be completed and frozen when built:
 - Keys: `id`, `type`, `issuer`, `recipient`, `issuedAt`, `expiresAt`, `threadId`, `payload`, `proof`, `@context`, `validFrom`, `validUntil`, `credentialSubject`, `credentialStatus`, `statusListIndex`, `statusListCredential`, `statusPurpose`, `code`, `message`, `retryable`, `challenge`, `credential`, `claim`, `termsHash`, `at`, `note`, `sensor`, `t`, `kind`, `value`, `unit`.
 - Strings: `https://www.w3.org/ns/credentials/v2`, `VerifiableCredential`, `BitstringStatusListEntry`, `DataIntegrityProof`, `eddsa-jcs-2022`, `assertionMethod`, the Trust Task error type URI, `settle/attestation`, `complete`, `not-complete`.
-- Prefixes: `https://zk-toip.example/spec/`, `https://trusttasks.org/spec/`, `https://trusttasks.org/`.
+- Prefixes: `https://toip.tools/spec/`, `https://trusttasks.org/spec/`, `https://trusttasks.org/`.
 
 **Tag numbers.** Tags 1 and 37 have their registered CBOR meanings. Tags 6 to 11 are private to CTT1 and mean nothing outside a CTT1 body **(our call; see open questions)**.
 
@@ -816,9 +816,9 @@ With 20% frame loss, a 3-frame packet needs on average about 1.5 rounds. The tes
    - `GwmpServer` and `GwmpLink`; `RakP2PLink`; the Node serial wrapper; `detectRadio`;
    - bundles: export, open, post.
 3. **`projects/mesh`**:
-   - `src/demo.ts`: the narrated simulator demo (section 17), `npm run demo --workspace @zk-toip/mesh`;
+   - `src/demo.ts`: the narrated simulator demo (section 17), `npm run demo --workspace @toip-tools/mesh`;
    - `src/cli.ts`: `mesh detect`, `mesh gateway`, `mesh node`, `mesh ping`, `mesh door`, `mesh guest`, `mesh attest`, `mesh courier`;
-   - the demo's Trust Task specs: `ourSpec("mesh-demo/door/open")`, with request `{credential, challenge}` and response `{open, reason?}`. The attestation uses Settle's `ESCROW_ATTEST` spec and `attest()` document, imported from `@zk-toip/settle` (the root `package.json` adds `projects/mesh` to its workspaces).
+   - the demo's Trust Task specs: `ourSpec("mesh-demo/door/open")`, with request `{credential, challenge}` and response `{open, reason?}`. The attestation uses Settle's `ESCROW_ATTEST` spec and `attest()` document, imported from `@toip-tools/settle` (the root `package.json` adds `projects/mesh` to its workspaces).
 
 **Demoed**: the whole script on the simulator; acts 1 and 2 on the miner and one RAK3172.
 
@@ -928,8 +928,8 @@ All in vitest, on the simulator unless marked.
 Subpath exports keep Node-only code out of browser builds.
 
 ```ts
-// ---- "@zk-toip/mesh-transport" (runs in browsers and Node)
-import type { Delivery, Identity, Transport, RelayTransport } from "@zk-toip/trust-core";
+// ---- "@toip-tools/mesh-transport" (runs in browsers and Node)
+import type { Delivery, Identity, Transport, RelayTransport } from "@toip-tools/trust-core";
 
 // Time
 export interface Scheduler { now(): number; setTimeout(fn: () => void, ms: number): unknown; clearTimeout(handle: unknown): void }
@@ -1054,7 +1054,7 @@ export function fragment(packet: Uint8Array, mtu: number, h: { ttl: number; hops
 export function packetId(packet: Uint8Array): Uint8Array;      // H(packet)[0..4]
 export function estimate(packetBytes: number, link: LinkInfo): { frames: number; airtimeMs: number };
 
-// ---- "@zk-toip/mesh-transport/sim"
+// ---- "@toip-tools/mesh-transport/sim"
 export class SimMedium {
   constructor(opts: { scheduler: VirtualScheduler; seed: number; captureDb?: number });
   node(name: string, params: SimRadioParams): SimLink;
@@ -1072,7 +1072,7 @@ export interface SimRadioParams {
 export class SimLink implements Link { /* section 13 */ }
 export class RegulatoryViolation extends Error {}
 
-// ---- "@zk-toip/mesh-transport/gwmp" (Node)
+// ---- "@toip-tools/mesh-transport/gwmp" (Node)
 export class GwmpServer {
   constructor(opts: { port?: number; host?: string; allow?: { eui: string; address?: string }[]; log?: (s: string) => void });
   start(): Promise<void>; stop(): Promise<void>;
@@ -1081,7 +1081,7 @@ export class GwmpServer {
 }
 export class GwmpLink implements Link { readonly eui: string; constructor(server: GwmpServer, eui: string, plan: ChannelPlan) }
 
-// ---- "@zk-toip/mesh-transport/serial" (SerialPortLike wrappers)
+// ---- "@toip-tools/mesh-transport/serial" (SerialPortLike wrappers)
 export interface SerialPortLike {
   readonly label: string;
   open(): Promise<void>; close(): Promise<void>;
@@ -1092,15 +1092,15 @@ export function nodeSerialPort(path: string, baud?: number): SerialPortLike;    
 export function webSerialPort(port: SerialPort, baud?: number): SerialPortLike;     // browser, Web Serial
 export function listSerialPorts(): Promise<{ path: string; vendorId?: string; productId?: string; hint?: string }[]>;
 
-// ---- "@zk-toip/mesh-transport/rak"
+// ---- "@toip-tools/mesh-transport/rak"
 export class RakP2PLink implements Link { constructor(opts: { port: SerialPortLike; plan: ChannelPlan; cad?: boolean }) }
 
-// ---- "@zk-toip/mesh-transport/rnode" (later)
+// ---- "@toip-tools/mesh-transport/rnode" (later)
 export class RNodeLink implements Link { constructor(opts: { port: SerialPortLike; plan: ChannelPlan }) }
 export function kissEncode(command: number, data: Uint8Array): Uint8Array;
 export class KissDecoder { push(bytes: Uint8Array): { command: number; data: Uint8Array }[] }
 
-// ---- "@zk-toip/mesh-transport/detect"
+// ---- "@toip-tools/mesh-transport/detect"
 export type RadioDetection =
   | { kind: "gwmp-gateway"; eui: string; address: string }
   | { kind: "rak-rui3"; port: string; version: string }
@@ -1110,7 +1110,7 @@ export type RadioDetection =
   | { kind: "unknown"; port?: string; heard: string };
 export function detectRadios(opts?: { udpPort?: number; timeoutMs?: number }): Promise<RadioDetection[]>;
 
-// ---- "@zk-toip/mesh-transport/ble" (milestone 2)
+// ---- "@toip-tools/mesh-transport/ble" (milestone 2)
 export const MESH_GATT: { service: string; framesIn: string; framesOut: string; info: string };
 export class BlePeripheralHost { constructor(opts: { name: string; keyHint: Uint8Array }); start(): Promise<void>; stop(): Promise<void>; onConnection(fn: (link: Link) => void): () => void }
 export function nodeBleCentral(opts?: { timeoutMs?: number }): Promise<Link>;

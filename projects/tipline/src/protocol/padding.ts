@@ -4,7 +4,7 @@
  * padded to a multiple of 16 KiB. Attachments travel in chunks of exactly 144 KiB, and the number of
  * chunks in a tip is padded up to a power of two.
  */
-import { toB64u, type Endpoint } from "@zk-toip/trust-core";
+import { toB64u, type Endpoint } from "@toip-tools/trust-core";
 type SpecPolicy = Parameters<Endpoint["seal"]>[1];
 import type { ChunkPayload } from "./messages";
 

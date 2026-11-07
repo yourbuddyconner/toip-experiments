@@ -1,7 +1,7 @@
 /** The camera (design §15.1): a browser key the page can't export signs every photo at the shutter. */
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Unlocked } from "@zk-toip/web-vault";
-import { encodeCbor } from "@zk-toip/cose";
+import type { Unlocked } from "@toip-tools/web-vault";
+import { encodeCbor } from "@toip-tools/cose";
 import {
   CameraDevice,
   decodeStore,

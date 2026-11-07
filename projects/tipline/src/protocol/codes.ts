@@ -5,7 +5,7 @@
 import { hmac } from "@noble/hashes/hmac.js";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
-import { identityFromSeed, type Identity } from "@zk-toip/trust-core";
+import { identityFromSeed, type Identity } from "@toip-tools/trust-core";
 
 const CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 const CODE_BYTES = 16;

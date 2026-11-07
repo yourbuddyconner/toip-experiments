@@ -2,7 +2,7 @@
  * The drop box descriptor (design §8.1): signed by the drop box DID, served by the outlet. It names
  * the stories that are open, which groups each accepts, and the policy for each group.
  */
-import { signDocument, verifyDocument, type Clock, type Identity } from "@zk-toip/trust-core";
+import { signDocument, verifyDocument, type Clock, type Identity } from "@toip-tools/trust-core";
 
 export interface StoryGroup {
   /** "<issuer DID>#<name>". */

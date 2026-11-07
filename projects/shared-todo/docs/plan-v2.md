@@ -18,7 +18,7 @@
 
 - **Inherited from v1's plan:** the Global Constraints there still apply. That covers pinned `@openvtc/*` versions, `did:key`, every document signed, and running `npm run licenses` whenever dependencies change.
 - **Time:** app code takes a `Clock` (`now()`, `iso()`, `date()`). Production code uses `SystemClock`, and tests may use `DemoClock`.
-- **Message types:** `https://zk-toip.example/spec/todo/<name>/0.1`, with names `join`, `welcome`, `join-refused`, `ack`, `op`, `roster`, `sync-request`, `sync` and `leave`.
+- **Message types:** `https://toip.tools/spec/todo/<name>/0.1`, with names `join`, `welcome`, `join-refused`, `ack`, `op`, `roster`, `sync-request`, `sync` and `leave`.
 - **Relay auth string:** `toip-relay-auth/v1|<challenge>|<relay URL>`.
 - **Relay limits:** 256 KiB per message, 5,000 queued per recipient, 30-day expiry.
 - **Default ports:** relay 8787, web 5181. `VITE_RELAY_URL` defaults to `ws://localhost:8787/v1`.
@@ -48,7 +48,7 @@
 
 ### Task 2: Relay server and RelayTransport
 
-`packages/relay` (`@zk-toip/relay`):
+`packages/relay` (`@toip-tools/relay`):
 - `startRelay({ port, dbPath, publicUrl }): Promise<{ url: string; close(): Promise<void> }>`, using a `ws` `WebSocketServer` on the `/v1` path.
 - The protocol (JSON text frames):
   - server sends `{t:"challenge", nonce}`
@@ -58,7 +58,7 @@
   - client sends `{t:"send", cid, to, wire}`, and the server replies `{t:"sent", cid, delivery:"live"|"queued"}`
   - server sends `{t:"error", cid?, code, message}`
 - A `messages` table in SQLite, with expiry and the per-recipient limit.
-- A `bin` script, `npm start --workspace @zk-toip/relay`, configured by `PORT`, `RELAY_DB`, `RELAY_PUBLIC_URL`.
+- A `bin` script, `npm start --workspace @toip-tools/relay`, configured by `PORT`, `RELAY_DB`, `RELAY_PUBLIC_URL`.
 
 `RelayTransport` in trust-core implements `Transport` over the global `WebSocket`:
 - Its constructor takes `{ url, identity, clock?, outbox?: OutboxStore }`.

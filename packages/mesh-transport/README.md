@@ -1,4 +1,4 @@
-# @zk-toip/mesh-transport
+# @toip-tools/mesh-transport
 
 Trust Tasks and TSP over LoRa radio and by hand, without the internet.
 
@@ -61,8 +61,8 @@ Tests never need a radio. For the real thing (the steps are in the design's sect
 **The RAK hotspot miner** is a LoRaWAN gateway, not a node. Repurpose it as in section 14.7, path B: a second microSD card with RAK's `udp-packet-forwarder` container, `BAND=us_902_928`, pointed at the laptop on UDP port 1700. Then on the laptop:
 
 ```ts
-import { GwmpServer } from "@zk-toip/mesh-transport/node";
-import { plans } from "@zk-toip/mesh-transport";
+import { GwmpServer } from "@toip-tools/mesh-transport/node";
+import { plans } from "@toip-tools/mesh-transport";
 const server = new GwmpServer({ port: 1700, plan: plans["us915-b-gateway"], log: console.log });
 await server.start();
 server.onGateway((link) => console.log("gateway", link.eui)); // a PULL_DATA every 10 s
@@ -73,9 +73,9 @@ Pin the gateway with `allow: [{ eui, address }]` on a shared LAN.
 **The RAK3172** is the second device: the node. Plug it in by USB, then:
 
 ```ts
-import { detectRadios, nodeSerialPort } from "@zk-toip/mesh-transport/node";
-import { RakP2PLink } from "@zk-toip/mesh-transport/rak";
-import { plans } from "@zk-toip/mesh-transport";
+import { detectRadios, nodeSerialPort } from "@toip-tools/mesh-transport/node";
+import { RakP2PLink } from "@toip-tools/mesh-transport/rak";
+import { plans } from "@toip-tools/mesh-transport";
 console.log(await detectRadios({ timeoutMs: 3000 })); // e.g. { kind: "rak-rui3", port: "/dev/tty.usbserial-0001", ... }
 const link = new RakP2PLink({ port: nodeSerialPort("/dev/tty.usbserial-0001"), plan: plans["us915-b-node"] });
 await link.open(); // switches the module to P2P mode, sets the sync word, IQ and channels
@@ -86,9 +86,9 @@ Plan `us915-b` matches the gateway's stock configuration: nodes send on 904.6 MH
 ## API
 
 ```ts
-import { MeshTransport, ChallengeBeacon, MeshGateway, plans, regions } from "@zk-toip/mesh-transport";
-import { SimMedium, VirtualScheduler } from "@zk-toip/mesh-transport/sim";
-import { Endpoint, ctt1 } from "@zk-toip/trust-core";
+import { MeshTransport, ChallengeBeacon, MeshGateway, plans, regions } from "@toip-tools/mesh-transport";
+import { SimMedium, VirtualScheduler } from "@toip-tools/mesh-transport/sim";
+import { Endpoint, ctt1 } from "@toip-tools/trust-core";
 
 // A simulated radio. The scheduler is also a Clock for Endpoints.
 const sched = new VirtualScheduler();

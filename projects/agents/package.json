@@ -1,5 +1,5 @@
 {
-  "name": "@zk-toip/agents",
+  "name": "@toip-tools/agents",
   "version": "0.0.0",
   "private": true,
   "license": "UNLICENSED",
@@ -17,11 +17,11 @@
     "@fontsource/atkinson-hyperlegible": "5.3.0",
     "@noble/hashes": "2.4.0",
     "@solana/kit": "8.6.0",
-    "@zk-toip/eventlog": "0.0.0",
-    "@zk-toip/mandates": "0.0.0",
-    "@zk-toip/relay": "0.0.0",
-    "@zk-toip/settle": "0.0.0",
-    "@zk-toip/trust-core": "0.0.0",
+    "@toip-tools/eventlog": "0.0.0",
+    "@toip-tools/mandates": "0.0.0",
+    "@toip-tools/relay": "0.0.0",
+    "@toip-tools/settle": "0.0.0",
+    "@toip-tools/trust-core": "0.0.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },

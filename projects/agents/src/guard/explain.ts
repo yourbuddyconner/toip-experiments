@@ -1,5 +1,5 @@
 /** Decisions as people and models see them: mandates' explain, plus the guard's own checks of a quote against its job. */
-import { explain, type Decision, type Reason } from "@zk-toip/mandates";
+import { explain, type Decision, type Reason } from "@toip-tools/mandates";
 import { DIMENSION_LABELS, SPEND_ATTRS, usdc } from "../config";
 import type { DecisionView } from "./api";
 

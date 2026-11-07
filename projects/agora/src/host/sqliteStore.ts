@@ -2,7 +2,7 @@
  * The host's log store in node:sqlite: eventlog's MemoryStore, written to tables after each change.
  * One row per message and per body, so an operator (or the tamper demo) can read and edit them.
  */
-import { MemoryStore, type StoreData, type StoredMessage } from "@zk-toip/eventlog";
+import { MemoryStore, type StoreData, type StoredMessage } from "@toip-tools/eventlog";
 import { DatabaseSync } from "node:sqlite";
 
 export class SqliteLogStore extends MemoryStore {

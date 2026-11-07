@@ -1,7 +1,7 @@
 /**
  * The mesh demo's command line.
  *
- *   npm run mesh --workspace @zk-toip/mesh -- <command> [options]
+ *   npm run mesh --workspace @toip-tools/mesh -- <command> [options]
  *
  * Run with no command for help.
  */
@@ -9,7 +9,7 @@ import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs, type ParseArgsConfig } from "node:util";
-import { startRelay } from "@zk-toip/relay";
+import { startRelay } from "@toip-tools/relay";
 import { act1, act2, act3, type ActOptions } from "./acts";
 import { formatReport, runDoctor, type DoctorOptions, type DoctorReport } from "./doctor";
 import { UsageError, openRealLink, parseLink, parsePlan, type LinkSpec, type OpenedLink, type PlanName } from "./links";
@@ -20,7 +20,7 @@ import { fmtBytes, fmtMs, type Trace } from "./trace";
 
 export const USAGE = `Trust Tasks and TSP over LoRa, and by hand.
 
-Usage: npm run mesh --workspace @zk-toip/mesh -- <command> [options]
+Usage: npm run mesh --workspace @toip-tools/mesh -- <command> [options]
 
 Commands
   demo                     the three acts on the simulator, narrated

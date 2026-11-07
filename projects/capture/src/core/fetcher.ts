@@ -1,5 +1,5 @@
 /** The verifier's one door to the network: the capture server's registry, key logs, status lists and beacons. Nothing it returns is trusted. */
-import type { StatusListDoc } from "@zk-toip/trust-core";
+import type { StatusListDoc } from "@toip-tools/trust-core";
 import { fromHex, hex } from "./bytes";
 import type { Fetcher } from "./verify";
 

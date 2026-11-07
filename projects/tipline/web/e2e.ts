@@ -3,8 +3,8 @@
  * has their own browser profile; sources use a fresh one each time, as a private window would be.
  * Passkeys come from virtual authenticators with PRF, as in Settle's e2e.
  *
- *   npm run e2e --workspace @zk-toip/tipline              # builds the web apps first
- *   npm run e2e --workspace @zk-toip/tipline -- --no-build
+ *   npm run e2e --workspace @toip-tools/tipline              # builds the web apps first
+ *   npm run e2e --workspace @toip-tools/tipline -- --no-build
  *   add --headed to watch
  *
  * Screenshots land in web/e2e-shots/; timings in results/e2e.json.
@@ -13,7 +13,7 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
-import { encodeMembershipCode } from "@zk-toip/anon-membership";
+import { encodeMembershipCode } from "@toip-tools/anon-membership";
 import { startPlatform } from "../src/platform/platform";
 import { withExif } from "../tests/fixtures/images";
 

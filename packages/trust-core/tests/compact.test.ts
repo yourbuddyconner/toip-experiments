@@ -30,7 +30,7 @@ function guestPass() {
     type: ["VerifiableCredential", "GuestPass"],
     validUntil: "2026-11-05T20:00:00Z",
     credentialSubject: { id: alice.did, door: "front", household: "4B", role: "dog walker", days: ["mon", "tue", "wed", "thu", "fri"], from: "12:00", until: "14:00" },
-    credentialStatus: { type: "BitstringStatusListEntry", statusListIndex: 412, statusListCredential: "https://zk-toip.example/status/building/1" },
+    credentialStatus: { type: "BitstringStatusListEntry", statusListIndex: 412, statusListCredential: "https://toip.tools/status/building/1" },
   });
 }
 
@@ -152,7 +152,7 @@ describe("CTT1 body codec", () => {
       "2026-11-05T14:30:00.123Z",
       "2026-11-05T14:30:00Z",
       "VerifiableCredential",
-      "https://zk-toip.example/spec/todo/op/0.1",
+      "https://toip.tools/spec/todo/op/0.1",
       "https://trusttasks.org/spec/x",
       "z",
       "",

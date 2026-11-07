@@ -1,4 +1,4 @@
-// "@zk-toip/mesh-transport": runs in browsers and Node. Node-only adapters are under ./gwmp, ./node and ./detect.
+// "@toip-tools/mesh-transport": runs in browsers and Node. Node-only adapters are under ./gwmp, ./node and ./detect.
 export { realScheduler, VirtualScheduler, type Scheduler } from "./scheduler";
 export type { Link, LinkInfo, LinkState, ReceivedFrame } from "./link";
 export { LinkEvents } from "./link";

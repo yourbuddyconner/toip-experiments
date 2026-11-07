@@ -3,7 +3,7 @@
  * runs in this tab once the account is unlocked, and its state is saved, sealed, after every change. One tab
  * per account at a time (a Web Lock), so two tabs never answer the same messages.
  */
-import { identityFromSeed, type OutboxItem, type OutboxStore } from "@zk-toip/trust-core";
+import { identityFromSeed, type OutboxItem, type OutboxStore } from "@toip-tools/trust-core";
 import { SettleApi, type Person, type PlatformConfig } from "../../src/client/client";
 import { SettlePolicy } from "../../src/protocol/policy";
 import type { Party, PartySnapshot } from "../../src/agents/party";

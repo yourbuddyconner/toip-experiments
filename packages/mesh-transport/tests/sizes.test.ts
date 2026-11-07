@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Bus, DemoClock, Endpoint, ctt1, issueCredential, ourSpec, signDocument, type Identity } from "@zk-toip/trust-core";
+import { Bus, DemoClock, Endpoint, ctt1, issueCredential, ourSpec, signDocument, type Identity } from "@toip-tools/trust-core";
 import { estimate } from "../src/frame";
 import { sealSender } from "../src/keys";
 import { encodePacket } from "../src/packet";

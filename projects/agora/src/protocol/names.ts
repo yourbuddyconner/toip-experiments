@@ -3,7 +3,7 @@
  * number from 0 to 99. Names are cosmetic. Clashes are possible; the full nym is always available.
  */
 import { sha256 } from "@noble/hashes/sha2.js";
-import { fieldFromHex, fieldToBytes } from "@zk-toip/anon-membership";
+import { fieldFromHex, fieldToBytes } from "@toip-tools/anon-membership";
 import { ADJECTIVES, NOUNS } from "./words";
 
 export interface NymLook {

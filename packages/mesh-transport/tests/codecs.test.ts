@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { pack, packNested } from "@openvtc/vti-tsp-js";
-import { identityFromSeed, seedFrom, resolveDidKey, type Identity } from "@zk-toip/trust-core";
+import { identityFromSeed, seedFrom, resolveDidKey, type Identity } from "@toip-tools/trust-core";
 import { loraAirtimeMs, maxBytesUnder, planMtu, plans, regions, AirtimeBudget, type LoRaSetting } from "../src/airtime";
 import { seeded } from "../src/bytes";
 import { joinTsp, splitTsp, tspSignatureValid } from "../src/tsp";

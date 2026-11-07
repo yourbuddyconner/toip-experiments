@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { DemoClock, identityFromSeed, seedFrom, signDocument } from "@zk-toip/trust-core";
+import { DemoClock, identityFromSeed, seedFrom, signDocument } from "@toip-tools/trust-core";
 import { loadArtifacts } from "../src/artifacts";
 import { acceptMembership, type AcceptPolicy } from "../src/accept";
 import { dayOf, groupFieldOf, memberSecret, scopeOf, messageOf } from "../src/encode";
@@ -10,7 +10,7 @@ import { membershipInputs } from "../src/member";
 import { NullifierBook } from "../src/nullifiers";
 import { MembershipError, MembershipProver, MembershipVerifier, type MembershipProof } from "../src/prove";
 import { treeFromRoot, type GroupRoot } from "../src/roots";
-import { toB64u, fromB64u } from "@zk-toip/trust-core";
+import { toB64u, fromB64u } from "@toip-tools/trust-core";
 
 const DAY = 86_400_000;
 const acme = identityFromSeed(seedFrom("acc/acme"));

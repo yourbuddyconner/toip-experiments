@@ -6,7 +6,7 @@
  * A new platform has no operators. It prints a setup code once at start; the first account to sign in
  * with that code becomes the operator, and can then add others.
  */
-import { verifyDocument, type Clock } from "@zk-toip/trust-core";
+import { verifyDocument, type Clock } from "@toip-tools/trust-core";
 
 export const SESSION_COOKIE = "settle_operator";
 const CHALLENGE_TTL_MS = 2 * 60_000;

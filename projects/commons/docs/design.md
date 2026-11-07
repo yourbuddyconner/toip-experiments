@@ -93,7 +93,7 @@ A household is a member of the building, and residents are members of the househ
 
 - **Communities inside communities.** A roster entry's member may itself be a community (a DID with its own roster). Checking "is Alice a resident of this building?" becomes a chain check of two signed rosters. Devices cache the rosters of every community they're in.
 - **One device, many communities, many apps.** Shared To-Do's `Device` becomes a core that hosts *communities* and *app modules*. Each app registers its message types, its Rego bundle and its views. Apps share the endpoint, the relay connection and the store, with storage namespaced per app.
-- **Message routing by app.** Types become `https://zk-toip.example/spec/commons/<app>/<name>/0.1`, or registry specs where they fit (section 6).
+- **Message routing by app.** Types become `https://toip.tools/spec/commons/<app>/<name>/0.1`, or registry specs where they fit (section 6).
 - **Devices that aren't people.** The door has a DID and a building membership with role `door`, a kiosk mode, and no person behind it.
 - **Several devices per person (probably needed here).** A resident with a phone and a laptop is normal in a building. The natural design: the person has a long-lived DID; each device has its own key; the person's DID delegates to device keys with a device credential, which a roster or verifier follows. This is the stack's "delegation of authority" credential type (S01, S02) used on yourself. It could be deferred, but the passes app benefits from it, because a pass issued from a laptop should be checkable to the same person as one issued from a phone.
 

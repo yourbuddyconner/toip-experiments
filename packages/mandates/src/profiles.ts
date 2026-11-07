@@ -1,4 +1,4 @@
-import { canonicalJson } from "@zk-toip/trust-core";
+import { canonicalJson } from "@toip-tools/trust-core";
 import type { Profile } from "./types";
 
 /** The Settle action vocabulary (agents design §7.4). Every action also has `spend`. */

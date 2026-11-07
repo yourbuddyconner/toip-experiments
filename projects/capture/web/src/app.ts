@@ -1,5 +1,5 @@
 /** Shared state for the pages: the server's config, the verifier's trust list, the gallery, and the vault. */
-import { createVault } from "@zk-toip/web-vault";
+import { createVault } from "@toip-tools/web-vault";
 import { chainFromJson, QUICKNET, type DrandChain, type TrustEntry } from "../../src/core";
 
 export interface Config {

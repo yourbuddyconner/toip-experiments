@@ -3,8 +3,8 @@
  */
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { messageOf, scopeOf, type Field, type MembershipProof } from "@zk-toip/anon-membership";
-import { canonicalJson, ourSpec } from "@zk-toip/trust-core";
+import { messageOf, scopeOf, type Field, type MembershipProof } from "@toip-tools/anon-membership";
+import { canonicalJson, ourSpec } from "@toip-tools/trust-core";
 
 export const APP = "tipline/v1";
 

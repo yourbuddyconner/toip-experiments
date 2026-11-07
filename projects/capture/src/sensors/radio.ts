@@ -1,5 +1,5 @@
 /** A send queue for a half-duplex radio link: one frame at a time, within the link's airtime budget. */
-import type { Link } from "@zk-toip/mesh-transport";
+import type { Link } from "@toip-tools/mesh-transport";
 
 export class RadioQueue {
   private tail: Promise<unknown> = Promise.resolve();

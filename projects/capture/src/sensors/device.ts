@@ -4,10 +4,10 @@
  */
 import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { seedSigner } from "@zk-toip/cose";
-import { Controller, ed25519Signer, httpWitnessClient, type WitnessClient } from "@zk-toip/eventlog";
-import { JsonFileStore } from "@zk-toip/eventlog/node";
-import { identityFromSeed, type Clock } from "@zk-toip/trust-core";
+import { seedSigner } from "@toip-tools/cose";
+import { Controller, ed25519Signer, httpWitnessClient, type WitnessClient } from "@toip-tools/eventlog";
+import { JsonFileStore } from "@toip-tools/eventlog/node";
+import { identityFromSeed, type Clock } from "@toip-tools/trust-core";
 import { b64, deviceDid, devTag, fromB64, fromHex, freshChain, hex, kidOf, ReadingChain, utf8, type ChainState } from "../core";
 
 export interface Enrollment {

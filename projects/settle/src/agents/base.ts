@@ -2,7 +2,7 @@
  * What every Settle party has: a ToIP identity, a TSP endpoint on the relay, a view of the chain,
  * the payment policy, and what it has learned about each payment.
  */
-import { Endpoint, RelayTransport, fromB64u, toB64u, type Clock, type Identity, type OutboxStore, type Traffic } from "@zk-toip/trust-core";
+import { Endpoint, RelayTransport, fromB64u, toB64u, type Clock, type Identity, type OutboxStore, type Traffic } from "@toip-tools/trust-core";
 import { ed25519 } from "@noble/curves/ed25519.js";
 import type { Address } from "@solana/kit";
 import { addressBytes, escrowAddress, outcomeMessage, STATE } from "../chain/escrow";

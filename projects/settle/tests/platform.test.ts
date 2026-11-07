@@ -6,7 +6,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { identityFromSeed, type Identity } from "@zk-toip/trust-core";
+import { identityFromSeed, type Identity } from "@toip-tools/trust-core";
 import { STATE } from "../src/chain/escrow";
 import { encodeLink, decodeLink, verifyLink, type Party } from "../src/agents/party";
 import { SettleApi } from "../src/client/client";
@@ -316,7 +316,7 @@ describe("Settle platform, end to end", () => {
 
     // A challenge is good once, for this platform only, signed by the key that claims it.
     const { nonce, audience } = await api.post<{ nonce: string; audience: string }>("/api/operator/challenge", {});
-    const { signDocument, SystemClock } = await import("@zk-toip/trust-core");
+    const { signDocument, SystemClock } = await import("@toip-tools/trust-core");
     const forged = { ...signDocument({ type: "settle/operator-login" as const, issuer: mallory.did, nonce, audience }, mallory, new SystemClock()), issuer: alice.did };
     await expect(api.post("/api/operator/login", { proof: forged })).rejects.toThrow(/signature/);
     const good = signDocument({ type: "settle/operator-login" as const, issuer: alice.did, nonce, audience }, alice, new SystemClock());

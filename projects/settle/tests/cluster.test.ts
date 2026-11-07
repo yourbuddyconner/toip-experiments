@@ -1,7 +1,7 @@
 /**
  * The platform on a real Solana cluster: a solana-test-validator, devnet, or any RPC URL. Off by default;
  *
- *   SETTLE_CLUSTER=localnet npm run test:cluster --workspace @zk-toip/settle   # solana-test-validator on :8899
+ *   SETTLE_CLUSTER=localnet npm run test:cluster --workspace @toip-tools/settle   # solana-test-validator on :8899
  *   SETTLE_CLUSTER=devnet SETTLE_DATA=.data/devnet npm run test:cluster ...    # devnet, with a funded treasury
  *
  * The program must be deployed first (npm run deploy -- --cluster <same>), and the treasury in the data
@@ -12,7 +12,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { identityFromSeed } from "@zk-toip/trust-core";
+import { identityFromSeed } from "@toip-tools/trust-core";
 import { STATE } from "../src/chain/escrow";
 import { rpcStats } from "../src/chain/chain";
 import type { Party } from "../src/agents/party";

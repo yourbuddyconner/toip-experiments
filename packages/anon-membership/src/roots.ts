@@ -1,6 +1,6 @@
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { canonicalJson, verifyDocument, type Clock } from "@zk-toip/trust-core";
+import { canonicalJson, verifyDocument, type Clock } from "@toip-tools/trust-core";
 import { groupFieldOf } from "./encode";
 import { fieldFromHex, fieldToHex } from "./field";
 import { GroupTree } from "./tree";

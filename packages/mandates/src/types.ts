@@ -1,4 +1,4 @@
-import type { Credential, StatusListDoc } from "@zk-toip/trust-core";
+import type { Credential, StatusListDoc } from "@toip-tools/trust-core";
 
 /** A decimal integer string, at most 2^53 − 1. */
 export type Units = string;

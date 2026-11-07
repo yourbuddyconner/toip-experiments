@@ -3,7 +3,7 @@
  * seconds. A guest signs the nonce into its presentation; the door accepts only recent nonces,
  * so an old presentation fails even after a restart.
  */
-import type { Identity } from "@zk-toip/trust-core";
+import type { Identity } from "@toip-tools/trust-core";
 import { equal } from "./bytes";
 import type { MeshTransport } from "./mesh";
 

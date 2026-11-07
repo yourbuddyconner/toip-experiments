@@ -2,7 +2,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, inject, it } from "vitest";
 import { WebSocket as NodeWebSocket } from "ws";
-import { Policies, SystemClock } from "@zk-toip/trust-core";
+import { Policies, SystemClock } from "@toip-tools/trust-core";
 import { Device } from "../src/todo/device";
 import { MemoryStore } from "../src/todo/store";
 import { App } from "../src/web/App";

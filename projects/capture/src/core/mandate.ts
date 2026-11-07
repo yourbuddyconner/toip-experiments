@@ -1,9 +1,9 @@
 /**
- * Owner-to-device mandates with the `capture/1` profile (@zk-toip/mandates). The owner limits what a
+ * Owner-to-device mandates with the `capture/1` profile (@toip-tools/mandates). The owner limits what a
  * device may sign for it; the verifier decides the capture as a `capture/sign-media` action.
  */
-import { explain, issueMandate, MandateEngine, staticStatusResolver, type Mandate, type StatusRegistry } from "@zk-toip/mandates";
-import type { Clock, Identity } from "@zk-toip/trust-core";
+import { explain, issueMandate, MandateEngine, staticStatusResolver, type Mandate, type StatusRegistry } from "@toip-tools/mandates";
+import type { Clock, Identity } from "@toip-tools/trust-core";
 import type { MandateCheck } from "./verify";
 
 /** A camera's mandate: sign photos of the given types for the owner, until `validUntil`. */

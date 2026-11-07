@@ -1,5 +1,5 @@
 import type { Proof } from "@openvtc/trust-tasks/runtime";
-import { signDocument, verifyDocument, type Clock, type Identity } from "@zk-toip/trust-core";
+import { signDocument, verifyDocument, type Clock, type Identity } from "@toip-tools/trust-core";
 import type { Role } from "./checks";
 
 export interface RosterMember {

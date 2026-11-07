@@ -3,13 +3,13 @@
  * is refused by an honest worker's gates.
  */
 import { describe, expect, it } from "vitest";
-import { defaultEngine, issueMandate, jcsHash, mandateHash, present, StatusRegistry, type Action, type Mandate } from "@zk-toip/mandates";
-import { DemoClock, signDocument } from "@zk-toip/trust-core";
+import { defaultEngine, issueMandate, jcsHash, mandateHash, present, StatusRegistry, type Action, type Mandate } from "@toip-tools/mandates";
+import { DemoClock, signDocument } from "@toip-tools/trust-core";
 import { mandateGates } from "../src/guard/gates";
 import { taskUri, USDC } from "../src/config";
 import { issuePassport } from "../src/passport";
 import { FakeHub, MINT, NAMES, makeLink, people, rootConstraints, verified } from "./helpers";
-import type { Terms } from "@zk-toip/settle/src/protocol/documents";
+import type { Terms } from "@toip-tools/settle/src/protocol/documents";
 
 const fee = (p: bigint) => (p / 100n < 500_000n ? 500_000n : p / 100n);
 

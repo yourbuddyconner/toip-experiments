@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { signDocument } from "@zk-toip/trust-core";
+import { signDocument } from "@toip-tools/trust-core";
 import { acceptRoster } from "../src/todo/roster";
 import { fixture } from "./helpers";
 

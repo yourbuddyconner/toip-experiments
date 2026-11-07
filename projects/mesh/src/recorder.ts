@@ -5,15 +5,15 @@
  * CTT1 body, and as the radio packet. It can, because in the simulator it holds everyone's keys.
  */
 import { pack, unpack } from "@openvtc/vti-tsp-js";
-import { decodeFrame, estimate, type MeshEvent } from "@zk-toip/mesh-transport";
-import type { SimMedium } from "@zk-toip/mesh-transport/sim";
-import { decodeBody, encodeBody, jsonBody, resolveDidKey, type Identity, type Transport } from "@zk-toip/trust-core";
+import { decodeFrame, estimate, type MeshEvent } from "@toip-tools/mesh-transport";
+import type { SimMedium } from "@toip-tools/mesh-transport/sim";
+import { decodeBody, encodeBody, jsonBody, resolveDidKey, type Identity, type Transport } from "@toip-tools/trust-core";
 import { fmtBytes, fmtMs, type MessageSizes, type Tone, type Trace, type TraceFrame, type TraceHop, type TraceLog, type TraceNode } from "./trace";
 
 const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
 const KINDS = ["", "pair", "intro", "via", "down", "receipt", "raw", "public"];
 
-/** "https://zk-toip.example/spec/mesh-demo/door/open/0.1#response" → "door/open response". */
+/** "https://toip.tools/spec/mesh-demo/door/open/0.1#response" → "door/open response". */
 export function shortType(type: string): string {
   const [base, frag] = type.split("#");
   const m = /\/spec\/(?:mesh-demo\/)?(.+)\/\d+\.\d+$/.exec(base);

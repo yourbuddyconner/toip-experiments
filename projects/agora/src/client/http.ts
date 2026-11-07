@@ -1,6 +1,6 @@
 /** The host's and the registrars' HTTP APIs (design §7.7), for the client and the tests. */
-import { fromB64u } from "@zk-toip/trust-core";
-import type { GroupRoot } from "@zk-toip/anon-membership";
+import { fromB64u } from "@toip-tools/trust-core";
+import type { GroupRoot } from "@toip-tools/anon-membership";
 import type { DeleteDoc, ForumPolicy, Gate, GroupDescriptor, Moderation, NymPass, PinnedRoot, Poll, Post, ReportDoc, Vote } from "../protocol/documents";
 import type { FeedView, PollView } from "../host/host";
 import type { IssuerInfo } from "../issuers/issuers";

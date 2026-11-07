@@ -2,8 +2,8 @@
  * Runs the whole world and the app: the principal's console and Dana's courier view.
  *
  *   npm run agents                                        # at the repository root
- *   npm run app --workspace @zk-toip/agents -- --live     # Claude, if credentials work
- *   npm run app --workspace @zk-toip/agents -- --static   # the built pages (npm run build:web first)
+ *   npm run app --workspace @toip-tools/agents -- --live     # Claude, if credentials work
+ *   npm run app --workspace @toip-tools/agents -- --static   # the built pages (npm run build:web first)
  *
  * Environment: AGENTS_PORT (4330), AGENTS_HUB_PORT (4331), AGENTS_SETTLE_PORT (4332), AGENTS_RELAY_PORT (4333),
  * AGENTS_RPC_PORT (4334), HOST (default 127.0.0.1).

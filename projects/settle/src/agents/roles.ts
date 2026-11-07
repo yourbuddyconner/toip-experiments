@@ -3,7 +3,7 @@
  * get paid and confirm work are Parties (party.ts). Each decides for itself and checks what it's told
  * against the chain; none of them, the processor included, can move the funds alone.
  */
-import { fromB64u, toB64u, utf8, type Credential } from "@zk-toip/trust-core";
+import { fromB64u, toB64u, utf8, type Credential } from "@toip-tools/trust-core";
 import {
   createNoopSigner,
   generateKeyPairSigner,

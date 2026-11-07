@@ -8,7 +8,7 @@
  */
 import { decode, encode } from "cborg";
 import { decodeEnvelope, hpke } from "@openvtc/vti-tsp-js";
-import type { Delivery, Identity } from "@zk-toip/trust-core";
+import type { Delivery, Identity } from "@toip-tools/trust-core";
 import { concat, utf8 } from "./bytes";
 
 export interface BundleItem {

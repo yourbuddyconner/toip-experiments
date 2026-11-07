@@ -2,8 +2,8 @@
  * Runs the Trail service and its explorer.
  *
  *   npm run trail                                         # from the repository root
- *   npm run app --workspace @zk-toip/trail -- --fresh     # forget everything and start the demo over
- *   npm run app --workspace @zk-toip/trail -- --static    # the built explorer (npm run build:web first)
+ *   npm run app --workspace @toip-tools/trail -- --fresh     # forget everything and start the demo over
+ *   npm run app --workspace @toip-tools/trail -- --static    # the built explorer (npm run build:web first)
  *
  * Environment: TRAIL_PORT (default 4340), TRAIL_WITNESS_PORT (witness 1; the others follow, default 4341-4344),
  * HOST (default 127.0.0.1), TRAIL_DATA (default projects/trail/.data).

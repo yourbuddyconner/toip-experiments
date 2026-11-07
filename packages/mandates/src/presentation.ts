@@ -1,5 +1,5 @@
 /** Presentations: what a delegate shows a counterparty before it acts (agents design §8.7). */
-import { signDocument, type Clock, type Identity } from "@zk-toip/trust-core";
+import { signDocument, type Clock, type Identity } from "@toip-tools/trust-core";
 import type { Presentation } from "./types";
 
 /** Signs a presentation by `holder`, the leaf's subject. `audience` and `action` bind it to one counterparty and one action. */

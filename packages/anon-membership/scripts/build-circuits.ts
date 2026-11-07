@@ -1,6 +1,6 @@
 // Rebuilds the committed circuit artifacts. Needs nargo 1.0.0 and bb 6.0.0; consumers and tests don't.
 //
-//   npm run build:circuits --workspace @zk-toip/anon-membership
+//   npm run build:circuits --workspace @toip-tools/anon-membership
 //
 // Writes artifacts/gate_d20.json (nargo's output), artifacts/gate_d20.meta.json (id, vk, vkHash,
 // gate count) and artifacts/crs.json (the CRS points the prover needs, so nothing is fetched at
@@ -12,7 +12,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { toB64u } from "@zk-toip/trust-core";
+import { toB64u } from "@toip-tools/trust-core";
 import { G2_POINT_HEX } from "../src/g2";
 
 const pkg = fileURLToPath(new URL("..", import.meta.url));

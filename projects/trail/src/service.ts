@@ -17,7 +17,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { existsSync, readFileSync, rmSync, statSync } from "node:fs";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
-import { evidenceToJson } from "@zk-toip/eventlog";
+import { evidenceToJson } from "@toip-tools/eventlog";
 import { STEPS, runNext } from "./steps";
 import { World } from "./world";
 
@@ -193,7 +193,7 @@ export async function startService(opts: ServiceOptions = {}): Promise<Service> 
     const { createServer: createVite } = await import("vite");
     vite = await createVite({ root: WEB_DIR, configFile: join(WEB_DIR, "vite.config.ts"), appType: "spa", server: { middlewareMode: true, hmr: { server } }, logLevel: "warn" });
   } else if (opts.web === "static" && !existsSync(join(distDir, "index.html"))) {
-    throw new Error("the explorer isn't built: run `npm run build:web --workspace @zk-toip/trail`");
+    throw new Error("the explorer isn't built: run `npm run build:web --workspace @toip-tools/trail`");
   }
   await new Promise<void>((resolve, reject) => server.once("error", reject).listen(opts.port ?? 0, host, () => resolve()));
   const port = (server.address() as { port: number }).port;

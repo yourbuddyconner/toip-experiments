@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DemoClock, identityFromSeed, seedFrom } from "@zk-toip/trust-core";
+import { DemoClock, identityFromSeed, seedFrom } from "@toip-tools/trust-core";
 import { accept, attest, bindPaymentKey, derivePaymentKey, termsHash, verifyAcceptance, verifyBinding, verifySigned, type Terms } from "../src/protocol/documents";
 
 const clock = new DemoClock("2026-11-06T10:00:00Z");

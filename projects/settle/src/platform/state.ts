@@ -11,7 +11,7 @@
  */
 import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { fromB64u, identityFromSeed, toB64u, type Identity } from "@zk-toip/trust-core";
+import { fromB64u, identityFromSeed, toB64u, type Identity } from "@toip-tools/trust-core";
 import { createKeyPairSignerFromPrivateKeyBytes, type KeyPairSigner } from "@solana/kit";
 
 export interface PlatformSecrets {

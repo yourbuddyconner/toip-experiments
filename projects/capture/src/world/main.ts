@@ -1,5 +1,5 @@
 /**
- * npm run app --workspace @zk-toip/capture   (or npm run capture at the repository root)
+ * npm run app --workspace @toip-tools/capture   (or npm run capture at the repository root)
  *
  * Environment:
  *   CAPTURE_PORT=4350        the web app and API; the witnesses use the next three ports
@@ -37,7 +37,7 @@ console.log(`
   Time beacon     ${world.drand.mode === "live" ? "drand quicknet (public)" : "local development beacon (offline)"}
   Data            ${world.dataDir}
 
-  Another sensor: npm run sensor --workspace @zk-toip/capture -- --name "Harbor 1"
+  Another sensor: npm run sensor --workspace @toip-tools/capture -- --name "Harbor 1"
   Stop with Ctrl-C.
 `);
 

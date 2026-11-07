@@ -14,8 +14,8 @@ import {
   type LeafFields,
   type Predicate,
   type Statement,
-} from "@zk-toip/anon-membership";
-import type { Credential } from "@zk-toip/trust-core";
+} from "@toip-tools/anon-membership";
+import type { Credential } from "@toip-tools/trust-core";
 import { APP, type Encoding, type Gate, type GroupDescriptor, type GroupRoot, type NymPass, type SlotSpec } from "./documents";
 
 const enc = new TextEncoder();

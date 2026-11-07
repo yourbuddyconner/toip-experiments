@@ -1,7 +1,7 @@
 /** The agents/* Trust Tasks (design §10.1). All one-way, signed, sealed in TSP Direct messages. */
-import { ourSpec, type Credential } from "@zk-toip/trust-core";
-import type { Presentation } from "@zk-toip/mandates";
-import type { PaymentLink } from "@zk-toip/settle/src/agents/party";
+import { ourSpec, type Credential } from "@toip-tools/trust-core";
+import type { Presentation } from "@toip-tools/mandates";
+import type { PaymentLink } from "@toip-tools/settle/src/agents/party";
 
 export const JOB_OFFER = ourSpec("agents/job/offer");
 export const JOB_QUOTE = ourSpec("agents/job/quote");

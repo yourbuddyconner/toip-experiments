@@ -1,4 +1,4 @@
-// Browser-safe core. JsonFileStore and serveHttp are in "@zk-toip/eventlog/node".
+// Browser-safe core. JsonFileStore and serveHttp are in "@toip-tools/eventlog/node".
 export * from "./types";
 export {
   Code,

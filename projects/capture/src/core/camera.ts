@@ -3,9 +3,9 @@
  * photo, and anchor batches of manifest ids in interaction events that the witnesses receipt.
  * Browser-safe; the key pair is a WebCrypto pair whose private key can't be exported.
  */
-import { webCryptoSigner as coseSigner } from "@zk-toip/cose";
-import { Controller, httpWitnessClient, keyQb64, MemoryStore, verifyKel, webCryptoSigner, type StoreData, type WitnessClient } from "@zk-toip/eventlog";
-import { SystemClock, type Clock, type Credential, type StatusListDoc } from "@zk-toip/trust-core";
+import { webCryptoSigner as coseSigner } from "@toip-tools/cose";
+import { Controller, httpWitnessClient, keyQb64, MemoryStore, verifyKel, webCryptoSigner, type StoreData, type WitnessClient } from "@toip-tools/eventlog";
+import { SystemClock, type Clock, type Credential, type StatusListDoc } from "@toip-tools/trust-core";
 import { fromHex, utf8 } from "./bytes";
 import { batchAnchors, makeCapture, type CaptureInput } from "./capture";
 import { compactFromStream, deviceDid, digestSealOf } from "./keylog";

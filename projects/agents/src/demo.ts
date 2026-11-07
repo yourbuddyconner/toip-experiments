@@ -1,8 +1,8 @@
 /**
  * The demo, narrated in the terminal (design §14.3): about three minutes with live models, less scripted.
  *
- *   npm run demo --workspace @zk-toip/agents            # scripted models, no API key needed
- *   npm run demo --workspace @zk-toip/agents -- --live  # Claude, if credentials work; scripted otherwise
+ *   npm run demo --workspace @toip-tools/agents            # scripted models, no API key needed
+ *   npm run demo --workspace @toip-tools/agents -- --live  # Claude, if credentials work; scripted otherwise
  *
  * Ports: 0 (free ports), so it never disturbs a running app.
  */

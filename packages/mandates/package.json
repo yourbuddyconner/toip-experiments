@@ -1,5 +1,5 @@
 {
-  "name": "@zk-toip/mandates",
+  "name": "@toip-tools/mandates",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@noble/hashes": "2.4.0",
-    "@zk-toip/trust-core": "0.0.0"
+    "@toip-tools/trust-core": "0.0.0"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

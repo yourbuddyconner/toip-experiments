@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Account } from "@zk-toip/web-vault";
+import type { Account } from "@toip-tools/web-vault";
 import { vault } from "./services";
 import { AccountPage } from "./pages/Account";
 import { AboutPage } from "./pages/About";

@@ -1,4 +1,4 @@
-import { SystemClock, type Clock } from "@zk-toip/trust-core";
+import { SystemClock, type Clock } from "@toip-tools/trust-core";
 import { witnessHttpHandler } from "../http";
 import { ed25519Signer } from "../keys";
 import { Witness } from "../witness";

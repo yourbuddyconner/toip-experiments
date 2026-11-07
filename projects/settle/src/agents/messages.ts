@@ -1,5 +1,5 @@
 /** The payloads Settle parties send each other over TSP (design §7). */
-import type { Credential } from "@zk-toip/trust-core";
+import type { Credential } from "@toip-tools/trust-core";
 import type { Address } from "@solana/kit";
 import type { Acceptance, Evidence, Party as TermsParty, Ruling, Terms } from "../protocol/documents";
 import type { OutcomeSignature } from "./base";

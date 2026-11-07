@@ -1,4 +1,4 @@
-import { fromB64u } from "@zk-toip/trust-core";
+import { fromB64u } from "@toip-tools/trust-core";
 import bundled from "../artifacts/crs.json" with { type: "json" };
 
 export { G2_POINT_HEX } from "./g2";

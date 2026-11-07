@@ -1,7 +1,7 @@
 /** The explorer's explanations and per-entry checks. */
 import { describe, expect, it } from "vitest";
-import { DemoClock, seedFrom } from "@zk-toip/trust-core";
-import { coldKeysFromSeed, Controller, exportBundle, MemoryStore, type ProblemCode } from "@zk-toip/eventlog";
+import { DemoClock, seedFrom } from "@toip-tools/trust-core";
+import { coldKeysFromSeed, Controller, exportBundle, MemoryStore, type ProblemCode } from "@toip-tools/eventlog";
 import { PROBLEM_TEXT, STATUS_TEXT } from "../src/explain";
 import { buildView, diffBodies } from "../src/view";
 

@@ -2,8 +2,8 @@
  * The visualizer, driven through a real browser: runs act 1 and act 2 from the page, with the
  * keyboard as well as the mouse, and checks what the page shows. Uses its own server on a free port.
  *
- *   npm run e2e --workspace @zk-toip/mesh              # Vite dev server
- *   npm run e2e --workspace @zk-toip/mesh -- --static  # the built app (npm run build:web first)
+ *   npm run e2e --workspace @toip-tools/mesh              # Vite dev server
+ *   npm run e2e --workspace @toip-tools/mesh -- --static  # the built app (npm run build:web first)
  *   add --headed to watch
  *
  * Screenshots land in web/e2e-shots/.

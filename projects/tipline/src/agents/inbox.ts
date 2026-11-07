@@ -15,8 +15,8 @@ import {
   type GroupRoot,
   type MembershipVerifier,
   type NullifierBookState,
-} from "@zk-toip/anon-membership";
-import { CoarseClock, Endpoint, fromB64u, type Clock, type Delivery, type Identity, type Transport } from "@zk-toip/trust-core";
+} from "@toip-tools/anon-membership";
+import { CoarseClock, Endpoint, fromB64u, type Clock, type Delivery, type Identity, type Transport } from "@toip-tools/trust-core";
 import { storyOf, storyOpen, type Descriptor, type Story, type StoryGroup } from "../protocol/descriptor";
 import {
   CHUNK,

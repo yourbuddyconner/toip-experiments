@@ -2,8 +2,8 @@
  * The owner's side of a device's key log (design §7.4): the owner holds the device's next key (derived
  * from the owner's seed and the device's nonce), so a thief with the device can't rotate, and the owner can.
  */
-import { attachmentsOf, coldKeysFromSeed, Controller, fromStream, keyQb64, MemoryStore, nextKeyDigest, type Signer, type SignedMessage, type WitnessClient } from "@zk-toip/eventlog";
-import type { Clock } from "@zk-toip/trust-core";
+import { attachmentsOf, coldKeysFromSeed, Controller, fromStream, keyQb64, MemoryStore, nextKeyDigest, type Signer, type SignedMessage, type WitnessClient } from "@toip-tools/eventlog";
+import type { Clock } from "@toip-tools/trust-core";
 
 /** The recovery keys an owner keeps for one device: set j signs the j-th rotation. */
 export function recoveryKeys(ownerSeed: Uint8Array, deviceNonce: string) {

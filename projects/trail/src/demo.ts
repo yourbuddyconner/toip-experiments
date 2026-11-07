@@ -1,7 +1,7 @@
 /**
  * Trail, narrated: the ten steps of the design's demo (§15) in the terminal, over real HTTP witnesses.
  *
- *   npm run demo --workspace @zk-toip/trail
+ *   npm run demo --workspace @toip-tools/trail
  *
  * Step 10 runs KERIpy when KERIPY_PYTHON (or ~/.cache/zk-toip-keripy/venv) has it, and says so when it doesn't.
  */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sealItem } from "@zk-toip/trust-core";
+import { sealItem } from "@toip-tools/trust-core";
 import { readableText, signOp, tamperOp, verifyOp } from "../src/todo/ops";
 import { fixture } from "./helpers";
 

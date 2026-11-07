@@ -105,7 +105,7 @@ export async function startApp(opts: AppOptions = {}): Promise<App> {
     const { createServer: createVite } = await import("vite");
     vite = await createVite({ root: WEB_DIR, configFile: join(WEB_DIR, "vite.config.ts"), appType: "spa", server: { middlewareMode: true, hmr: { server } }, logLevel: "warn" });
   } else if (opts.web === "static" && !existsSync(join(distDir, "index.html"))) {
-    throw new Error("the web app isn't built: run `npm run build:web --workspace @zk-toip/mesh`");
+    throw new Error("the web app isn't built: run `npm run build:web --workspace @toip-tools/mesh`");
   }
   await new Promise<void>((resolve, reject) => server.once("error", reject).listen(opts.port ?? 0, host, () => resolve()));
   const port = (server.address() as { port: number }).port;

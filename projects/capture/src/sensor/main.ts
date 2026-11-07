@@ -1,5 +1,5 @@
 /**
- * npm run sensor --workspace @zk-toip/capture -- [--name "Harbor 1"] [--lat 40.70 --lon -74.01]
+ * npm run sensor --workspace @toip-tools/capture -- [--name "Harbor 1"] [--lat 40.70 --lon -74.01]
  *        [--world http://localhost:4350] [--interval 5] [--seal-every 6] [--clock-skew-hours -24]
  *
  * A sensor in its own process, with a software key file (key class S). It enrolls with the world's owner
@@ -9,8 +9,8 @@
  */
 import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { SystemClock } from "@zk-toip/trust-core";
-import { realScheduler } from "@zk-toip/mesh-transport";
+import { SystemClock } from "@toip-tools/trust-core";
+import { realScheduler } from "@toip-tools/mesh-transport";
 import { openSensor, type Enrollment } from "../sensors/device";
 import { SensorNode, simulatedChannels } from "../sensors/node";
 import { RemoteSimLink } from "../sensors/remoteLink";
@@ -40,7 +40,7 @@ const post = async (path: string, body: unknown) => {
 try {
   await fetch(`${world}/api/config`);
 } catch {
-  console.error(`Can't reach the Capture world at ${world}. Start it first: npm run app --workspace @zk-toip/capture`);
+  console.error(`Can't reach the Capture world at ${world}. Start it first: npm run app --workspace @toip-tools/capture`);
   process.exit(1);
 }
 

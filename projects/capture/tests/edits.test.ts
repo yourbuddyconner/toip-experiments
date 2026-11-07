@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { identityFromSeed, seedFrom } from "@zk-toip/trust-core";
+import { identityFromSeed, seedFrom } from "@toip-tools/trust-core";
 import {
   checkTiles,
   commitTiles,

@@ -4,8 +4,8 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { CIRCUIT_ID, checkRootLog, epochOf, snapshotMatches, type GroupRoot } from "@zk-toip/anon-membership";
-import { Endpoint, RelayTransport, SystemClock, identityFromSeed, seedFrom } from "@zk-toip/trust-core";
+import { CIRCUIT_ID, checkRootLog, epochOf, snapshotMatches, type GroupRoot } from "@toip-tools/anon-membership";
+import { Endpoint, RelayTransport, SystemClock, identityFromSeed, seedFrom } from "@toip-tools/trust-core";
 import { startPlatform, WEB_DIR, type Platform } from "../src/platform/platform";
 import { signDescriptor, DEFAULT_LIMITS } from "../src/protocol/descriptor";
 import { enrollWallet } from "../src/agents/wallet";

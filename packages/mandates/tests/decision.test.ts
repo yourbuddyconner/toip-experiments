@@ -104,7 +104,7 @@ describe("the action against the chain (§8.2 step 10)", () => {
       id: "act-fund",
       actor: ops,
       at: w.clock.iso(),
-      attrs: { spend: usdc(50), counterparty: people.errands.did, child: "sha256:11", asset: MINT, task: "https://zk-toip.example/spec/mandates/issue/0.1" },
+      attrs: { spend: usdc(50), counterparty: people.errands.did, child: "sha256:11", asset: MINT, task: "https://toip.tools/spec/mandates/issue/0.1" },
     };
     // spendPerTx (30) applies only to settle/pay, so funding 50 is fine; the daily budget still applies.
     expect((await decide(w, [root], fund)).outcome).toBe("allow");
@@ -115,7 +115,7 @@ describe("the action against the chain (§8.2 step 10)", () => {
   it("an action type outside `actions` is denied", async () => {
     const w = world();
     const root = rootMandate(w);
-    const refund: Action = { type: "settle/refund", profile: "settle/1", id: "r1", actor: ops, at: w.clock.iso(), attrs: { spend: "0", payment: "p1", counterparty: people.dana.did, task: "https://zk-toip.example/spec/settle/escrow/sign/0.1" } };
+    const refund: Action = { type: "settle/refund", profile: "settle/1", id: "r1", actor: ops, at: w.clock.iso(), attrs: { spend: "0", payment: "p1", counterparty: people.dana.did, task: "https://toip.tools/spec/settle/escrow/sign/0.1" } };
     const d = await decide(w, [root], refund);
     expect(d.outcome).toBe("deny");
     expect(d.reasons[0]).toMatchObject({ dimension: "actions", attr: "type", value: "settle/refund" });

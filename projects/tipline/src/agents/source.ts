@@ -27,8 +27,8 @@ import {
   type ProveProgress,
   type Statement,
   type Witness,
-} from "@zk-toip/anon-membership";
-import { CoarseClock, Endpoint, RelayTransport, type Clock, type Identity } from "@zk-toip/trust-core";
+} from "@toip-tools/anon-membership";
+import { CoarseClock, Endpoint, RelayTransport, type Clock, type Identity } from "@toip-tools/trust-core";
 import { tipKeys } from "../protocol/codes";
 import { storyOf, verifyDescriptor, type Descriptor, type Story, type StoryGroup } from "../protocol/descriptor";
 import {

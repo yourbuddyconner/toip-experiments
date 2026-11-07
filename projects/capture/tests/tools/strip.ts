@@ -5,7 +5,7 @@ import { contentHash, hex, withoutStore } from "../../src/core";
 
 const [inPath, outPath] = process.argv.slice(2);
 if (!inPath) {
-  console.error("usage: npm run strip --workspace @zk-toip/capture -- <photo> [output]");
+  console.error("usage: npm run strip --workspace @toip-tools/capture -- <photo> [output]");
   process.exit(1);
 }
 const file = new Uint8Array(readFileSync(resolve(process.env.INIT_CWD ?? process.cwd(), inPath)));

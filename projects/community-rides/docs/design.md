@@ -111,14 +111,14 @@ The same agent code also runs headless in Node, for tests and for the scripted s
 
 ### 5.3 Trust Tasks: real specs where they fit, ours elsewhere
 
-Rule for the builder: **use a real registry spec, with its type URI and generated payload type, when its required fields can be filled honestly for this story. Otherwise use our namespace**, `https://zk-toip.example/spec/rides/<name>/0.1`. Record every choice and its reason in a table in the project README. Always use the real envelope.
+Rule for the builder: **use a real registry spec, with its type URI and generated payload type, when its required fields can be filled honestly for this story. Otherwise use our namespace**, `https://toip.tools/spec/rides/<name>/0.1`. Record every choice and its reason in a table in the project README. Always use the real envelope.
 
 | Step | Candidate real spec (S02) | Expected outcome |
 |---|---|---|
 | Vouch for an applicant | `vtc/endorsements/issue` 0.1 is community-issued, but a vouch is member-issued | ours: `rides/vouch` |
 | Join | `vtc/join-requests/submit` 0.3 | real if its required fields fit, otherwise ours: `rides/join` |
 | Membership credentials | the community's credential comes back in the join response; the member's credential back to the community goes through `vtc/members/vmc` 0.1, which replaced `vtc/join-requests/accept` | real `vtc/members/vmc`, if it fits |
-| Driver endorsement | `vtc/endorsements/issue` 0.1, sent by Carol's phone. The predicate is registered once at setup through `vtc/endorsement-types/register`. The spec returns the credential to the requester (Carol), so the community also delivers it to Bob. | real issue and register, community predicate `https://zk-toip.example/rides/driver/1`. Delivery is ours: `rides/endorsement/deliver` |
+| Driver endorsement | `vtc/endorsements/issue` 0.1, sent by Carol's phone. The predicate is registered once at setup through `vtc/endorsement-types/register`. The spec returns the credential to the requester (Carol), so the community also delivers it to Bob. | real issue and register, community predicate `https://toip.tools/rides/driver/1`. Delivery is ours: `rides/endorsement/deliver` |
 | Post, list and withdraw ride requests | none found | ours: `rides/board/post`, `rides/board/list`, `rides/board/withdraw` |
 | Offer, accept, decline | none found | ours: `rides/offer`, `rides/accept`, `rides/decline` |
 | Pickup answer | `peer-check/ask` 0.1 puts a yes/no question to a person; here the phone answers a challenge it scanned | ours: `rides/pickup-check` |

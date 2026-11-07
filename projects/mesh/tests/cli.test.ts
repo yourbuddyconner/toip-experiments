@@ -2,9 +2,9 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { US915_UP, realScheduler, regions } from "@zk-toip/mesh-transport";
-import { SimMedium } from "@zk-toip/mesh-transport/sim";
-import { startRelay, type Relay } from "@zk-toip/relay";
+import { US915_UP, realScheduler, regions } from "@toip-tools/mesh-transport";
+import { SimMedium } from "@toip-tools/mesh-transport/sim";
+import { startRelay, type Relay } from "@toip-tools/relay";
 import { runCli, type CliDeps, type Io } from "../src/cli";
 import { parseLink, parsePlan } from "../src/links";
 

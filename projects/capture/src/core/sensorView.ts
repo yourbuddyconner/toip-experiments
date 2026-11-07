@@ -2,9 +2,9 @@
  * The sensor dashboard's checks, run in the browser: beacon rounds (BLS), device keys (key logs),
  * installation credentials, gateway receipts, and every reading chain. The server only carries frames.
  */
-import { keyAt, type KelResult } from "@zk-toip/eventlog";
-import type { Credential } from "@zk-toip/trust-core";
-import { verifyCredential } from "@zk-toip/trust-core";
+import { keyAt, type KelResult } from "@toip-tools/eventlog";
+import type { Credential } from "@toip-tools/trust-core";
+import { verifyCredential } from "@toip-tools/trust-core";
 import { fromB64, fromHex } from "./bytes";
 import { randomnessOf, roundTime, verifyRounds, type DrandChain } from "./drand";
 import { devTag } from "./frames";

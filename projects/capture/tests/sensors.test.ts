@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { seedSigner } from "@zk-toip/cose";
-import { plans, regions } from "@zk-toip/mesh-transport";
-import { SimMedium, VirtualScheduler } from "@zk-toip/mesh-transport/sim";
-import { seedFrom } from "@zk-toip/trust-core";
+import { seedSigner } from "@toip-tools/cose";
+import { plans, regions } from "@toip-tools/mesh-transport";
+import { SimMedium, VirtualScheduler } from "@toip-tools/mesh-transport/sim";
+import { seedFrom } from "@toip-tools/trust-core";
 import {
   backfillRanges,
   beaconTag,

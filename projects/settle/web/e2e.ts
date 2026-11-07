@@ -4,8 +4,8 @@
  * passkey authenticator with PRF, so accounts are sealed with passkeys exactly as in a real browser; one
  * person uses a passphrase instead.
  *
- *   npm run e2e --workspace @zk-toip/settle             # Vite dev server
- *   npm run e2e --workspace @zk-toip/settle -- --static # the built app (npm run build:web first)
+ *   npm run e2e --workspace @toip-tools/settle             # Vite dev server
+ *   npm run e2e --workspace @toip-tools/settle -- --static # the built app (npm run build:web first)
  *   add --headed to watch
  *
  * Screenshots land in web/e2e-shots/.

@@ -6,10 +6,10 @@
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { MeshGateway, MeshTransport, exportBundle, openBundle, postBundle, realScheduler, type Link, type MeshEvent } from "@zk-toip/mesh-transport";
-import { fileContacts, fileGatewayStore, fileOutbox, fileReplayStore } from "@zk-toip/mesh-transport/node";
-import { SimMedium } from "@zk-toip/mesh-transport/sim";
-import { Endpoint, RelayTransport, SystemClock, ctt1, resolveDidKey, type Identity } from "@zk-toip/trust-core";
+import { MeshGateway, MeshTransport, exportBundle, openBundle, postBundle, realScheduler, type Link, type MeshEvent } from "@toip-tools/mesh-transport";
+import { fileContacts, fileGatewayStore, fileOutbox, fileReplayStore } from "@toip-tools/mesh-transport/node";
+import { SimMedium } from "@toip-tools/mesh-transport/sim";
+import { Endpoint, RelayTransport, SystemClock, ctt1, resolveDidKey, type Identity } from "@toip-tools/trust-core";
 import { act0, hex, until } from "./acts";
 import { member, nameOf } from "./cast";
 import { Door, Guest, OFFLINE_FRESHNESS, nextChallenge, type DoorAnswer } from "./door";

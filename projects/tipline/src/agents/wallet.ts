@@ -21,8 +21,8 @@ import {
   treeFromRoot,
   type Enrollment,
   type Field,
-} from "@zk-toip/anon-membership";
-import type { Clock, Endpoint } from "@zk-toip/trust-core";
+} from "@toip-tools/anon-membership";
+import type { Clock, Endpoint } from "@toip-tools/trust-core";
 import type { Fetcher } from "./logs";
 
 /** The wallet's group secrets come from its seed, never from the organization. */

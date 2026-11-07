@@ -30,7 +30,7 @@ It prints the URLs and the DIDs. Data is kept in `projects/agora/.data/local`. A
 | TSP relay | ws://127.0.0.1:4323/v1 | `AGORA_RELAY_PORT` |
 | Data | `projects/agora/.data/local` | `AGORA_DATA` |
 
-The web app uses Vite's dev server by default. For the built app, run `npm run build:web --workspace @zk-toip/agora`, then `npm run app --workspace @zk-toip/agora -- --static`.
+The web app uses Vite's dev server by default. For the built app, run `npm run build:web --workspace @toip-tools/agora`, then `npm run app --workspace @toip-tools/agora -- --static`.
 
 Open the app in separate browser profiles, or private windows, to be different people. Accounts are sealed with a passkey (Touch ID, Windows Hello, a phone), or a passphrase if the browser's passkeys can't do it.
 
@@ -44,7 +44,7 @@ Try the demo:
 7. **Moderation.** Ben breaks a rule, Ana reports him, and Dee hides the post and bans his pseudonym from **Moderate this forum**.
 8. **A poll.** In a forum for Riverton residents, Dee opens a poll for district 7. Ana proves her vote, and it is sent within 10 minutes, or at once with **Send now**. Cal, in district 3, is told why he can't vote.
 
-`npm run demo --workspace @zk-toip/agora` tells the whole story in the terminal (design section 12.3, steps 1 to 12), with real proofs.
+`npm run demo --workspace @toip-tools/agora` tells the whole story in the terminal (design section 12.3, steps 1 to 12), with real proofs.
 
 ## What's built
 
@@ -68,8 +68,8 @@ How trust works:
 ## Tests
 
 ```bash
-npm test --workspace @zk-toip/agora    # 42 tests, about 7 seconds, real proofs
-npm run e2e --workspace @zk-toip/agora # the demo in Chromium, with virtual passkeys
+npm test --workspace @toip-tools/agora    # 42 tests, about 7 seconds, real proofs
+npm run e2e --workspace @toip-tools/agora # the demo in Chromium, with virtual passkeys
 ```
 
 - `tests/protocol.test.ts`: gate compilation for each predicate kind and encoding, refused gates, scopes, signals, nym names, words, anonymity estimates.

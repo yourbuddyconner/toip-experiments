@@ -2,8 +2,8 @@
  * A sensor (design §12): takes a reading every interval, chains it, sends it on the radio, and seals the
  * chain head every few readings. It listens for the gateway's beacons and backfill requests.
  */
-import type { Link } from "@zk-toip/mesh-transport";
-import type { Scheduler } from "@zk-toip/mesh-transport";
+import type { Link } from "@toip-tools/mesh-transport";
+import type { Scheduler } from "@toip-tools/mesh-transport";
 import { equal } from "../core/bytes";
 import { beaconTag, decodeFrame, FRAME, ReadingChain } from "../core/frames";
 import { RadioQueue } from "./radio";

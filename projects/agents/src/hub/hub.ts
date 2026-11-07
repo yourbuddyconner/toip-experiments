@@ -4,8 +4,8 @@
  * verifier that can't get a list fails closed.
  */
 import { createServer, type IncomingMessage, type Server } from "node:http";
-import { ed25519Signer, MemoryStore, Witness, witnessHttpHandler } from "@zk-toip/eventlog";
-import { SystemClock, verifyCredential, verifyDocument, type Clock, type Credential, type StatusListDoc } from "@zk-toip/trust-core";
+import { ed25519Signer, MemoryStore, Witness, witnessHttpHandler } from "@toip-tools/eventlog";
+import { SystemClock, verifyCredential, verifyDocument, type Clock, type Credential, type StatusListDoc } from "@toip-tools/trust-core";
 import { verifyProfile, type WorkerProfile } from "./client";
 
 export interface Hub {

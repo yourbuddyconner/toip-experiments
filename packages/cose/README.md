@@ -1,4 +1,4 @@
-# @zk-toip/cose
+# @toip-tools/cose
 
 Deterministic CBOR and `COSE_Sign1`, with async signers.
 
@@ -9,7 +9,7 @@ It uses `cborg` for CBOR, and `@noble/curves` and `@noble/hashes` for Ed25519, P
 ## CBOR
 
 ```ts
-import { encodeCbor, decodeCbor, Tagged } from "@zk-toip/cose";
+import { encodeCbor, decodeCbor, Tagged } from "@toip-tools/cose";
 
 const bytes = encodeCbor({ v: 1, kind: "capture", hash: new Uint8Array(32) });
 const claim = decodeCbor<{ v: number }>(bytes);

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { fromB64u } from "@zk-toip/trust-core";
-import { decodeKeyRefSig, verifyBundle, verifySignature, type Bundle, type SignatureCheck } from "@zk-toip/eventlog";
+import { fromB64u } from "@toip-tools/trust-core";
+import { decodeKeyRefSig, verifyBundle, verifySignature, type Bundle, type SignatureCheck } from "@toip-tools/eventlog";
 import { buildView, type EvidenceView, type IdentifierView } from "../../src/view";
 import { evidenceHolders, getBundle, getCaptures, getSamples, loadView, resetDemo, runStep, witnessClients, type Capture, type Sample, type State } from "./api";
 import { Hash, IdentifierBody, Problems, Stamp } from "./components";

@@ -1,6 +1,6 @@
 /** HTTP plumbing shared by the host, the registrar and the web app's server. Node only. */
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
-import type { DemoClock } from "@zk-toip/trust-core";
+import type { DemoClock } from "@toip-tools/trust-core";
 
 export const MAX_BODY = 256 * 1024;
 

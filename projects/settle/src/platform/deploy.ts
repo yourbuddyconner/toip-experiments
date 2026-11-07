@@ -1,7 +1,7 @@
 /**
  * Deploys the Settle program to a real cluster, paid for by the platform's treasury key.
  *
- *   npm run deploy --workspace @zk-toip/settle -- --cluster devnet
+ *   npm run deploy --workspace @toip-tools/settle -- --cluster devnet
  *
  * It uses the Solana CLI (https://solana.com/docs/intro/installation) and deploys program/dist/settle_escrow.so
  * at the development program id (program/keys), with the treasury as its upgrade authority. If the treasury is
@@ -12,7 +12,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { fromB64u } from "@zk-toip/trust-core";
+import { fromB64u } from "@toip-tools/trust-core";
 import { ed25519 } from "@noble/curves/ed25519.js";
 import { Chain } from "../chain/chain";
 import { PROGRAM_KEYPAIR, PROGRAM_SO } from "../chain/simnet";

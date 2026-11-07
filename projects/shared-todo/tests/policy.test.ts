@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { beforeAll, describe, expect, it } from "vitest";
-import { Policies } from "@zk-toip/trust-core";
+import { Policies } from "@toip-tools/trust-core";
 import { authorize, type AuthzInput } from "../src/todo/checks";
 
 let policies: Policies;

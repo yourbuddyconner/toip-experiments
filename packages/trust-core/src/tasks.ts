@@ -41,7 +41,7 @@ export type Handler<P, R> = (
   ctx: { sender: string },
 ) => Promise<R | Refusal | void> | R | Refusal | void;
 
-export const OUR_SPEC_BASE = "https://zk-toip.example/spec/";
+export const OUR_SPEC_BASE = "https://toip.tools/spec/";
 
 /** A spec in our own namespace. `name` may include a family, e.g. "todo/op". */
 export function ourSpec(name: string): SpecPolicy {

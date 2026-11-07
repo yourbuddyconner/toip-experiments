@@ -1,6 +1,6 @@
 /** The wallet: credentials from the demo issuers, and the groups they let you join. */
 import { useEffect, useRef, useState } from "react";
-import type { Credential } from "@zk-toip/trust-core";
+import type { Credential } from "@toip-tools/trust-core";
 import type { IssuerInfo } from "../../../src/issuers/issuers";
 import { Link, navigate } from "../router";
 import { useApp, useLoad } from "../state";

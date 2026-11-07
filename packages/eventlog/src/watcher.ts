@@ -1,5 +1,5 @@
 /** Watchers: a verifier's first-seen copies, witness polling, and duplicity evidence (trail design §10). */
-import { utf8, type Clock } from "@zk-toip/trust-core";
+import { utf8, type Clock } from "@toip-tools/trust-core";
 import type { WitnessClient } from "./client";
 import { KelProcessor, type KelResult } from "./kel";
 import { verifyCouple } from "./keys";

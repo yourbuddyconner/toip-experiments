@@ -1,8 +1,8 @@
 /** A small world for tests: three witnesses, an owner, a maker, a dev drand chain, and cameras. */
-import { webCryptoSigner as coseWebCrypto, seedSigner } from "@zk-toip/cose";
-import { Controller, ed25519Signer, localWitnessClient, MemoryStore, webCryptoSigner, Witness, exportBundle } from "@zk-toip/eventlog";
-import { DemoClock, identityFromSeed, seedFrom, type Identity } from "@zk-toip/trust-core";
-import { StatusRegistry } from "@zk-toip/mandates";
+import { webCryptoSigner as coseWebCrypto, seedSigner } from "@toip-tools/cose";
+import { Controller, ed25519Signer, localWitnessClient, MemoryStore, webCryptoSigner, Witness, exportBundle } from "@toip-tools/eventlog";
+import { DemoClock, identityFromSeed, seedFrom, type Identity } from "@toip-tools/trust-core";
+import { StatusRegistry } from "@toip-tools/mandates";
 import { sha256 } from "@noble/hashes/sha2.js";
 import {
   batchAnchors,

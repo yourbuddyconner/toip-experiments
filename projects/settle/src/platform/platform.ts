@@ -14,8 +14,8 @@ import { existsSync, mkdtempSync, readFileSync, statSync } from "node:fs";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { tmpdir } from "node:os";
 import { extname, join, normalize } from "node:path";
-import { startRelay, type Relay } from "@zk-toip/relay";
-import { issueCredential, SystemClock, verifyDocument, type Clock, type Identity } from "@zk-toip/trust-core";
+import { startRelay, type Relay } from "@toip-tools/relay";
+import { issueCredential, SystemClock, verifyDocument, type Clock, type Identity } from "@toip-tools/trust-core";
 import type { Address, KeyPairSigner } from "@solana/kit";
 import type { Chain } from "../chain/chain";
 import { STATE } from "../chain/escrow";
@@ -517,7 +517,7 @@ export async function startPlatform(opts: PlatformOptions = {}): Promise<Platfor
     const { createServer: createVite } = await import("vite");
     vite = await createVite({ root: WEB_DIR, configFile: join(WEB_DIR, "vite.config.ts"), appType: "spa", server: { middlewareMode: true, hmr: { server } }, logLevel: "warn" });
   } else if (opts.web === "static" && !existsSync(join(distDir, "index.html"))) {
-    throw new Error("the web app isn't built: run `npm run build:web --workspace @zk-toip/settle`");
+    throw new Error("the web app isn't built: run `npm run build:web --workspace @toip-tools/settle`");
   }
   await new Promise<void>((resolve, reject) => server.once("error", reject).listen(opts.port ?? 0, host, () => resolve()));
   const port = (server.address() as { port: number }).port;

@@ -55,7 +55,7 @@ What the stock US915 configuration means for us (design 14.4): the gateway liste
 2. Run:
 
    ```
-   npm run mesh --workspace @zk-toip/mesh -- doctor --no-serial
+   npm run mesh --workspace @toip-tools/mesh -- doctor --no-serial
    ```
 
    It listens on UDP 1700 for up to 15 seconds. You want to see your gateway's EUI with **downlink yes**. The forwarder sends PULL_DATA every 10 seconds; that's the downlink path.
@@ -63,7 +63,7 @@ What the stock US915 configuration means for us (design 14.4): the gateway liste
 4. Then check the gateway will transmit for us. This sends one 12-byte test frame on 923.3 MHz at 20 dBm, so **the antenna must be on**:
 
    ```
-   npm run mesh --workspace @zk-toip/mesh -- doctor --no-serial --tx-test
+   npm run mesh --workspace @toip-tools/mesh -- doctor --no-serial --tx-test
    ```
 
    You want `test transmission ok`. `TX_FREQ` means the gateway won't transmit on 923.3 MHz: its `tx_freq_min`/`tx_freq_max` must include it (the stock US915 configuration does). `TX_POWER` means its power table has no 20 dBm entry.
@@ -74,14 +74,14 @@ What the stock US915 configuration means for us (design 14.4): the gateway liste
 2. Run:
 
    ```
-   npm run mesh --workspace @zk-toip/mesh -- doctor
+   npm run mesh --workspace @toip-tools/mesh -- doctor
    ```
 
    You want the port listed as `RAK RUI3 AT firmware` with a version. If nothing answers `AT`: check the cable carries data, press the board's reset button, and run doctor again. Doctor probes at 115200 baud.
 3. Switch it to LoRa P2P mode with plan `us915-b`, to check it accepts the settings:
 
    ```
-   npm run mesh --workspace @zk-toip/mesh -- doctor --rak-p2p
+   npm run mesh --workspace @toip-tools/mesh -- doctor --rak-p2p
    ```
 
    This sends, in order (design 14.6): `AT`, `AT+VER=?`, `AT+NWM=?`, then `AT+NWM=0` if it isn't in P2P mode already (the module restarts), `AT+SYNCWORD=3444`, `AT+IQINVER=0`, `AT+CAD=1`, `AT+P2P=923300000:8:2:0:8:20` (listen on 923.3 MHz, SF8, 500 kHz, coding rate 4/5, preamble 8, 20 dBm), and `AT+PRECV=65533` (listen continuously). It doesn't transmit. You want `P2P ok`.
@@ -95,10 +95,10 @@ Two terminals on the laptop. The door's radio is the miner; Rosa's is the RAK317
 
 ```
 # terminal 1: the Front Door
-npm run mesh --workspace @zk-toip/mesh -- door --link gwmp
+npm run mesh --workspace @toip-tools/mesh -- door --link gwmp
 
 # terminal 2: Rosa, once the door says it is up
-npm run mesh --workspace @zk-toip/mesh -- guest --link rak:/dev/tty.usbserial-XXXX
+npm run mesh --workspace @toip-tools/mesh -- guest --link rak:/dev/tty.usbserial-XXXX
 ```
 
 The door waits for the packet forwarder's PULL_DATA, then beacons a signed challenge every 15 seconds. The guest waits up to 60 seconds for a beacon, presents the pass, and prints `✓ the door opened`. Both print every frame with its RSSI and SNR.
@@ -113,13 +113,13 @@ The gateway and the door both use UDP port 1700, so stop the door first.
 
 ```
 # terminal 1: the Lodge's gateway, with a relay on this machine (port 4361)
-npm run mesh --workspace @zk-toip/mesh -- gateway --link gwmp
+npm run mesh --workspace @toip-tools/mesh -- gateway --link gwmp
 
 # terminal 2: the landlord's agent
-npm run mesh --workspace @zk-toip/mesh -- receive
+npm run mesh --workspace @toip-tools/mesh -- receive
 
 # terminal 3: Alice
-npm run mesh --workspace @zk-toip/mesh -- attest --link rak:/dev/tty.usbserial-XXXX
+npm run mesh --workspace @toip-tools/mesh -- attest --link rak:/dev/tty.usbserial-XXXX
 ```
 
 Alice listens for the gateway's beacon (it beacons every 60 seconds), sends the attestation, and gets a custody receipt. The landlord's agent prints that it accepted it.
@@ -127,8 +127,8 @@ Alice listens for the gateway's beacon (it beacons every 60 seconds), sends the 
 For act 3, stop the gateway and run `attest` again: with no gateway heard, the attestation waits in `.data/alice/outbox.json`. Then:
 
 ```
-npm run mesh --workspace @zk-toip/mesh -- bundle export --out stick.toipbundle
-npm run mesh --workspace @zk-toip/mesh -- bundle import stick.toipbundle --relay ws://localhost:4361/v1
+npm run mesh --workspace @toip-tools/mesh -- bundle export --out stick.toipbundle
+npm run mesh --workspace @toip-tools/mesh -- bundle import stick.toipbundle --relay ws://localhost:4361/v1
 ```
 
 The import needs a relay to post to. Start the gateway again (it starts the relay on port 4361), or point `--relay` at another relay. Keep `receive` running to see the landlord's agent accept it.

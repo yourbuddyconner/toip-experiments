@@ -31,8 +31,8 @@ import {
   type ProveProgress,
   type Statement,
   type Witness,
-} from "@zk-toip/anon-membership";
-import { identityFromSeed, signDocument, toB64u, fromB64u, verifyCredential, type Clock, type Credential, type Endpoint, type Identity } from "@zk-toip/trust-core";
+} from "@toip-tools/anon-membership";
+import { identityFromSeed, signDocument, toB64u, fromB64u, verifyCredential, type Clock, type Credential, type Endpoint, type Identity } from "@toip-tools/trust-core";
 import {
   PASS_MAX_MS,
   docHash,

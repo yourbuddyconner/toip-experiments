@@ -39,11 +39,11 @@ Only one tab per profile can be open at a time.
 
 ## Deploy it
 
-- **Relay.** Run `npm start --workspace @zk-toip/relay` anywhere with Node 22.5 or later, behind TLS. Set:
+- **Relay.** Run `npm start --workspace @toip-tools/relay` anywhere with Node 22.5 or later, behind TLS. Set:
   - `PORT` (default 8787)
   - `RELAY_DB` (the SQLite file, default `relay.db`)
   - `RELAY_PUBLIC_URL`, the exact URL clients use, such as `wss://relay.example.com/v1`, because clients sign it when they authenticate.
-- **App.** Run `VITE_RELAY_URL=wss://relay.example.com/v1 npm run build --workspace @zk-toip/shared-todo` and serve `projects/shared-todo/dist/` as static files, over HTTPS.
+- **App.** Run `VITE_RELAY_URL=wss://relay.example.com/v1 npm run build --workspace @toip-tools/shared-todo` and serve `projects/shared-todo/dist/` as static files, over HTTPS.
 
 ## Security notes
 
@@ -57,7 +57,7 @@ Only one tab per profile can be open at a time.
 
 ```bash
 npm test                                # every package
-npm test --workspace @zk-toip/shared-todo
+npm test --workspace @toip-tools/shared-todo
 ```
 
 - **Unit tests:** the checks, the signed roster, and a permutation test showing every arrival order gives the same list.
@@ -81,5 +81,5 @@ npm test --workspace @zk-toip/shared-todo
 - Invitations are OOBI-style links, not the stack's OOBI format.
 - A list is a community whose key its creator holds. Real VTCs have a governance document and M-of-N signing.
 - The relay is our own WebSocket mailbox, not TSP Routed Mode or the stack's libp2p relays.
-- Message types are ours, under `https://zk-toip.example/spec/todo/…`.
+- Message types are ours, under `https://toip.tools/spec/todo/…`.
 - Whether the OpenVTC libraries interoperate with the P2P Trust Stack's own implementation wasn't checked.

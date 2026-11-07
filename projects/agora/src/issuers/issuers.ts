@@ -3,7 +3,7 @@
  * status list. It issues credentials over agora/demo/issue, and, as an issuer-run group, runs its own
  * registrar. A real board would check something before issuing; these issue what they're asked.
  */
-import { StatusList, Refusal, issueCredential, type Clock, type Credential, type Endpoint, type Identity, type StatusListDoc } from "@zk-toip/trust-core";
+import { StatusList, Refusal, issueCredential, type Clock, type Credential, type Endpoint, type Identity, type StatusListDoc } from "@toip-tools/trust-core";
 import type { SlotSpec } from "../protocol/documents";
 import { DEMO_ISSUE, type DemoIssueRequest } from "../protocol/specs";
 import { Registrar, type RegistrarState } from "../registrar/registrar";

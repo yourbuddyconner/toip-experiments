@@ -1,5 +1,5 @@
 /** Making captures and edits: what the camera and the editor do, shared by the web app and the tests. */
-import type { AsyncSigner } from "@zk-toip/cose";
+import type { AsyncSigner } from "@toip-tools/cose";
 import { randomBytes } from "./bytes";
 import { contentHash, embedStore, sniffMime } from "./embed";
 import { idBytes, idText, parseManifest, signManifest, type Action, type AppInfo, type Beacon, type CameraInfo, type CaptureClaim, type EditClaim, type LocationClaim, type Rect } from "./manifest";

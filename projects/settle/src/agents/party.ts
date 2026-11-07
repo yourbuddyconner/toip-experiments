@@ -4,7 +4,7 @@
  * decides everything for itself: it checks what it's told against the chain, and signs only what its
  * policy allows.
  */
-import { canonicalJson, fromB64u, signDocument, toB64u, utf8, verifyDocument, type Clock, type Credential } from "@zk-toip/trust-core";
+import { canonicalJson, fromB64u, signDocument, toB64u, utf8, verifyDocument, type Clock, type Credential } from "@toip-tools/trust-core";
 import { createNoopSigner, generateKeyPairSigner, type Address } from "@solana/kit";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { claimInstruction, escrowAddress, openInstruction, reclaimInstruction, STATE, type EscrowState } from "../chain/escrow";

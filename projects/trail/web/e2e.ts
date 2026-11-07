@@ -1,8 +1,8 @@
 /**
  * The explorer, driven through a real browser over the ten demo steps, against a local Trail service.
  *
- *   npm run e2e --workspace @zk-toip/trail             # Vite dev server
- *   npm run e2e --workspace @zk-toip/trail -- --static # the built explorer (npm run build:web first)
+ *   npm run e2e --workspace @toip-tools/trail             # Vite dev server
+ *   npm run e2e --workspace @toip-tools/trail -- --static # the built explorer (npm run build:web first)
  *   add --headed to watch
  *
  * Screenshots land in web/e2e-shots/.

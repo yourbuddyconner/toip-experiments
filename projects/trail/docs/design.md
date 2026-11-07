@@ -3,7 +3,7 @@
 Verifiable audit trails for agents, devices and services, and the shared event-log library under them. Date: 2026-11-06.
 
 Trail has two parts:
-1. **`packages/eventlog`** (`@zk-toip/eventlog`): append-only, hash-chained, signed event logs with key rotation, witnesses, receipts and duplicity detection. Other projects build on it.
+1. **`packages/eventlog`** (`@toip-tools/eventlog`): append-only, hash-chained, signed event logs with key rotation, witnesses, receipts and duplicity detection. Other projects build on it.
 2. **`projects/trail`**: a small service and explorer that proves the library works and gives `projects/agents` and `projects/capture` a viewer.
 
 Choices marked **(our call)** are the assistant's and open to change. Claims about KERI cite the sources in section 18. A guess is labeled a guess.
@@ -525,7 +525,7 @@ A bundle is what gets handed around: KEL stream, trail streams, the bodies discl
 
 The library replaces `projects/settle/src/protocol/log.ts`, in a later change to Settle:
 
-| Today | With `@zk-toip/eventlog` |
+| Today | With `@toip-tools/eventlog` |
 |---|---|
 | `new TransparencyLog(identity, clock)` | the processor's `Controller` (AID bound to its `did:key`) plus `openTrail("settle/transparency")` |
 | `append(kind, termsHash, detail)` | `trail.append({kind: "settle/" + kind, body: {termsHash, ...detail}})`. Bodies are published, because the log is public. |
@@ -551,10 +551,10 @@ The library replaces `projects/settle/src/protocol/log.ts`, in a later change to
 
 ### 13.1 Package
 
-- **`packages/eventlog`**, published as `@zk-toip/eventlog`. It is not called `kel`, because it holds trails, witnesses and watchers too.
-- **Runtime dependencies:** `@noble/curves` 2.4.0, `@noble/hashes` 2.4.0 (Blake3, HKDF and SHA-256) and `@zk-toip/trust-core` (`Clock`, `Identity`, `signDocument`, `verifyDocument`, `canonicalJson`, `Endpoint`, `ourSpec`, base64url). All are already in the workspace.
+- **`packages/eventlog`**, published as `@toip-tools/eventlog`. It is not called `kel`, because it holds trails, witnesses and watchers too.
+- **Runtime dependencies:** `@noble/curves` 2.4.0, `@noble/hashes` 2.4.0 (Blake3, HKDF and SHA-256) and `@toip-tools/trust-core` (`Clock`, `Identity`, `signDocument`, `verifyDocument`, `canonicalJson`, `Endpoint`, `ourSpec`, base64url). All are already in the workspace.
 - **Optional for tests only:** KERIpy 1.3.x (Python, run from an interop script) and `cesr-ts` 1.0.0, to parse our streams independently.
-- Browser-safe except `JsonFileStore`, which is exported from `@zk-toip/eventlog/node`.
+- Browser-safe except `JsonFileStore`, which is exported from `@toip-tools/eventlog/node`.
 
 ```
 packages/eventlog/src/
@@ -799,7 +799,7 @@ export interface LogStore {
   logs(): Promise<{ logId: Qb64; kind: "kel" | "trail"; controller: Qb64 }[]>;
 }
 export class MemoryStore implements LogStore {}
-// @zk-toip/eventlog/node:
+// @toip-tools/eventlog/node:
 export class JsonFileStore implements LogStore { constructor(path: string, opts?: { flushMs?: number }) }
 ```
 
@@ -848,7 +848,7 @@ projects/trail/
 
 ## 15. Demo script
 
-`npm run demo --workspace @zk-toip/trail` runs it narrated in the terminal. The explorer shows the same story step by step.
+`npm run demo --workspace @toip-tools/trail` runs it narrated in the terminal. The explorer shows the same story step by step.
 
 1. **Birth.** Ada creates an agent, "Scout". Scout's AID is incepted with three witnesses, two required, and a rotation key held by Ada. Its DID binding is sealed in the inception. The explorer shows the KEL with 3/3 receipts.
 2. **Work.** Scout runs a fixed script:
@@ -972,7 +972,7 @@ The MVP of section 14.2 is built. These notes say where it differs from the desi
 **Layout and ports**
 
 - The service runs at http://localhost:4340, not 4500. Ports 4340 to 4349 are this project's range. Each witness also has its own port (4341 to 4344).
-- `npm run trail` runs it. `npm run demo --workspace @zk-toip/trail` runs the ten steps in the terminal.
+- `npm run trail` runs it. `npm run demo --workspace @toip-tools/trail` runs the ten steps in the terminal.
 - There is a fourth witness from the start. It joins Scout's list at step 6.
 - The KERIpy check uses the library's `packages/eventlog/interop/keripy_check.py`. There is no copy in this project.
 - The explorer verifies everything in the browser with the library. The service only hands over bundles and evidence.

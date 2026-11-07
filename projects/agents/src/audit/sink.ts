@@ -2,8 +2,8 @@
  * The guard's audit trail (design §13), through packages/eventlog. The guard is its only writer. Headers go to
  * the witnesses; bodies stay here and go to the principal by disclosure.
  */
-import { coldKeysFromSeed, Controller, exportBundle, MemoryStore, signerFromIdentity, WitnessError, type Bundle, type LogStore, type Trail, type WitnessClient } from "@zk-toip/eventlog";
-import type { Clock, Identity } from "@zk-toip/trust-core";
+import { coldKeysFromSeed, Controller, exportBundle, MemoryStore, signerFromIdentity, WitnessError, type Bundle, type LogStore, type Trail, type WitnessClient } from "@toip-tools/eventlog";
+import type { Clock, Identity } from "@toip-tools/trust-core";
 
 export interface TrailRef {
   i: string;

@@ -19,7 +19,7 @@
 - Before each commit that changes `package.json`, run `npm run licenses`.
 - `did:key` (Ed25519) for every VID. X25519 keys are derived from the Ed25519 key (`ed25519.utils.toMontgomerySecret` and `ed25519.utils.toMontgomery` in `@noble/curves` 2.x).
 - Every Trust Task document we send carries a Data Integrity proof (`signTrustTask`), responses included. Our own specs set `isProofRequired: true`, `isRecipientRequired: true`, `isIssuedAtRequired: true` and `isBearer: false`.
-- Our namespace: type URIs `https://zk-toip.example/spec/rides/<name>/0.1`. The driver predicate is `https://zk-toip.example/rides/driver/1`. The extension key in `ext` is `example.zk-toip.rides`.
+- Our namespace: type URIs `https://toip.tools/spec/rides/<name>/0.1`. The driver predicate is `https://toip.tools/rides/driver/1`. The extension key in `ext` is `example.zk-toip.rides`.
 - The community's name is "Eastside Rides". People: Alice, Bob, Carol (admin), Dave, Mallory. Keys come from `sha256("community-rides/<name>")`.
 - The demo clock starts at `2026-11-05T14:30:00Z`. Every component takes the clock, and none reads `Date.now()`.
 - Status-list freshness limit: 600 seconds. Vouch age limit: 30 days. Admission needs 2 vouches.
@@ -78,7 +78,7 @@
   - `class TaskError extends Error { readonly code: string }`
   - `type Handler<P, R> = (doc: TrustTaskDocument<P>, ctx: { sender: string }) => Promise<R | Refusal> | R | Refusal`
   - `class Endpoint { constructor(opts: { identity: Identity; bus: Bus; clock: DemoClock }); readonly vid: string; handle<P, R>(spec: SpecPolicy, handler: Handler<P, R>): void; request<P, R>(to: string, spec: SpecPolicy, payload: P): Promise<TrustTaskDocument<R>>; close(): void }`
-  - `function ourSpec(name: string): SpecPolicy`. It returns the type URI `https://zk-toip.example/spec/rides/<name>/0.1` with the flags in Global Constraints.
+  - `function ourSpec(name: string): SpecPolicy`. It returns the type URI `https://toip.tools/spec/rides/<name>/0.1` with the flags in Global Constraints.
 
 How `Endpoint` works:
 - Outgoing requests are documents with `id` from `newUrnUuid()`, `issuer = vid`, `recipient = to`, and `issuedAt`/`expiresAt` (+5 min) from the clock. They are signed with `signTrustTask(doc, identity.signer, { created: clock.date() })`, sealed with `packTrustTask`, and sent on the bus.

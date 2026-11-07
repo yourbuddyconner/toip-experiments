@@ -3,7 +3,7 @@
  * gates (S1), paying from the wallet (S2), and event hooks through SettleApi.party (S3).
  */
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { identityFromSeed, type Traffic } from "@zk-toip/trust-core";
+import { identityFromSeed, type Traffic } from "@toip-tools/trust-core";
 import type { Party } from "../src/agents/party";
 import type { AgentEvent } from "../src/agents/base";
 import { SettleApi } from "../src/client/client";

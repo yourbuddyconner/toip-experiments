@@ -3,9 +3,9 @@
  * proof: the verifier can check every pixel outside the redaction against what the camera committed to.
  */
 import { useEffect, useRef, useState } from "react";
-import type { Unlocked } from "@zk-toip/web-vault";
-import { decodeCbor, seedSigner } from "@zk-toip/cose";
-import { identityFromSeed, type Credential, type StatusListDoc } from "@zk-toip/trust-core";
+import type { Unlocked } from "@toip-tools/web-vault";
+import { decodeCbor, seedSigner } from "@toip-tools/cose";
+import { identityFromSeed, type Credential, type StatusListDoc } from "@toip-tools/trust-core";
 import { decodeStore, encodeStore, fromHex, intersects, makeEdit, publishStore, snapCrop, TILE, utf8, type Rect, type RedactMethod, type Store } from "../../../src/core";
 import { download, gallery, navigate, objectUrl, setHandoff, tileKeyName, vault, type Shot } from "../app";
 import { CreateAccount, UnlockAccount, useRoleAccount } from "./Unlock";

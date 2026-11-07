@@ -4,8 +4,8 @@
  * edit back to the device, catch a tampered file, read a C2PA sample, retire the key and catch the thief's
  * next photo, and watch verified sensor readings.
  *
- *   npm run e2e --workspace @zk-toip/capture              # Vite dev server
- *   npm run e2e --workspace @zk-toip/capture -- --static  # the built app (npm run build:web first)
+ *   npm run e2e --workspace @toip-tools/capture              # Vite dev server
+ *   npm run e2e --workspace @toip-tools/capture -- --static  # the built app (npm run build:web first)
  *   add --headed to watch
  *
  * Screenshots land in web/e2e-shots/.

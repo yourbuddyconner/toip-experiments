@@ -2,9 +2,9 @@
  * Runs a Settle network and its web app.
  *
  *   npm run settle                                   # a local cluster, kept in projects/settle/.data/local
- *   npm run app --workspace @zk-toip/settle -- --static          # the built app (npm run build:web first)
- *   npm run app --workspace @zk-toip/settle -- --cluster devnet  # on Solana devnet (npm run deploy first)
- *   npm run app --workspace @zk-toip/settle -- --fresh           # forget everything and start a new network
+ *   npm run app --workspace @toip-tools/settle -- --static          # the built app (npm run build:web first)
+ *   npm run app --workspace @toip-tools/settle -- --cluster devnet  # on Solana devnet (npm run deploy first)
+ *   npm run app --workspace @toip-tools/settle -- --fresh           # forget everything and start a new network
  *
  * Environment: PORT, RELAY_PORT, RPC_PORT, HOST (default 127.0.0.1), PUBLIC_HOST, SETTLE_DATA, SETTLE_PROGRAM_ID.
  */

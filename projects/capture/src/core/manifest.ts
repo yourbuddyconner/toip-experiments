@@ -2,7 +2,7 @@
  * Capture and edit manifests (design §8, §11.1): a deterministic CBOR claim, signed as a COSE_Sign1.
  * The manifest id is SHA-256 of the whole COSE_Sign1, written cm1_<base64url>.
  */
-import { decodeCbor, encodeCbor, signCose1, Tagged, type AsyncSigner, type CoseAlg } from "@zk-toip/cose";
+import { decodeCbor, encodeCbor, signCose1, Tagged, type AsyncSigner, type CoseAlg } from "@toip-tools/cose";
 import { b64u, fromB64u, fromUtf8, sha } from "./bytes";
 
 export const CLAIM_TYPE = "application/vnd.zk-toip.capture-claim+cbor";

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { BackendType, Barretenberg, UltraHonkBackend, UltraHonkVerifierBackend } from "@aztec/bb.js";
 import { Noir } from "@noir-lang/noir_js";
-import { fromB64u, toB64u } from "@zk-toip/trust-core";
+import { fromB64u, toB64u } from "@toip-tools/trust-core";
 import { loadArtifacts, vkHashOf } from "../src/artifacts";
 import { bundledCrs } from "../src/crs";
 import { fieldFromBytes, fieldToBytes, fieldToHex } from "../src/field";

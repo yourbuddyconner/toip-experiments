@@ -3,7 +3,7 @@
  * find a store, a fresher key log or a status list, and nothing it sends is believed without checking.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MandateEngine } from "@zk-toip/mandates";
+import { MandateEngine } from "@toip-tools/mandates";
 import {
   credentialKind,
   httpFetcher,

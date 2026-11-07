@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { Bus, DemoClock, Endpoint, Refusal, canonicalJson, identityFromSeed, seedFrom, signDocument } from "@zk-toip/trust-core";
+import { Bus, DemoClock, Endpoint, Refusal, canonicalJson, identityFromSeed, seedFrom, signDocument } from "@toip-tools/trust-core";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { groupFieldOf, memberSecret } from "../src/encode";
@@ -162,7 +162,7 @@ describe("the anon-membership/enroll Trust Task", () => {
     const issuer = new GroupIssuer({ identity: acme, clock, name: "employees" });
     const roster = new Set([alice.did]);
     issuer.serve(issuerEp, (did) => roster.has(did));
-    expect(ENROLL.typeUri).toBe("https://zk-toip.example/spec/anon-membership/enroll/0.1");
+    expect(ENROLL.typeUri).toBe("https://toip.tools/spec/anon-membership/enroll/0.1");
 
     const seed = seedFrom("am/alice-wallet");
     const secret = memberSecret(seed, issuer.groupId);

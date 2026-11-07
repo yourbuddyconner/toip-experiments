@@ -2,8 +2,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { realScheduler } from "@zk-toip/mesh-transport";
-import { SystemClock } from "@zk-toip/trust-core";
+import { realScheduler } from "@toip-tools/mesh-transport";
+import { SystemClock } from "@toip-tools/trust-core";
 import {
   CameraDevice,
   chainFromJson,

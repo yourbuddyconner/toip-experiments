@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { MeshTransport } from "@zk-toip/mesh-transport";
-import { issueCredential } from "@zk-toip/trust-core";
+import { MeshTransport } from "@toip-tools/mesh-transport";
+import { issueCredential } from "@toip-tools/trust-core";
 import { DEMO_START, NODE_RADIO, act0, act1, doorWorld, type DoorWorld } from "../src/acts";
 import { member } from "../src/cast";
 import { Guest, nextChallenge, type DoorAnswer } from "../src/door";

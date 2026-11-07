@@ -1,5 +1,5 @@
 /** Shared constants and small helpers. */
-import { ourSpec } from "@zk-toip/trust-core";
+import { ourSpec } from "@toip-tools/trust-core";
 
 export const HARNESS = "zk-toip/agents@0.1.0";
 

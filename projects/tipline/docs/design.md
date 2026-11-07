@@ -320,7 +320,7 @@ A cheaper shape: prove that once, to register a commitment with a group run by s
 
 ## 7. The protocol as Trust Tasks
 
-All tasks use `ourSpec(name)`, so type URIs are `https://zk-toip.example/spec/<name>/0.1`, signed and sealed by `Endpoint`. All are one-way (`notify`) except enrollment, as in Settle, because the inbox is often offline and the source app may close.
+All tasks use `ourSpec(name)`, so type URIs are `https://toip.tools/spec/<name>/0.1`, signed and sealed by `Endpoint`. All are one-way (`notify`) except enrollment, as in Settle, because the inbox is often offline and the source app may close.
 
 ### 7.1 Message types
 
@@ -512,7 +512,7 @@ See 6.6.
    - the inbox: descriptor editor, verification, source labels and counts, attachments, replies, proof requests, equivocation alerts;
    - the outlet site with its mirror;
    - a relay panel showing what the relay stored;
-   - `npm run tipline`, `npm run demo --workspace @zk-toip/tipline`, `npm run e2e --workspace @zk-toip/tipline`.
+   - `npm run tipline`, `npm run demo --workspace @toip-tools/tipline`, `npm run e2e --workspace @toip-tools/tipline`.
 
 **Deferred**
 
@@ -594,10 +594,10 @@ Cast: **Acme Chemicals** (the issuer, which also runs the relay), 60 employees (
 
 ### 13.1 `packages/anon-membership` (new; used by tipline and agora)
 
-Name kept from the working name: it says what it does, and it isn't tied to one proof system. Package `@zk-toip/anon-membership`.
+Name kept from the working name: it says what it does, and it isn't tied to one proof system. Package `@toip-tools/anon-membership`.
 
 ```ts
-import type { Clock, Endpoint, Identity } from "@zk-toip/trust-core";
+import type { Clock, Endpoint, Identity } from "@toip-tools/trust-core";
 import type { SpecPolicy } from "@openvtc/trust-tasks/runtime";
 
 // ── Fields and hashing ──────────────────────────────────────────────

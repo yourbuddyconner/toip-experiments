@@ -1,5 +1,5 @@
 {
-  "name": "@zk-toip/web-vault",
+  "name": "@toip-tools/web-vault",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@zk-toip/trust-core": "0.0.0"
+    "@toip-tools/trust-core": "0.0.0"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

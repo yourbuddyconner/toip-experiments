@@ -18,13 +18,13 @@ A transmitting radio can be located. This project hides what you say and who you
 From the repository root, after `npm install`:
 
 ```
-npm run demo --workspace @zk-toip/mesh       # the three acts, narrated in the terminal
+npm run demo --workspace @toip-tools/mesh       # the three acts, narrated in the terminal
 npm run mesh                                  # the visualizer: prints http://localhost:4360
-npm test --workspace @zk-toip/mesh            # unit and end-to-end tests on the simulator
-npm run e2e --workspace @zk-toip/mesh         # the visualizer in a real browser (Playwright)
+npm test --workspace @toip-tools/mesh            # unit and end-to-end tests on the simulator
+npm run e2e --workspace @toip-tools/mesh         # the visualizer in a real browser (Playwright)
 ```
 
-The CLI: `npm run mesh --workspace @zk-toip/mesh -- <command>`. Run it with no command for help.
+The CLI: `npm run mesh --workspace @toip-tools/mesh -- <command>`. Run it with no command for help.
 
 | Command | What it does |
 |---|---|

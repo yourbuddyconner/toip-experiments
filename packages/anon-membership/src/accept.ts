@@ -1,4 +1,4 @@
-import type { Clock } from "@zk-toip/trust-core";
+import type { Clock } from "@toip-tools/trust-core";
 import { dayOf, groupFieldOf } from "./encode";
 import { fieldFromHex, type Field } from "./field";
 import { parseMembershipProof, type MembershipVerifier } from "./prove";

@@ -1,6 +1,6 @@
 /** Shared pieces: the nym seal, notices, proving progress, and the dev clock. */
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import type { ProveProgress } from "@zk-toip/anon-membership";
+import type { ProveProgress } from "@toip-tools/anon-membership";
 import { nymLook } from "../../src/protocol/names";
 import { useApp } from "./state";
 

@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { identityFromSeed, seedFrom, signDocument } from "@zk-toip/trust-core";
+import { identityFromSeed, seedFrom, signDocument } from "@toip-tools/trust-core";
 import type { AgoraClient } from "../src/client/client";
 import type { AgoraError } from "../src/client/http";
 import type { ForumPolicy, Gate, NymPass } from "../src/protocol/documents";

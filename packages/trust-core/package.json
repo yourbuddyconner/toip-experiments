@@ -1,5 +1,5 @@
 {
-  "name": "@zk-toip/trust-core",
+  "name": "@toip-tools/trust-core",
   "version": "0.0.0",
   "private": true,
   "type": "module",

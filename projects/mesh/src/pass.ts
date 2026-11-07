@@ -4,7 +4,7 @@
  * revocation index. The door checks it offline, against signed state it cached while online: the
  * Building's DID and the Building's revocation list.
  */
-import { checkStatus, issueCredential, verifyCredential, type Clock, type Credential, type Identity, type StatusListDoc } from "@zk-toip/trust-core";
+import { checkStatus, issueCredential, verifyCredential, type Clock, type Credential, type Identity, type StatusListDoc } from "@toip-tools/trust-core";
 
 export const GUEST_PASS = "GuestPass";
 

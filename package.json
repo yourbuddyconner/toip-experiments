@@ -1,5 +1,5 @@
 {
-  "name": "zk-toip",
+  "name": "toip-tools",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -24,12 +24,12 @@
     "test": "npm test --workspaces --if-present",
     "licenses": "node scripts/check-licenses.mjs",
     "dev": "node scripts/dev.mjs",
-    "settle": "npm run app --workspace @zk-toip/settle",
-    "trail": "npm run app --workspace @zk-toip/trail",
-    "agora": "npm run app --workspace @zk-toip/agora",
-    "tipline": "npm run app --workspace @zk-toip/tipline",
-    "agents": "npm run app --workspace @zk-toip/agents",
-    "mesh": "npm run app --workspace @zk-toip/mesh",
-    "capture": "npm run app --workspace @zk-toip/capture"
+    "settle": "npm run app --workspace @toip-tools/settle",
+    "trail": "npm run app --workspace @toip-tools/trail",
+    "agora": "npm run app --workspace @toip-tools/agora",
+    "tipline": "npm run app --workspace @toip-tools/tipline",
+    "agents": "npm run app --workspace @toip-tools/agents",
+    "mesh": "npm run app --workspace @toip-tools/mesh",
+    "capture": "npm run app --workspace @toip-tools/capture"
   }
 }

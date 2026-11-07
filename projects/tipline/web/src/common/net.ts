@@ -1,5 +1,5 @@
 // Talking to this page's own server, and the demo's shared clock.
-import type { Clock } from "@zk-toip/trust-core";
+import type { Clock } from "@toip-tools/trust-core";
 
 export async function getJson<T>(path: string): Promise<T> {
   const r = await fetch(path, { cache: "no-store" });

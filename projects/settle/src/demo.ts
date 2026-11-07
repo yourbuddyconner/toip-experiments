@@ -1,12 +1,12 @@
 /**
  * Settle, narrated: the repair job twice on a local Solana chain (LiteSVM) and a real TSP relay.
  *
- *   npm run demo --workspace @zk-toip/settle
+ *   npm run demo --workspace @toip-tools/settle
  */
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { startRelay } from "@zk-toip/relay";
+import { startRelay } from "@toip-tools/relay";
 import { STATE } from "./chain/escrow";
 import { verifyLog, type LogEntry, type LogHead } from "./protocol/log";
 import { PROCESSOR_LOG } from "./protocol/specs";

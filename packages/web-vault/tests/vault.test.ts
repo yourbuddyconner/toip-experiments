@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { IDBFactory } from "fake-indexeddb";
-import { fromB64u, identityFromSeed, toB64u } from "@zk-toip/trust-core";
+import { fromB64u, identityFromSeed, toB64u } from "@toip-tools/trust-core";
 import { createVault, PasskeyUnsupported, type Vault, type VaultConfig } from "../src/index";
 import { FakeAuthenticator, MemoryStorage, type AuthenticatorOptions } from "./fakes";
 

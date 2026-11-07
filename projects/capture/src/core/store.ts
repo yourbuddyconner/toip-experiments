@@ -2,8 +2,8 @@
  * The store (design §9.1): manifests and the evidence to check them offline, as one CBOR map.
  * Map keys are text: manifest ids as cm1_…, device ids as DIDs, beacons as "<kind>:<round>".
  */
-import { decodeCbor, encodeCbor } from "@zk-toip/cose";
-import type { Credential, StatusListDoc } from "@zk-toip/trust-core";
+import { decodeCbor, encodeCbor } from "@toip-tools/cose";
+import type { Credential, StatusListDoc } from "@toip-tools/trust-core";
 
 export const STORE_TYPE = "application/vnd.zk-toip.capture-store+cbor";
 

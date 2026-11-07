@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Delivery } from "@zk-toip/trust-core";
+import type { Delivery } from "@toip-tools/trust-core";
 import { ChallengeBeacon } from "../src/beacon";
 import { decodeFrame } from "../src/frame";
 import { MeshGateway } from "../src/gateway";

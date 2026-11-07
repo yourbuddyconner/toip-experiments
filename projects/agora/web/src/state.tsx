@@ -1,6 +1,6 @@
 /** App-wide state: the services, the signed-in account, and a version that bumps when anything changes. */
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import type { Unlocked } from "@zk-toip/web-vault";
+import type { Unlocked } from "@toip-tools/web-vault";
 import { Session, loadServices, vault, type Services } from "./services";
 
 interface AppState {

@@ -4,8 +4,8 @@
  * revocation; CI failing first; a rogue hirer refused by an honest worker.
  */
 import { afterEach, describe, expect, it } from "vitest";
-import { verifyBundle } from "@zk-toip/eventlog";
-import { identityFromSeed } from "@zk-toip/trust-core";
+import { verifyBundle } from "@toip-tools/eventlog";
+import { identityFromSeed } from "@toip-tools/trust-core";
 import { createWorld, type World } from "../src/world";
 import { runStory, waitFor } from "../src/story";
 import { coderScript } from "../src/roles/scripts";
@@ -107,8 +107,8 @@ describe("the demo's flows on a local Settle network", () => {
   });
 });
 
-import { hex } from "@zk-toip/settle/src/agents/base";
-import { termsHash } from "@zk-toip/settle/src/protocol/documents";
+import { hex } from "@toip-tools/settle/src/agents/base";
+import { termsHash } from "@toip-tools/settle/src/protocol/documents";
 function require_terms(p: { terms?: Parameters<typeof termsHash>[0] } | undefined): string {
   if (!p?.terms) throw new Error("no terms");
   return hex(termsHash(p.terms));

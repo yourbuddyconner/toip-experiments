@@ -1,9 +1,9 @@
 /**
  * Runs Agora locally: npm run agora (from the repository root).
  *
- *   npm run app --workspace @zk-toip/agora                # Vite dev server for the web app
- *   npm run app --workspace @zk-toip/agora -- --static    # the built app (npm run build:web first)
- *   npm run app --workspace @zk-toip/agora -- --fresh     # forget everything and start again
+ *   npm run app --workspace @toip-tools/agora                # Vite dev server for the web app
+ *   npm run app --workspace @toip-tools/agora -- --static    # the built app (npm run build:web first)
+ *   npm run app --workspace @toip-tools/agora -- --fresh     # forget everything and start again
  *
  * Environment: AGORA_WEB_PORT (4320), AGORA_HOST_PORT (4321), AGORA_REGISTRAR_PORT (4322),
  * AGORA_RELAY_PORT (4323), AGORA_DATA (projects/agora/.data/local).

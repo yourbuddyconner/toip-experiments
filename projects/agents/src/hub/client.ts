@@ -1,5 +1,5 @@
 /** The hub's HTTP API, as agents, workers and consoles use it. Browser-safe. Everything on the hub is signed by its subject. */
-import { signDocument, verifyDocument, type Clock, type Credential, type Identity, type StatusListDoc } from "@zk-toip/trust-core";
+import { signDocument, verifyDocument, type Clock, type Credential, type Identity, type StatusListDoc } from "@toip-tools/trust-core";
 
 /** A worker's signed card in the hub's directory (design §5). */
 export interface WorkerProfile {

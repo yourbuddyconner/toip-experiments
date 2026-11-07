@@ -15,7 +15,7 @@ import {
   type Clock,
   type Credential,
   type Identity,
-} from "@zk-toip/trust-core";
+} from "@toip-tools/trust-core";
 import { ed25519 } from "@noble/curves/ed25519.js";
 import type { Address } from "@solana/kit";
 import { addressBytes } from "../chain/escrow";

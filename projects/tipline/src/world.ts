@@ -4,9 +4,9 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { MembershipProver, MembershipVerifier, epochOf, initHashing, loadArtifacts, CIRCUIT_ID } from "@zk-toip/anon-membership";
-import { startRelay, type Relay, type StoredMessage } from "@zk-toip/relay";
-import { DemoClock, Endpoint, RelayTransport, identityFromSeed, seedFrom, toB64u, type Identity } from "@zk-toip/trust-core";
+import { MembershipProver, MembershipVerifier, epochOf, initHashing, loadArtifacts, CIRCUIT_ID } from "@toip-tools/anon-membership";
+import { startRelay, type Relay, type StoredMessage } from "@toip-tools/relay";
+import { DemoClock, Endpoint, RelayTransport, identityFromSeed, seedFrom, toB64u, type Identity } from "@toip-tools/trust-core";
 import { OrgIssuer } from "./agents/issuer";
 import { InboxAgent, type InboxState } from "./agents/inbox";
 import { Mirror } from "./agents/mirror";

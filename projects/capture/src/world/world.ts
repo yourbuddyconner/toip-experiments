@@ -9,12 +9,12 @@ import { createServer, request as httpRequest, type IncomingMessage, type Server
 import { extname, join, normalize } from "node:path";
 import { ed25519 } from "@noble/curves/ed25519.js";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { httpWitnessClient, verifyKel, type WitnessClient } from "@zk-toip/eventlog";
-import { startWitness } from "@zk-toip/eventlog/node";
-import { StatusRegistry, type StatusRegistryState } from "@zk-toip/mandates";
-import { plans, realScheduler, regions } from "@zk-toip/mesh-transport";
-import { SimMedium, type SimLink } from "@zk-toip/mesh-transport/sim";
-import { identityFromSeed, SystemClock, type Clock, type Credential, type Identity } from "@zk-toip/trust-core";
+import { httpWitnessClient, verifyKel, type WitnessClient } from "@toip-tools/eventlog";
+import { startWitness } from "@toip-tools/eventlog/node";
+import { StatusRegistry, type StatusRegistryState } from "@toip-tools/mandates";
+import { plans, realScheduler, regions } from "@toip-tools/mesh-transport";
+import { SimMedium, type SimLink } from "@toip-tools/mesh-transport/sim";
+import { identityFromSeed, SystemClock, type Clock, type Credential, type Identity } from "@toip-tools/trust-core";
 import {
   b64,
   chainJson,
@@ -683,7 +683,7 @@ export async function startWorld(opts: WorldOptions): Promise<World> {
     const { createServer: createVite } = await import("vite");
     vite = await createVite({ root: WEB_DIR, configFile: join(WEB_DIR, "vite.config.ts"), appType: "spa", server: { middlewareMode: true, hmr: { server } }, logLevel: "warn" });
   } else if (opts.web === "static" && !existsSync(join(distDir, "index.html"))) {
-    throw new Error("the web app isn't built: run `npm run build:web --workspace @zk-toip/capture`");
+    throw new Error("the web app isn't built: run `npm run build:web --workspace @toip-tools/capture`");
   }
   await new Promise<void>((resolve, reject) => server.once("error", reject).listen(opts.port ?? 4350, host, () => resolve()));
   const port = (server.address() as { port: number }).port;

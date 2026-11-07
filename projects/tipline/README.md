@@ -47,13 +47,13 @@ A walk through the demo:
 6. The inbox shows Source A. Reply. Under **Relay** in the HR console, see what Acme's relay saw.
 7. Skip ahead a day. In a new private window, type the tip code to read the reply.
 
-`npm run demo --workspace @zk-toip/tipline` runs the same script in a terminal, every party in one process.
+`npm run demo --workspace @toip-tools/tipline` runs the same script in a terminal, every party in one process.
 
 ## Tests
 
 ```sh
-npm test --workspace @zk-toip/tipline     # unit and integration tests (vitest)
-npm run e2e --workspace @zk-toip/tipline  # the demo script in Chromium (Playwright)
+npm test --workspace @toip-tools/tipline     # unit and integration tests (vitest)
+npm run e2e --workspace @toip-tools/tipline  # the demo script in Chromium (Playwright)
 ```
 
 - `tests/protocol.test.ts`: tip codes, message binding, chunking and padding, the descriptor, image metadata.

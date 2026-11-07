@@ -2,13 +2,13 @@
  * KERI 1.0 key event logs: event builders, key state, and verification (trail design §11.1).
  * Supported: non-delegated self-addressing AIDs, Ed25519 and P-256 keys, integer thresholds, traits [] or ["DND"].
  */
-import { utf8 } from "@zk-toip/trust-core";
+import { utf8 } from "@toip-tools/trust-core";
 import { DUAL_CODES, decode, isQb64, nextKeyDigest } from "./cesr";
 import { verifyCouple, verifyKeySig, type SigOptions } from "./keys";
 import { buildMessage, hexNumber } from "./said";
 import type { LogStore } from "./store";
 import { fromStream } from "./stream";
-import type { Clock } from "@zk-toip/trust-core";
+import type { Clock } from "@toip-tools/trust-core";
 import type { DuplicityEvidence, IndexedSig, Problem, Qb64, Seal, SignedMessage } from "./types";
 import { problem } from "./types";
 

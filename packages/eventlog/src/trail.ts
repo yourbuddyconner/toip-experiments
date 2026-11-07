@@ -1,7 +1,7 @@
 /**
  * Trails: our audit logs on top of a KEL (trail design §7.4, §11.2). Not KERI.
  */
-import { utf8 } from "@zk-toip/trust-core";
+import { utf8 } from "@toip-tools/trust-core";
 import { verifyCouple, verifyKeySig } from "./keys";
 import { isEventSeal, sealsOf, type KelResult, type KeyState, type VerifyOptions } from "./kel";
 import { buildMessage, checkBody, hexNumber } from "./said";

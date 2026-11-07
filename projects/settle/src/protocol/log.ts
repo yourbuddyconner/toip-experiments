@@ -3,7 +3,7 @@
  * Anyone holding a payment's documents can check them against it and against the chain.
  */
 import { sha256 } from "@noble/hashes/sha2.js";
-import { canonicalJson, signDocument, utf8, verifyDocument, type Clock, type Identity } from "@zk-toip/trust-core";
+import { canonicalJson, signDocument, utf8, verifyDocument, type Clock, type Identity } from "@toip-tools/trust-core";
 
 const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
 export const GENESIS = "0".repeat(64);

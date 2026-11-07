@@ -18,7 +18,7 @@ import {
   type TrailEntry,
   type TrailResult,
   type WitnessClient,
-} from "@zk-toip/eventlog";
+} from "@toip-tools/eventlog";
 import { explainProblem, short, STATUS_TEXT } from "./explain";
 
 export type CheckResult = "pass" | "fail" | "warn" | "info";

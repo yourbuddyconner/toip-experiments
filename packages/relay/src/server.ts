@@ -10,7 +10,7 @@ import type { IncomingMessage } from "node:http";
 import { DatabaseSync } from "node:sqlite";
 import { ed25519 } from "@noble/curves/ed25519.js";
 import { WebSocketServer, type WebSocket } from "ws";
-import { fromB64u, resolveDidKey, toB64u, utf8 } from "@zk-toip/trust-core";
+import { fromB64u, resolveDidKey, toB64u, utf8 } from "@toip-tools/trust-core";
 
 export const MAX_MESSAGE_BYTES = 256 * 1024;
 export const MAX_QUEUED_PER_RECIPIENT = 5000;

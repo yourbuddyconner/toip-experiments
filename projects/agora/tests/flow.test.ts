@@ -3,8 +3,8 @@
  * Each step depends on the ones before it.
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { MembershipError, fieldToHex, fieldFromHex, membershipInputs, treeFromRoot, type Statement } from "@zk-toip/anon-membership";
-import { identityFromSeed, signDocument } from "@zk-toip/trust-core";
+import { MembershipError, fieldToHex, fieldFromHex, membershipInputs, treeFromRoot, type Statement } from "@toip-tools/anon-membership";
+import { identityFromSeed, signDocument } from "@toip-tools/trust-core";
 import type { AgoraClient } from "../src/client/client";
 import { AgoraError } from "../src/client/http";
 import type { ForumPolicy, Gate, NymPass, Poll } from "../src/protocol/documents";

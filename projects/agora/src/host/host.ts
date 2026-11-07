@@ -15,9 +15,9 @@ import {
   type Field,
   type GroupRoot,
   type MembershipVerifier,
-} from "@zk-toip/anon-membership";
-import { Controller, coldKeysFromSeed, signerFromIdentity, toStream, type Body, type DidBinding, type LogStore, type Trail } from "@zk-toip/eventlog";
-import { verifyDocument, type Clock, type Identity } from "@zk-toip/trust-core";
+} from "@toip-tools/anon-membership";
+import { Controller, coldKeysFromSeed, signerFromIdentity, toStream, type Body, type DidBinding, type LogStore, type Trail } from "@toip-tools/eventlog";
+import { verifyDocument, type Clock, type Identity } from "@toip-tools/trust-core";
 import {
   MODERATION_ACTIONS,
   PASS_MAX_MS,

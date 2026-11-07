@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { SystemClock, verifyCredential } from "@zk-toip/trust-core";
+import { SystemClock, verifyCredential } from "@toip-tools/trust-core";
 import { decodeLink, verifyLink, type PaymentLink } from "../../../src/agents/party";
 import { facilitatorFee } from "../../../src/protocol/documents";
 import { A, Action } from "../ui";

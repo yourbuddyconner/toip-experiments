@@ -752,7 +752,7 @@ Two browser windows on the laptop (Owner and Verifier), a phone or a second brow
 11. **Dashboard:** "Riverside 4" shows solid verified points. Turn up simulated loss to 30% on the mesh. Hollow (pending) and grey (unlinked) points appear. Click "Request backfill", and they turn solid. The gateway is set to "evil" mode, so it changes one reading's value: that point turns into a red cross, "Invalid". *The gateway can't forge.*
 12. **Optional hardware:** the same sensor code on the Raspberry Pi with a BME280, over the LoRa radio to the gateway. The frame size shown in the gateway log is 42 bytes per reading and 141 per seal.
 
-The demo also runs narrated and unattended (`npm run demo --workspace @zk-toip/capture`), as Settle's does, with a fake camera (below).
+The demo also runs narrated and unattended (`npm run demo --workspace @toip-tools/capture`), as Settle's does, with a fake camera (below).
 
 ## 18. Test plan
 
@@ -1053,7 +1053,7 @@ What the MVP built, and where it differs from the sections above. The README say
 **Where the code is.**
 - The provenance code is in `src/core`, not in `packages/provenance` (decision 0006). It runs in browsers and in Node.
 - `src/world` starts the whole network in one process. `src/sensors` has the sensor, the gateway and the radio link. `src/sensor/main.ts` is a sensor in its own process. `web` is the React app.
-- It uses the shared packages as they are: `@zk-toip/cose`, `@zk-toip/eventlog`, `@zk-toip/mandates`, `@zk-toip/web-vault`, `@zk-toip/mesh-transport` and `@zk-toip/trust-core`. None of them was changed.
+- It uses the shared packages as they are: `@toip-tools/cose`, `@toip-tools/eventlog`, `@toip-tools/mandates`, `@toip-tools/web-vault`, `@toip-tools/mesh-transport` and `@toip-tools/trust-core`. None of them was changed.
 
 **Identifiers and keys.**
 - A device's identifier is `did:keri:<AID>`, as eventlog names it, not `did:trail:`.
@@ -1080,7 +1080,7 @@ What the MVP built, and where it differs from the sections above. The README say
 - The world polls the public drand quicknet chain and caches the rounds it sees. Without network it uses a "dev" beacon of its own, with the same scheme. The verifier says which one gave "not before". The quicknet round-time formula was checked against `/info` and recorded rounds.
 
 **Sensors.**
-- Frames go on the radio as they are, on a `SimMedium` link from `@zk-toip/mesh-transport`, with no TSP envelope (design §12.1). The frame sizes match §12.4 exactly in the worst case. With small sequence numbers, a reading is 38 bytes, or 42 with a beacon tag.
+- Frames go on the radio as they are, on a `SimMedium` link from `@toip-tools/mesh-transport`, with no TSP envelope (design §12.1). The frame sizes match §12.4 exactly in the worst case. With small sequence numbers, a reading is 38 bytes, or 42 with a beacon tag.
 - Each reading is one radio frame, and each batch has one signature, its seal. A seal is sent twice, the second time at a random moment, because one lost seal leaves a whole batch pending. Verifiers ignore the duplicate.
 - A sensor answers a backfill request 1.5 s later, since the gateway can't hear while it is still sending. It also resends the seals over the range.
 - The gateway is in the world process and signs a receipt for each frame. That receipt is the readings' "not after". There is no relay hop, and seals are not anchored in the sensor's key log yet.

@@ -92,7 +92,7 @@ export const CTT1_STRINGS: readonly string[] = Object.freeze([
 
 /** String prefixes written as `[index, rest]`. */
 export const CTT1_PREFIXES: readonly string[] = Object.freeze([
-  "https://zk-toip.example/spec/", "https://trusttasks.org/spec/", "https://trusttasks.org/",
+  "https://toip.tools/spec/", "https://trusttasks.org/spec/", "https://trusttasks.org/",
 ]);
 
 const TAG_EPOCH_S = 1;

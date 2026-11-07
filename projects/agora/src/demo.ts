@@ -1,9 +1,9 @@
 /**
- * The demo script (design §12.3) in the terminal, with real proofs: npm run demo --workspace @zk-toip/agora.
+ * The demo script (design §12.3) in the terminal, with real proofs: npm run demo --workspace @toip-tools/agora.
  * Everything runs in this process. TSP goes over an in-memory bus; the host and registrars answer HTTP on free ports.
  */
-import { MembershipProver } from "@zk-toip/anon-membership";
-import { Bus, DemoClock, Endpoint, identityFromSeed, seedFrom, signDocument } from "@zk-toip/trust-core";
+import { MembershipProver } from "@toip-tools/anon-membership";
+import { Bus, DemoClock, Endpoint, identityFromSeed, seedFrom, signDocument } from "@toip-tools/trust-core";
 import { AgoraClient, MemoryWallet } from "./client/client";
 import { AgoraError, HostApi, RegistrarApi } from "./client/http";
 import { ForumReader, MemoryKeyValue } from "./client/reader";

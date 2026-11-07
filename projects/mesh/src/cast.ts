@@ -3,7 +3,7 @@
  * who is who across processes and machines without exchanging files. This is a demo, not key management:
  * anyone who reads this file has every key.
  */
-import { identityFromSeed, seedFrom, type Identity } from "@zk-toip/trust-core";
+import { identityFromSeed, seedFrom, type Identity } from "@toip-tools/trust-core";
 
 export const CAST = {
   building: "the Building",

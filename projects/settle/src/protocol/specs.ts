@@ -1,8 +1,8 @@
-import { ourSpec } from "@zk-toip/trust-core";
+import { ourSpec } from "@toip-tools/trust-core";
 
 /**
  * Settle's Trust Task types (design §7), proposed for the registry. Until then they live in our namespace:
- * https://zk-toip.example/spec/settle/<name>/0.1
+ * https://toip.tools/spec/settle/<name>/0.1
  */
 export const PAYMENT_REQUEST = ourSpec("settle/payment/request");
 export const TERMS_PROPOSE = ourSpec("settle/payment/terms/propose");

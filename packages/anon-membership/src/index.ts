@@ -1,4 +1,4 @@
-// @zk-toip/anon-membership: prove "I am a member of one of these groups, my attributes meet these
+// @toip-tools/anon-membership: prove "I am a member of one of these groups, my attributes meet these
 // predicates, and this is my nullifier for this scope, bound to this signal" without saying which member.
 // Runs in Node and in browsers; nothing here imports Node built-ins.
 

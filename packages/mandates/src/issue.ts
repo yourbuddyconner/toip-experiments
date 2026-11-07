@@ -1,5 +1,5 @@
 /** Issuing a root mandate, and delegating a narrower one (agents design §7). */
-import { signDocument, type Clock, type Identity } from "@zk-toip/trust-core";
+import { signDocument, type Clock, type Identity } from "@toip-tools/trust-core";
 import { newId } from "./approval";
 import { narrows } from "./engine";
 import { mandateHash } from "./hash";

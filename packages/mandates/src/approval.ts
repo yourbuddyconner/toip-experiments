@@ -1,5 +1,5 @@
 /** Approvals: a chain issuer's signature over the hash of one exact action (agents design §9). */
-import { signDocument, verifyDocument, type Clock, type Identity } from "@zk-toip/trust-core";
+import { signDocument, verifyDocument, type Clock, type Identity } from "@toip-tools/trust-core";
 import { actionHash, jcsHash } from "./hash";
 import type { Action, Approval, Mandate, Reason } from "./types";
 

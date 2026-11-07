@@ -1,12 +1,12 @@
 /**
- * "@zk-toip/mesh-transport/node": Node-only pieces. The serial wrapper over the "serialport"
+ * "@toip-tools/mesh-transport/node": Node-only pieces. The serial wrapper over the "serialport"
  * package, port listing with board hints, JSON file stores, and re-exports of the GWMP adapter
  * and radio detection.
  */
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { SerialPort, SerialPortMock } from "serialport";
-import type { ReplayRecord, ReplayStore } from "@zk-toip/trust-core";
+import type { ReplayRecord, ReplayStore } from "@toip-tools/trust-core";
 import type { GatewayStore } from "./gateway";
 import type { Contact, ContactStore, MeshOutboxItem, MeshOutboxStore } from "./mesh";
 import type { SerialPortLike } from "./serial";

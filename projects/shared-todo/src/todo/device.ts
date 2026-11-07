@@ -23,7 +23,7 @@ import {
   type RelayStatus,
   type SealedText,
   type Traffic,
-} from "@zk-toip/trust-core";
+} from "@toip-tools/trust-core";
 import { authorize, checkOp, type CheckResult, type Role } from "./checks";
 import { ListModel, type Item } from "./model";
 import { opKey, signOp, tamperOp, type Op, type OpKind } from "./ops";

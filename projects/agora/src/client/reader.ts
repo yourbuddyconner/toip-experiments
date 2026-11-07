@@ -4,9 +4,9 @@
  * proof (cached by pass hash), every vote's proof, and that the feed extends what this reader saw before.
  * Anyone can read; no account is needed.
  */
-import { checkRootLog, fieldFromHex, parseMembershipProof, type GroupRoot, type Statement, type VerifyResult } from "@zk-toip/anon-membership";
-import { verifyBinding, verifyKel, verifyTrail, type Body } from "@zk-toip/eventlog";
-import { verifyDocument, type Clock } from "@zk-toip/trust-core";
+import { checkRootLog, fieldFromHex, parseMembershipProof, type GroupRoot, type Statement, type VerifyResult } from "@toip-tools/anon-membership";
+import { verifyBinding, verifyKel, verifyTrail, type Body } from "@toip-tools/eventlog";
+import { verifyDocument, type Clock } from "@toip-tools/trust-core";
 import type { DeleteDoc, ForumDoc, ForumPolicy, GroupDescriptor, Moderation, NymPass, Poll, Post, ReportDoc, Vote } from "../protocol/documents";
 import { docHash } from "../protocol/documents";
 import { compileGate, gateProblem, passScope, passSignal, pollScope, voteSignal } from "../protocol/gate";

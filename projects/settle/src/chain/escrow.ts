@@ -12,7 +12,7 @@ import {
   type Instruction,
   type TransactionSigner,
 } from "@solana/kit";
-import { utf8 } from "@zk-toip/trust-core";
+import { utf8 } from "@toip-tools/trust-core";
 
 export const TOKEN_PROGRAM = address("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 export const SYSTEM_PROGRAM = address("11111111111111111111111111111111");

@@ -2,7 +2,7 @@
  * Device credentials (design §7.5) on trust-core: W3C VC-shaped JSON with an eddsa-jcs-2022 proof by a
  * did:key issuer, revocable through trust-core status lists.
  */
-import { issueCredential, type Clock, type Credential, type Identity } from "@zk-toip/trust-core";
+import { issueCredential, type Clock, type Credential, type Identity } from "@toip-tools/trust-core";
 
 export type KeyClass = "S" | "B" | "P" | "E";
 

@@ -1,5 +1,5 @@
 /** Trust Task transport for witnesses, disclosure and duplicity reports, over trust-core's Endpoint (TSP). */
-import { ourSpec, Refusal, type Endpoint } from "@zk-toip/trust-core";
+import { ourSpec, Refusal, type Endpoint } from "@toip-tools/trust-core";
 import { aidOfDidKey } from "./cesr";
 import type { SubmitResult, WitnessClient } from "./client";
 import { evidenceFromJson, evidenceToJson, type StoredEvidence } from "./store";

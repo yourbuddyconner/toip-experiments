@@ -2,8 +2,8 @@
  * The ten demo steps, run in order over real HTTP witnesses. Each attack must be detected, and explained.
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { fromB64u } from "@zk-toip/trust-core";
-import { decodeKeyRefSig, fromStream, verifyBundle, verifyEvidence, verifyKel, verifySignature } from "@zk-toip/eventlog";
+import { fromB64u } from "@toip-tools/trust-core";
+import { decodeKeyRefSig, fromStream, verifyBundle, verifyEvidence, verifyKel, verifySignature } from "@toip-tools/eventlog";
 import { runNext } from "../src/steps";
 import { buildView, type IdentifierView } from "../src/view";
 import { World } from "../src/world";

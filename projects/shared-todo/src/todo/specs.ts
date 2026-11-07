@@ -1,6 +1,6 @@
-import { ourSpec } from "@zk-toip/trust-core";
+import { ourSpec } from "@toip-tools/trust-core";
 
-/** Our Trust Task types (design v2 §4.3), all one-way, under https://zk-toip.example/spec/todo/... */
+/** Our Trust Task types (design v2 §4.3), all one-way, under https://toip.tools/spec/todo/... */
 export const JOIN = ourSpec("todo/join");
 export const WELCOME = ourSpec("todo/welcome");
 export const JOIN_REFUSED = ourSpec("todo/join-refused");

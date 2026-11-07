@@ -4,17 +4,17 @@
  * lets her quote and deliver, and shows who stands behind each payment. In the MVP it runs in Node; the
  * courier web page is her screen.
  */
-import type { WitnessClient } from "@zk-toip/eventlog";
-import type { MandateEngine, Presentation, StatusResolver } from "@zk-toip/mandates";
-import type { Clock, Identity } from "@zk-toip/trust-core";
-import type { Party, PaymentLink } from "@zk-toip/settle/src/agents/party";
+import type { WitnessClient } from "@toip-tools/eventlog";
+import type { MandateEngine, Presentation, StatusResolver } from "@toip-tools/mandates";
+import type { Clock, Identity } from "@toip-tools/trust-core";
+import type { Party, PaymentLink } from "@toip-tools/settle/src/agents/party";
 import { JOB_DELIVER, JOB_OFFER, JOB_QUOTE, JOB_REFUSED, type JobOffer } from "../protocol/tasks";
 import { mandateGates, type MandateGates } from "../guard/gates";
 import { decisionView } from "../guard/explain";
 import { verifyPassport } from "../passport";
 import { usdc } from "../config";
-import { hex } from "@zk-toip/settle/src/agents/base";
-import { termsHash } from "@zk-toip/settle/src/protocol/documents";
+import { hex } from "@toip-tools/settle/src/agents/base";
+import { termsHash } from "@toip-tools/settle/src/protocol/documents";
 
 export interface OfferItem {
   job: string;

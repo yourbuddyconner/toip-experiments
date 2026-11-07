@@ -2,13 +2,13 @@
  * One agent process (design §5): a Settle party, a trail, a passport and a guard, with the loop on top. The
  * loop only gets the guard, as a GuardApi.
  */
-import { httpWitnessClient, taskWitnessClient, type WitnessClient } from "@zk-toip/eventlog";
-import type { Credential, Identity } from "@zk-toip/trust-core";
-import type { MandateEngine, Requirements, StatusRegistry, StatusResolver } from "@zk-toip/mandates";
-import type { SettleApi } from "@zk-toip/settle/src/client/client";
-import type { Party } from "@zk-toip/settle/src/agents/party";
-import type { SettlePolicy } from "@zk-toip/settle/src/protocol/policy";
-import type { Clock } from "@zk-toip/trust-core";
+import { httpWitnessClient, taskWitnessClient, type WitnessClient } from "@toip-tools/eventlog";
+import type { Credential, Identity } from "@toip-tools/trust-core";
+import type { MandateEngine, Requirements, StatusRegistry, StatusResolver } from "@toip-tools/mandates";
+import type { SettleApi } from "@toip-tools/settle/src/client/client";
+import type { Party } from "@toip-tools/settle/src/agents/party";
+import type { SettlePolicy } from "@toip-tools/settle/src/protocol/policy";
+import type { Clock } from "@toip-tools/trust-core";
 import { createAgentTrail, type EventlogSink } from "../audit/sink";
 import { Guard } from "../guard/guard";
 import { mandateGates } from "../guard/gates";

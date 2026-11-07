@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { dayFromIso, fieldFromHex, fieldToHex, groupFieldOf, initHashing, sameStatement } from "@zk-toip/anon-membership";
-import { canonicalJson } from "@zk-toip/trust-core";
+import { dayFromIso, fieldFromHex, fieldToHex, groupFieldOf, initHashing, sameStatement } from "@toip-tools/anon-membership";
+import { canonicalJson } from "@toip-tools/trust-core";
 import type { Gate, GroupDescriptor, SlotSpec } from "../src/protocol/documents";
 import { docHash } from "../src/protocol/documents";
 import { gateInWords, eligibility } from "../src/protocol/describe";

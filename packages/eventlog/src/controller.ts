@@ -1,5 +1,5 @@
 /** The writing side: a controller's KEL and its trails (trail design §8, §9.3, §13.2). */
-import { utf8, type Clock, type Identity } from "@zk-toip/trust-core";
+import { utf8, type Clock, type Identity } from "@toip-tools/trust-core";
 import { bindingSeal, makeBinding, type DidBinding } from "./binding";
 import { nextKeyDigest } from "./cesr";
 import { WitnessError, withTimeout, type WitnessClient } from "./client";

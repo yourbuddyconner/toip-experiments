@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { utf8, fromUtf8 } from "@zk-toip/trust-core";
+import { utf8, fromUtf8 } from "@toip-tools/trust-core";
 import { verifyKel } from "../src/kel";
 import { verifyTrail } from "../src/trail";
 import { exportBundle } from "../src/verify";

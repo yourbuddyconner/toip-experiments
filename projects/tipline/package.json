@@ -1,5 +1,5 @@
 {
-  "name": "@zk-toip/tipline",
+  "name": "@toip-tools/tipline",
   "version": "0.0.0",
   "private": true,
   "license": "UNLICENSED",
@@ -17,10 +17,10 @@
     "@fontsource-variable/newsreader": "5.3.0",
     "@fontsource/ibm-plex-mono": "5.3.0",
     "@noble/hashes": "2.4.0",
-    "@zk-toip/anon-membership": "0.0.0",
-    "@zk-toip/relay": "0.0.0",
-    "@zk-toip/trust-core": "0.0.0",
-    "@zk-toip/web-vault": "0.0.0",
+    "@toip-tools/anon-membership": "0.0.0",
+    "@toip-tools/relay": "0.0.0",
+    "@toip-tools/trust-core": "0.0.0",
+    "@toip-tools/web-vault": "0.0.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },

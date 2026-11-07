@@ -2,9 +2,9 @@
 // with a passkey, makes group secrets from its own seed, enrolls the commitment with the employer, and
 // shows the membership code. The employer never sees the secret.
 import { useEffect, useState } from "react";
-import { initHashing } from "@zk-toip/anon-membership";
-import { Endpoint, RelayTransport, identityFromSeed } from "@zk-toip/trust-core";
-import { createVault, PasskeyUnsupported, type Account, type Unlocked } from "@zk-toip/web-vault";
+import { initHashing } from "@toip-tools/anon-membership";
+import { Endpoint, RelayTransport, identityFromSeed } from "@toip-tools/trust-core";
+import { createVault, PasskeyUnsupported, type Account, type Unlocked } from "@toip-tools/web-vault";
 import { httpFetcher } from "../../../src/agents/logs";
 import { checkMembership, enrollWallet, membershipCode, type MembershipCheck } from "../../../src/agents/wallet";
 import { FRESHNESS } from "../../../src/protocol/messages";

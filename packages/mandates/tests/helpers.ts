@@ -1,4 +1,4 @@
-import { DemoClock, identityFromSeed, issueCredential, seedFrom, signDocument, type Clock, type Identity } from "@zk-toip/trust-core";
+import { DemoClock, identityFromSeed, issueCredential, seedFrom, signDocument, type Clock, type Identity } from "@toip-tools/trust-core";
 import {
   MandateEngine,
   StatusRegistry,
@@ -52,7 +52,7 @@ export function settleConstraints(): Record<string, Constraint> {
     attesters: { attr: "attester", anyOf: [people.ci.did, people.conner.did], when: ["settle/pay"] },
     arbiters: { attr: "arbiter", anyOf: [people.arbiter.did], when: ["settle/pay"] },
     minWindow: { attr: "disputeWindowSeconds", min: 0, when: ["settle/pay"] },
-    tasks: { attr: "task", within: ["https://zk-toip.example/spec/settle/*", "https://zk-toip.example/spec/agents/*", "https://zk-toip.example/spec/mandates/*"] },
+    tasks: { attr: "task", within: ["https://toip.tools/spec/settle/*", "https://toip.tools/spec/agents/*", "https://toip.tools/spec/mandates/*"] },
   };
 }
 
@@ -127,7 +127,7 @@ export function payAction(w: World, actor: string, attrs: Partial<Action["attrs"
       disputeWindowSeconds: 0,
       link: "sha256:00",
       job: "job-1",
-      task: "https://zk-toip.example/spec/settle/checkout/start/0.1",
+      task: "https://toip.tools/spec/settle/checkout/start/0.1",
       purpose: "Pick up a parcel at the post office on Main St",
       ...attrs,
     } as Action["attrs"],

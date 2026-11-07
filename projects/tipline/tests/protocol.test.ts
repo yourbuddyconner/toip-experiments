@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Bus, CoarseClock, DemoClock, Endpoint, identityFromSeed, seedFrom } from "@zk-toip/trust-core";
+import { Bus, CoarseClock, DemoClock, Endpoint, identityFromSeed, seedFrom } from "@toip-tools/trust-core";
 import { decodeTipCode, encodeTipCode, newTipCode, tipKeys } from "../src/protocol/codes";
 import { CHUNK, SUBMIT, bodyHash, presentSignal, tipScope, tipSignal } from "../src/protocol/messages";
 import { CHUNK_BYTES, SOURCE_WIRE_BYTES, randomBytes, dropboxSize, joinChunks, paddedChunkCount, padChunk, sealPadded, splitAttachment, sourceSize } from "../src/protocol/padding";

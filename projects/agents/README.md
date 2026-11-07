@@ -22,15 +22,15 @@ In the console, issue Ops agent's mandate, fund it, and send it the task. Open t
 
 Settings:
 - `--live` uses Claude if credentials work (the SDK's usual chain: `ANTHROPIC_API_KEY`, or an `ant auth login` profile): `claude-opus-5-5` for Ops agent, `claude-sonnet-5-5` for Coder agent, `claude-haiku-5-5` for Errands agent. Without credentials, it says so and uses the scripted models.
-- `--static` serves the built pages (`npm run build:web --workspace @zk-toip/agents` first). `--auto-courier` makes Dana quote and deliver by herself.
+- `--static` serves the built pages (`npm run build:web --workspace @toip-tools/agents` first). `--auto-courier` makes Dana quote and deliver by herself.
 - Ports: `AGENTS_PORT` (4330), `AGENTS_HUB_PORT` (4331), `AGENTS_SETTLE_PORT` (4332), `AGENTS_RELAY_PORT` (4333), `AGENTS_RPC_PORT` (4334). `HOST` defaults to this machine only.
 - Everything is in memory. Stopping the app throws the world away.
 
 ## The terminal demo
 
 ```bash
-npm run demo --workspace @zk-toip/agents             # scripted models, no key needed, a few seconds
-npm run demo --workspace @zk-toip/agents -- --live   # Claude, if credentials work
+npm run demo --workspace @toip-tools/agents             # scripted models, no key needed, a few seconds
+npm run demo --workspace @toip-tools/agents -- --live   # Claude, if credentials work
 ```
 
 It narrates the design's story (§14.3), using free ports:
@@ -65,9 +65,9 @@ It narrates the design's story (§14.3), using free ports:
 ## Tests
 
 ```bash
-npm test --workspace @zk-toip/agents      # no key, no network
-npm run e2e --workspace @zk-toip/agents   # the console and the courier view in a real browser; screenshots in web/e2e-shots/
-AGENTS_LIVE=1 npm test --workspace @zk-toip/agents   # also runs tests/live.test.ts with Claude (needs credentials)
+npm test --workspace @toip-tools/agents      # no key, no network
+npm run e2e --workspace @toip-tools/agents   # the console and the courier view in a real browser; screenshots in web/e2e-shots/
+AGENTS_LIVE=1 npm test --workspace @toip-tools/agents   # also runs tests/live.test.ts with Claude (needs credentials)
 ```
 
 The tests cover:

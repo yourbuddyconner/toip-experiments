@@ -4,7 +4,7 @@
 
 **Goal:** Build the shared trust core, then a one-page browser demo of a shared to-do list on it: four people and a relay, each holding its own copy, with every change checked on each device.
 
-**Architecture:** An npm workspace at the repository root. `packages/trust-core` (`@zk-toip/trust-core`) holds framework-free plumbing: clock, identity, bus, Trust Task endpoint over TSP, credentials, status list, item sealing, and the Rego loader. `projects/shared-todo` holds the to-do domain (`src/todo`), its Rego policy (`policies/`) and a React view (`src/web`). Agent code runs unchanged in Node tests and the browser.
+**Architecture:** An npm workspace at the repository root. `packages/trust-core` (`@toip-tools/trust-core`) holds framework-free plumbing: clock, identity, bus, Trust Task endpoint over TSP, credentials, status list, item sealing, and the Rego loader. `projects/shared-todo` holds the to-do domain (`src/todo`), its Rego policy (`policies/`) and a React view (`src/web`). Agent code runs unchanged in Node tests and the browser.
 
 **Tech Stack:** As in `projects/community-rides/docs/plan.md`, plus `@noble/ciphers` for ChaCha20-Poly1305.
 
@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - All of Community Rides' plan Global Constraints apply: pinned `@openvtc/*` versions, `did:key` identities, every document signed, no runtime network access, components take the demo clock and never read `Date.now()`, and a license check whenever `package.json` changes.
-- Our type URIs: `https://zk-toip.example/spec/todo/<name>/0.1`. Names: `join`, `op`, `sync`, `status`, `relay/deposit`, `relay/collect`.
+- Our type URIs: `https://toip.tools/spec/todo/<name>/0.1`. Names: `join`, `op`, `sync`, `status`, `relay/deposit`, `relay/collect`.
 - List name: "Maple St House". People: Alice (admin), Bob (editor), Carol (viewer), Mallory (not a member), plus the relay. Seeds: `sha256("shared-todo/<name>")`, and `sha256("shared-todo/list")` for the list.
 - The demo clock starts at `2026-11-05T14:30:00Z`.
 - Fixed reason strings: `"<role> may not <kind>"` (for example `"viewer may not add"`), `"not a reader of this item"`, `"membership revoked"`, `"not a member"`, `"credential is for someone else"`, `"operation: signature does not verify"`, `"membership: signature does not verify"`, `"not from its author"`, `"no such item"`.
@@ -28,7 +28,7 @@
 
 ---
 
-### Task 1: Workspace and `@zk-toip/trust-core`
+### Task 1: Workspace and `@toip-tools/trust-core`
 
 Build Community Rides' plan Tasks 1 to 4 in `packages/trust-core/` (sources in `src/`, tests in `tests/`), with these changes:
 

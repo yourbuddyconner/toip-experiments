@@ -2,7 +2,7 @@ import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterEach, describe, expect, it } from "vitest";
 import { StatusRegistry, delegate, httpStatusResolver, staticStatusResolver, type Mandate, type StatusResolver } from "../src/index";
-import type { StatusListDoc } from "@zk-toip/trust-core";
+import type { StatusListDoc } from "@toip-tools/trust-core";
 import { codes, engine, inDays, payAction, people, rootMandate, twoLinks, world, zeroSpent, type World } from "./helpers";
 
 async function decide(w: World, chain: Mandate[], status: StatusResolver, maxStatusAgeSeconds?: number) {

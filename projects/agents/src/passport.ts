@@ -1,5 +1,5 @@
 /** Agent passports (design §6.2): the operator's signed claim about what an agent is and who answers for it. */
-import { canonicalJson, issueCredential, utf8, verifyCredential, type Clock, type Credential, type Identity } from "@zk-toip/trust-core";
+import { canonicalJson, issueCredential, utf8, verifyCredential, type Clock, type Credential, type Identity } from "@toip-tools/trust-core";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { HARNESS } from "./config";
 

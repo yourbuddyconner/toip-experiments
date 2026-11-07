@@ -2,7 +2,7 @@
  * The repair job's cast (design §10) on a local chain and a real relay: a landlord, Joe the plumber,
  * Alice the tenant, Settle's arbiter and processor, and a licensing board that vouches for Joe.
  */
-import { DemoClock, identityFromSeed, issueCredential, seedFrom, type Traffic } from "@zk-toip/trust-core";
+import { DemoClock, identityFromSeed, issueCredential, seedFrom, type Traffic } from "@toip-tools/trust-core";
 import type { Address, KeyPairSigner } from "@solana/kit";
 import { Chain } from "./chain/chain";
 import { startChainServer, type ChainServer } from "./chain/rpcServer";

@@ -1,10 +1,10 @@
 /**
- * Device key logs (design §7.3), on @zk-toip/eventlog: compact export for stores, offline verification,
+ * Device key logs (design §7.3), on @toip-tools/eventlog: compact export for stores, offline verification,
  * and the witness-receipt time bounds that give "not after".
  */
-import { aidDid, aidOfDid, fromCompactLog, fromStream, toCompactLog, verifyKel, type KelResult, type SignedMessage } from "@zk-toip/eventlog";
+import { aidDid, aidOfDid, fromCompactLog, fromStream, toCompactLog, verifyKel, type KelResult, type SignedMessage } from "@toip-tools/eventlog";
 
-export { digestSeal as digestSealOf } from "@zk-toip/eventlog";
+export { digestSeal as digestSealOf } from "@toip-tools/eventlog";
 
 /** A key log's compact form from a CESR stream (a witness's or a controller's), timed receipts included. */
 export async function compactFromStream(stream: string): Promise<{ bytes: Uint8Array; kel: KelResult }> {

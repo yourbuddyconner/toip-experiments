@@ -1,5 +1,5 @@
-import { DemoClock, identityFromSeed, seedFrom } from "@zk-toip/trust-core";
-import { utf8 } from "@zk-toip/trust-core";
+import { DemoClock, identityFromSeed, seedFrom } from "@toip-tools/trust-core";
+import { utf8 } from "@toip-tools/trust-core";
 import { Controller, type InceptOptions } from "../src/controller";
 import { coldKeysFromSeed, ed25519Signer, keyQb64, signWith, type Signer } from "../src/keys";
 import { MemoryStore } from "../src/store";

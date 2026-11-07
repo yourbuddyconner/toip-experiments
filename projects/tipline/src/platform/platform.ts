@@ -17,9 +17,9 @@ import { tmpdir } from "node:os";
 import { extname, join, normalize } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { createHash, randomBytes } from "node:crypto";
-import { epochOf, initHashing, type GroupRoot } from "@zk-toip/anon-membership";
-import { startRelay, type Relay, type StoredMessage } from "@zk-toip/relay";
-import { Endpoint, RelayTransport, identityFromSeed, toB64u, type Clock } from "@zk-toip/trust-core";
+import { epochOf, initHashing, type GroupRoot } from "@toip-tools/anon-membership";
+import { startRelay, type Relay, type StoredMessage } from "@toip-tools/relay";
+import { Endpoint, RelayTransport, identityFromSeed, toB64u, type Clock } from "@toip-tools/trust-core";
 import { OrgIssuer, type OrgIssuerState } from "../agents/issuer";
 import { Mirror } from "../agents/mirror";
 import { verifyDescriptor, type Descriptor } from "../protocol/descriptor";
@@ -226,7 +226,7 @@ function forms(q: string): string[] {
 export async function startPlatform(opts: PlatformOptions = {}): Promise<Platform> {
   const log = opts.log ?? (() => {});
   const web = (opts.web ?? "static") === "static";
-  if (web && !existsSync(join(DIST, "source.html"))) throw new Error("the web apps aren't built: run `npm run build:web --workspace @zk-toip/tipline`");
+  if (web && !existsSync(join(DIST, "source.html"))) throw new Error("the web apps aren't built: run `npm run build:web --workspace @toip-tools/tipline`");
   await initHashing();
   const dataDir = opts.dataDir ?? mkdtempSync(join(tmpdir(), "tipline-"));
   mkdirSync(dataDir, { recursive: true });
