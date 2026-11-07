@@ -33,6 +33,18 @@ export interface RelayOptions {
   host?: string;
   log?: (line: string) => void;
   limits?: Partial<RelayLimits>;
+  /** Called for every message the relay accepts: what an operator can see (sender, recipient, size, time), never the contents. */
+  onStored?: (m: StoredMessage) => void;
+}
+
+/** What the relay learns about one message it stores. */
+export interface StoredMessage {
+  id: number;
+  from: string;
+  to: string;
+  bytes: number;
+  at: number;
+  delivery: "live" | "queued";
 }
 
 export interface RelayLimits {
@@ -205,6 +217,11 @@ export async function startRelay(opts: RelayOptions): Promise<Relay> {
     const target = online.get(to);
     if (target) pump(target);
     send(s, { t: "sent", cid, delivery: target ? "live" : "queued" });
+    try {
+      opts.onStored?.({ id: Number(lastInsertRowid), from: s.did!, to, bytes: wire.length, at, delivery: target ? "live" : "queued" });
+    } catch (e) {
+      log(`onStored threw: ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 
   return {
