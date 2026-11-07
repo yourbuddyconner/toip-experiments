@@ -11,12 +11,14 @@
     "packages/anon-membership",
     "packages/eventlog",
     "projects/shared-todo",
-    "projects/settle"
+    "projects/settle",
+    "projects/agora"
   ],
   "scripts": {
     "test": "npm test --workspaces --if-present",
     "licenses": "node scripts/check-licenses.mjs",
     "dev": "node scripts/dev.mjs",
-    "settle": "npm run app --workspace @zk-toip/settle"
+    "settle": "npm run app --workspace @zk-toip/settle",
+    "agora": "npm run app --workspace @zk-toip/agora"
   }
 }

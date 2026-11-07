@@ -165,6 +165,7 @@ The two designs are tipline's §6 and §13.1 and agora's §5.1 and §14.1 to §1
 - Agora's `added`, `removed`, `counts` and `leavesHash` are not fields. `publish(ext)` signs any such fields under `ext`.
 - The root log is this package's `checkRootLog`. Trail's event-log library is not in this branch.
 - `EnrollRequest` may carry a `credential`. `admit()` may return leaf fields, which is how an issuer puts attributes in the leaf. `EnrollResponse` also returns the `leaf`, so the member can check it.
+- `admit()` may also return a trust-core `Refusal`, to refuse with its own code (Agora's `alreadyMember`). `EnrollRequest` may set `replace: true`, and `enroll(…, { replace: true })` sends it: the member asks to swap the leaf they have for a new commitment. `admit()` decides, for example by counting rotations.
 - `GroupIssuer` keeps the last 30 snapshots by default.
 - Agora's registrar package (`anon-groups`: credential checks, rotation limits, status-list polling) is not built here. `GroupIssuer` and `admit()` are what it would build on.
 

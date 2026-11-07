@@ -16,6 +16,8 @@ export interface EnrollRequest {
   commitment: string;
   /** Anything the issuer's admit() needs to decide and to fill the leaf's attributes, such as a credential. */
   credential?: unknown;
+  /** The member asks to replace a leaf they already have, with a new commitment (a rotation). admit() decides. (Additive.) */
+  replace?: boolean;
 }
 
 export interface LeafJson {
@@ -204,9 +206,12 @@ export class GroupIssuer {
 
   /**
    * Answers anon-membership/enroll. `admit` decides whether the sending DID may join: false refuses,
-   * true admits with a plain leaf, and leaf fields admit with those attributes.
+   * a Refusal refuses with its own code, true admits with a plain leaf, and leaf fields admit with those attributes.
    */
-  serve(endpoint: Endpoint, admit: (did: string, request: EnrollRequest) => boolean | LeafFields | Promise<boolean | LeafFields>): void {
+  serve(
+    endpoint: Endpoint,
+    admit: (did: string, request: EnrollRequest) => boolean | LeafFields | Refusal | Promise<boolean | LeafFields | Refusal>,
+  ): void {
     endpoint.handle<EnrollRequest, EnrollResponse>(ENROLL, async (doc, { sender }) => {
       const req = doc.payload;
       if (!req || req.group !== this.groupId) return new Refusal("unknownGroup", `unknown group; this issuer runs ${this.groupId}`);
@@ -217,6 +222,7 @@ export class GroupIssuer {
         return new Refusal("badRequest", "commitment is not a field");
       }
       const decision = await admit(sender, req);
+      if (decision instanceof Refusal) return decision;
       if (decision === false) return new Refusal("notAdmitted", "not admitted to this group");
       const { index, leaf } = this.enroll(sender, commitment, decision === true ? undefined : decision);
       return { group: this.groupId, index, firstEpoch: this.nextEpoch(), leaf: encodeLeaf(leaf) };
@@ -243,10 +249,15 @@ export async function enroll(
   issuerDid: string,
   groupId: string,
   secret: Field,
-  extra: { credential?: unknown } = {},
+  extra: { credential?: unknown; replace?: boolean } = {},
 ): Promise<Enrollment> {
   const commitment = commitmentOf(secret, groupFieldOf(groupId));
-  const req: EnrollRequest = { group: groupId, commitment: fieldToHex(commitment), ...(extra.credential !== undefined ? { credential: extra.credential } : {}) };
+  const req: EnrollRequest = {
+    group: groupId,
+    commitment: fieldToHex(commitment),
+    ...(extra.credential !== undefined ? { credential: extra.credential } : {}),
+    ...(extra.replace ? { replace: true } : {}),
+  };
   const res = await endpoint.request<EnrollRequest, EnrollResponse>(issuerDid, ENROLL, req);
   const p = res.payload;
   if (p.group !== groupId) throw new Error("the issuer answered for another group");

@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { Bus, DemoClock, Endpoint, canonicalJson, identityFromSeed, seedFrom, signDocument } from "@zk-toip/trust-core";
+import { Bus, DemoClock, Endpoint, Refusal, canonicalJson, identityFromSeed, seedFrom, signDocument } from "@zk-toip/trust-core";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { groupFieldOf, memberSecret } from "../src/encode";
@@ -200,5 +200,27 @@ describe("the anon-membership/enroll Trust Task", () => {
     const res = await enroll(aliceEp, acme.did, issuer.groupId, 77n, { credential: "a license" });
     expect(res.leaf).toEqual({ ...fields, commitment: commitmentOf(77n, groupFieldOf(issuer.groupId)) });
     await expect(enroll(aliceEp, acme.did, issuer.groupId, 77n)).rejects.toThrow(/not admitted/);
+  });
+
+  it("lets admit() refuse with its own code, and carries a replace request", async () => {
+    const clock = new DemoClock("2026-11-06T09:00:00Z");
+    const bus = new Bus(clock);
+    const issuerEp = new Endpoint({ identity: acme, transport: bus, clock });
+    const alice = identityFromSeed(seedFrom("am/alice"));
+    const aliceEp = new Endpoint({ identity: alice, transport: bus, clock });
+    const issuer = new GroupIssuer({ identity: acme, clock, name: "rotating" });
+    const seen: (boolean | undefined)[] = [];
+    issuer.serve(issuerEp, (did, req) => {
+      seen.push(req.replace);
+      if (issuer.member(did) && !req.replace) return new Refusal("alreadyMember", "already a member; ask to replace your leaf instead");
+      return true;
+    });
+    const first = await enroll(aliceEp, acme.did, issuer.groupId, 1n);
+    await expect(enroll(aliceEp, acme.did, issuer.groupId, 2n)).rejects.toMatchObject({ code: "alreadyMember" });
+    const second = await enroll(aliceEp, acme.did, issuer.groupId, 2n, { replace: true });
+    expect(seen).toEqual([undefined, undefined, true]);
+    expect(second.index).toBe(first.index + 1);
+    expect(issuer.tree().leaf(first.index)).toBe(0n);
+    expect(issuer.member(alice.did)?.leaf.commitment).toBe(commitmentOf(2n, groupFieldOf(issuer.groupId)));
   });
 });
