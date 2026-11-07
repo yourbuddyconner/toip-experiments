@@ -73,7 +73,7 @@ export function homePage(sample: SealedSample, specCount: number): Page {
 <div class="wrap">
   <section class="hero" aria-labelledby="hero-title">
     <div>
-      <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span> Independent tools for Trust over IP</p>
+      <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span> Interoperable tools for Trust over IP</p>
       <h1 id="hero-title">Trust people<br>can <em>verify.</em></h1>
       <p class="lede">Build apps where people hold their own keys, exchange private messages, and check each other's claims directly.</p>
       <p>TypeScript libraries and runnable apps built with ToIP protocols, verifiable credentials, and cryptographic proofs. Start with two identities and a signed, encrypted message.</p>
