@@ -293,6 +293,9 @@ async function verifyDeviceManifest(c: Ctx, p: ParsedManifest, step: ChainStep):
     return;
   }
   add(c, "ok", "signature.ok", "Signed by the device's key.", p.idText);
+  const label = p.claim.kind === "capture" ? p.claim.sensor?.trackLabel : undefined;
+  if (label && /virtual|obs|fake|snap camera|manycam|droidcam/i.test(label))
+    add(c, "warn", "capture.virtualCamera", `The camera input was named “${label}”, which is a virtual or test camera: the picture may not have come from a lens.`, p.idText);
 
   // time
   const nb = await beaconBound(c, p.claim.beacons ?? [], p.idText);
