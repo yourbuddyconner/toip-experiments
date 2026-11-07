@@ -88,6 +88,8 @@ export type MeshEvent =
   | { type: "frame-out"; link: string; bytes: number; airtimeMs: number; summary: string }
   | { type: "frame-in"; link: string; bytes: number; rssi?: number; snr?: number; summary: string }
   | { type: "packet-in"; pid: string; kind: PacketKind; forMe: boolean }
+  /** A packet built from a posted TSP message, before its first frame goes out. `wireBytes` is the TSP message's size. */
+  | { type: "packet-out"; pid: string; kind: PacketKind; from: string; to: string; route: "direct" | "flood" | "gateway"; bytes: number; frames: number; wireBytes: number }
   | { type: "retry"; pid: string; round: number; missing: number[] }
   | { type: "delivered"; pid: string; to: string; route: "direct" | "flood" | "gateway" }
   | { type: "custody"; pid: string; gateway: string }
@@ -577,6 +579,7 @@ export class MeshTransport implements Transport {
       waiters: [],
     };
     item.pid = o.pidHex;
+    this.emit({ type: "packet-out", pid: o.pidHex, kind: packet.kind, from: local.did, to: item.to, route: route.route, bytes: bytes.length, frames: count, wireBytes: item.wire.length });
     this.active.set(o.pidHex, o);
     this.activeByItem.set(item, o);
     this.byReceiptTag.set(o.rtagHex, o);

@@ -31,6 +31,7 @@ export class VirtualScheduler implements Scheduler {
   private seq = 0;
   private timers: Timer[] = [];
   private failure: unknown;
+  private held = 0;
 
   constructor(startMs = Date.parse("2026-11-06T12:00:00.000Z")) {
     this.ms = startMs;
@@ -65,6 +66,28 @@ export class VirtualScheduler implements Scheduler {
     return this.timers.length;
   }
 
+  /**
+   * Freezes virtual time until `p` settles, and returns it. For real I/O inside a simulation (a post
+   * to a real relay, say): without it, timers would fire as fast as they can while the I/O is out,
+   * and a sender would time out in virtual seconds that took a few real milliseconds.
+   */
+  hold<T>(p: Promise<T>): Promise<T> {
+    this.held++;
+    const done = () => void this.held--;
+    p.then(done, done);
+    return p;
+  }
+
+  /** Whether some held I/O is still out. */
+  holding(): boolean {
+    return this.held > 0;
+  }
+
+  /** Waits in real time while held I/O is out. */
+  private async thaw(): Promise<void> {
+    while (this.held > 0) await realSleep(1);
+  }
+
   private fire(t: Timer): void {
     this.ms = Math.max(this.ms, t.at);
     try {
@@ -86,10 +109,12 @@ export class VirtualScheduler implements Scheduler {
   async advance(ms: number): Promise<void> {
     const end = this.ms + ms;
     await flush();
+    await this.thaw();
     while (this.timers.length && this.timers[0].at <= end) {
       this.fire(this.timers.shift()!);
       await flush();
       this.check();
+      await this.thaw();
     }
     this.ms = end;
     await flush();
@@ -100,10 +125,12 @@ export class VirtualScheduler implements Scheduler {
   async runUntilIdle(opts: { maxMs?: number } = {}): Promise<void> {
     const end = this.ms + (opts.maxMs ?? 30 * 24 * 3600_000);
     await flush();
+    await this.thaw();
     while (this.timers.length && this.timers[0].at <= end) {
       this.fire(this.timers.shift()!);
       await flush();
       this.check();
+      await this.thaw();
     }
     if (this.timers.length && opts.maxMs !== undefined) this.ms = end;
   }
@@ -123,6 +150,10 @@ export class VirtualScheduler implements Scheduler {
     await flush();
     while (!settled) {
       this.check();
+      if (this.held > 0) {
+        await realSleep(1);
+        continue;
+      }
       const next = this.timers[0];
       if (!next) {
         if (idle >= (opts.realIdleMs ?? 5000)) throw new Error("VirtualScheduler: idle with the promise still pending");

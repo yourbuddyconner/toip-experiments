@@ -105,7 +105,8 @@ const endpoint = new Endpoint({
 const answer = await sched.run(endpoint.request(door.did, spec, payload, { timeoutMs: mesh.suggestedTimeoutMs(door.did, 600) }));
 ```
 
-- `MeshTransport`: `start`, `stop`, `attach`, `detach`, `post`, `addContact`, `addContactKeys`, `supportsCompact`, `estimate`, `suggestedTimeoutMs`, `pending`, `neighbors`, `exportBundle`, `onBeacon`, `stats`. For doors and gateways: `sendBeacon`, `onVia`, `sendPacket`, `scheduler`. Options include `gateways`, `relay`, `flood: { maxTtl, relayShare, unknown }`, `arq`, `acceptIntros`, `onEvent` and `random` (seed it in simulations).
+- `MeshTransport`: `start`, `stop`, `attach`, `detach`, `post`, `addContact`, `addContactKeys`, `supportsCompact`, `estimate`, `suggestedTimeoutMs`, `pending`, `neighbors`, `exportBundle`, `onBeacon`, `stats`. For doors and gateways: `sendBeacon`, `onVia`, `sendPacket`, `scheduler`. Options include `gateways`, `relay`, `flood: { maxTtl, relayShare, unknown }`, `arq`, `acceptIntros`, `onEvent` and `random` (seed it in simulations). `onEvent` reports frames in and out, each packet built (`packet-out`: kind, route, size, frames), retries, deliveries, custody, queueing, budget waits and drops.
+- `VirtualScheduler`: `advance`, `runUntilIdle`, `run(promise)`, and `hold(promise)`, which freezes virtual time while real I/O (a post to a real relay) is out.
 - `ChallengeBeacon({ identity, mesh, everyMs, keep })`: `start`, `stop`, `current`, `isFresh`.
 - `MeshGateway({ identity, mesh, relay, store, beaconEveryMs })`: `start`, `stop`, `stats`. `relay` is a `RelayTransport` signed in as the gateway.
 - Bundles: `exportBundle(items, { sealTo })`, `openBundle(bytes, courier)`, `postBundle(items, relayTransport)`, and `mesh.exportBundle({ sealTo })`.
