@@ -14,6 +14,7 @@
     "examples:record": "tsx build/record-examples.ts",
     "links": "tsx build/links.ts",
     "screenshots": "tsx build/screenshots.ts",
+    "test:ui": "node --import tsx --test build/ui.test.ts",
     "licenses": "tsx build/licenses.ts"
   },
   "devDependencies": {

@@ -22,13 +22,13 @@ const concepts: Concept[] = [
   {
     id: "dids",
     title: "Decentralized identifiers",
-    short: "Names that their owners make, not names a provider hands out.",
+    short: "An identifier you control, with keys others can verify.",
     body: md`
-      A decentralized identifier (DID) is an identifier its subject creates and controls. It resolves to a short document listing keys, so whoever holds a DID can check that subject's signatures and encrypt to them. How a DID resolves depends on its *method*.
+      A decentralized identifier (DID) identifies a person, organization, or device without requiring an account at a central provider. It resolves to a document containing verification keys and, depending on the method, other information. Those keys let others check signatures and establish encrypted communication.
 
-      \`did:key\` is the simplest method: the identifier is the public key itself, encoded. Resolving it needs no network and no registry. The cost is that its key can never change: lose or leak the key and the identifier goes with it. That suits short-lived or low-stakes identities, and tutorials.
+      The toolkit starts with \`did:key\`, which encodes the public key in the identifier itself. Resolution needs no network or registry. The tradeoff is a fixed key: if it is lost or compromised, you need a new identifier. This makes \`did:key\` useful for tutorials and short-lived identities.
 
-      The P2P Trust Stack uses \`did:peer:4\` between parties and \`did:scid:vh\`, a self-certifying method with a hash-chained history, key pre-rotation and witnesses. KERI, below, is another answer to the same problem: an identifier whose keys can rotate.
+      Other methods support longer-lived relationships. The P2P Trust Stack uses \`did:peer:4\` and \`did:scid:vh\`; the latter maintains a history with pre-rotation and witnesses. KERI, described below, also lets an identifier keep its identity as its keys change.
     `,
     diagram: didDiagram(),
     caption: "A did:key is its public key, written out. A KERI identifier (AID) is a digest of its first event, which already commits to the next key.",
@@ -42,15 +42,15 @@ const concepts: Concept[] = [
   {
     id: "credentials",
     title: "Verifiable credentials and status lists",
-    short: "Signed claims anyone can check, and a way to take them back.",
+    short: "A claim you can carry, verify, and revoke.",
     body: md`
-      A credential is a signed statement by an *issuer* about a *subject*: "Bob is a member of the Riverside Community Garden." The *holder* keeps it and shows it to whoever needs it. The *verifier* checks the issuer's signature and decides whether it trusts that issuer for that kind of claim. The issuer isn't asked, and doesn't learn that the credential was used.
+      A verifiable credential is a signed statement from an *issuer* about a *subject*: "Bob is a member of the Riverside Community Garden." The *holder* keeps it and presents it when needed. A *verifier* checks the signature and decides whether the issuer is an authority it accepts for that claim.
 
-      To revoke, the issuer publishes a signed list with one bit per credential it issued; each credential names its position. A verifier fetches the list from anywhere, because the signature makes any copy trustworthy, and checks the bit. Because one list covers many credentials, fetching it doesn't say which one is being checked.
+      The issuer can revoke a credential by updating a signed status list. Each credential points to a bit in that list. A verifier retrieves a current copy, checks its signature, and reads the bit. One list covers many credentials, so the request does not identify which credential is being checked. Verification can happen without asking the issuer about the holder's visit.
     `,
     diagram: credentialDiagram(),
-    caption: "Three roles. The verifier trusts the issuer, not the holder, and not whoever hosts the status list.",
-    here: html`${libLinks(["trust-core"])} issues and verifies credentials in the W3C Verifiable Credentials 2.0 shape, signed with Data Integrity <code>eddsa-jcs-2022</code> proofs (<code>issueCredential</code>, <code>verifyCredential</code>). Its <code>StatusList</code> is its own signed format, after the W3C Bitstring Status List, not that format exactly. ${libLinks(["mandates"])} builds delegation on the same credentials.`,
+    caption: "The issuer makes the claim, the holder presents it, and the verifier checks it against an issuer it trusts.",
+    here: html`${libLinks(["trust-core"])} provides <code>issueCredential</code> and <code>verifyCredential</code> for credentials in the W3C Verifiable Credentials 2.0 shape, signed with Data Integrity <code>eddsa-jcs-2022</code> proofs. Its signed <code>StatusList</code> format is inspired by the W3C Bitstring Status List but is not format-compatible. ${libLinks(["mandates"])} uses these credentials for delegation.`,
     sources: [
       { href: X.vc2, label: "W3C Verifiable Credentials Data Model v2.0" },
       { href: X.bitstring, label: "W3C Bitstring Status List" },
@@ -60,15 +60,17 @@ const concepts: Concept[] = [
   {
     id: "tsp",
     title: "The Trust Spanning Protocol",
-    short: "Messages that prove who sent them and that only the recipient can read, over any transport.",
+    short: "Private, authenticated messages that can travel over different transports.",
     body: md`
-      TSP is ToIP's message layer, the "spanning" layer that every trust interaction crosses. A TSP message names its sender and receiver by verifiable identifiers (VIDs), seals its payload to the receiver with HPKE in authenticated mode, and is signed by the sender. The receiver checks the signature against the sender's VID before trusting anything inside. Whoever carries the message, a relay, a radio or a USB stick, only has to be trusted to deliver it.
+      The Trust Spanning Protocol (TSP) provides ToIP's messaging layer. In the Direct mode used here, a message names its sender and recipient with verifiable identifiers (VIDs), encrypts its payload with authenticated HPKE, and carries the sender's signature. The recipient checks that signature before processing the contents.
+
+      This separates message security from delivery. A relay, radio link, or portable file can carry the same protected message. The carrier can delay or drop it, but cannot read its encrypted payload or alter it without detection.
 
       In *Direct* mode, which this toolkit uses, both VIDs travel in the clear, so a carrier learns who is talking to whom. The specification also defines *Routed* and *Nested* modes, in which intermediaries forward messages without learning both ends. The P2P Trust Stack runs TSP with CESR encoding over libp2p, and starts each relationship with an invitation and an acceptance (\`TSP_RFI\`, \`TSP_RFA\`).
     `,
     diagram: tspDiagram(),
     caption: "What each part of a Direct-mode TSP message reveals. The landing page shows a real one, byte for byte.",
-    here: html`${libLinks(["trust-core"])} sends real TSP Direct messages through <code>@openvtc/vti-tsp-js</code>, over the in-memory <code>Bus</code> or ${libLinks(["relay"])}. Relationships start with the first Direct message, not the invitation handshake, and the relay is a WebSocket mailbox, not Routed mode. ${libLinks(["mesh-transport"])}, being built, carries the same messages over radio and hides the identifiers on the air.`,
+    here: html`${libLinks(["trust-core"])} uses <code>@openvtc/vti-tsp-js</code> for TSP Direct messaging over the in-memory <code>Bus</code> or ${libLinks(["relay"])}. Communication starts with a Direct message; the invitation handshake and Routed mode are not implemented here. ${libLinks(["mesh-transport"])} carries the same messages over radio, replacing visible identifiers with short address tags on the air.`,
     sources: [
       { href: X.tspSpec, label: "ToIP Trust Spanning Protocol specification" },
       { href: X.hpke, label: "RFC 9180: Hybrid Public Key Encryption" },
@@ -79,11 +81,11 @@ const concepts: Concept[] = [
   {
     id: "trust-tasks",
     title: "Trust Tasks",
-    short: "Typed, signed requests between parties: the verbs of a trust relationship.",
+    short: "A shared message format for the work parties do together.",
     body: md`
-      A Trust Task is one step of work between two parties who have a trusted channel: issue an endorsement, ask to join a community, approve a payment. The framework fixes one envelope for all of them: an \`id\`, a \`type\` that is a specification's URI, the \`issuer\` and \`recipient\`, when it was issued and when it expires, an optional proof, and the payload. A response uses the same type with \`#response\` appended.
+      A Trust Task describes one interaction: issuing an endorsement, requesting community membership, or approving a payment. Each uses the same document envelope: an \`id\`, a specification URI as its \`type\`, an \`issuer\`, a \`recipient\`, timing fields, a payload, and a proof when required. A response uses the same type with \`#response\` appended.
 
-      Before a handler sees a document, the receiving side checks it: is it fresh, has it been seen before, does it carry the proof its type requires, is the payload acceptable. The public registry at trusttasks.org published about 1,400 task specifications when this repository read it, from community membership to voting. A specification says what a task means. It doesn't mean anyone has implemented it.
+      Before dispatching a document to a handler, the receiver checks freshness, replay history, required proofs, and payload validity. The public registry at trusttasks.org catalogs specifications for many interactions, from community membership to voting. A specification defines an interaction; check separately whether an implementation exists.
     `,
     diagram: taskDiagram(),
     caption: "Every Trust Task in this toolkit is signed by its issuer, and every response by its responder, refusals included.",
@@ -97,9 +99,11 @@ const concepts: Concept[] = [
   {
     id: "governance",
     title: "Trust registries and governance",
-    short: "Signatures tell you who said something. Governance tells you whether they count.",
+    short: "Decide whose claims you accept, and under what rules.",
     body: md`
-      A credential from "the garden" is only worth something if the verifier knows the garden's DID and accepts it as the authority on who is a member. Ecosystems write those decisions down: a governance framework says who may issue what, how members join and leave, and how disputes go. A trust registry answers the question a verifier actually has: *is this DID allowed to issue this kind of credential?*
+      A valid signature tells you which key signed a claim. You still need to decide whether to accept that signer as an authority. For a garden membership credential, that means knowing the garden's DID and trusting it to vouch for members.
+
+      A governance framework records those decisions: who may issue which credentials, how members join and leave, and how disputes are resolved. A trust registry makes a key question answerable by software: *is this DID authorized to issue this kind of credential?*
 
       In the P2P Trust Stack, a Verified Trust Community has governance rules for who can join, which credentials membership needs and what members can do. Today those rules are an admin list and a signature threshold; roles, delegation, voting and admission requests are planned.
     `,
@@ -114,11 +118,11 @@ const concepts: Concept[] = [
   {
     id: "keri",
     title: "KERI key event logs and witnesses",
-    short: "Identifiers whose keys can change, with a history nobody can quietly rewrite.",
+    short: "Rotate keys while keeping a verifiable identity history.",
     body: md`
-      KERI (Key Event Receipt Infrastructure) gives an identifier a history instead of a fixed key. The identifier (an AID) is a digest of its *inception* event, which lists the current keys and a digest of the *next* keys. Rotating reveals those pre-committed keys, so a thief who steals only the current key can't rotate to keys of their own. Every event is signed and appended to the identifier's key event log (KEL).
+      KERI (Key Event Receipt Infrastructure) records how an identifier's keys change. For the identifiers used here, the AID is a digest of an *inception* event that lists the initial keys and commits to the next ones. Rotation reveals those pre-committed keys. Someone who steals only the current key cannot substitute their own next keys. Signed events form the key event log (KEL).
 
-      *Witnesses* receipt the first version of each event they see. A controller who shows one history to some people and another to others commits *duplicity*, and *watchers* catch it by comparing what witnesses hold. A signature made last year still verifies against the key that was current last year.
+      *Witnesses* sign receipts for the first version of each event they accept. If a controller presents conflicting histories, *watchers* can compare witness records and produce evidence of *duplicity*. The log also lets a verifier check an older signature against the keys that were valid when it was made.
     `,
     diagram: keriDiagram(),
     caption: "Each event commits to the next key before it is needed. Witnesses make a forked history detectable.",
@@ -132,15 +136,15 @@ const concepts: Concept[] = [
   {
     id: "zk",
     title: "Selective disclosure and zero-knowledge membership",
-    short: "Prove what's needed, and nothing else.",
+    short: "Prove a required fact while keeping the underlying record private.",
     body: md`
-      Showing a whole credential reveals everything in it, and showing the same one twice links the two visits. *Selective disclosure* reveals some claims and withholds others. *Zero-knowledge proofs* go further: they prove a statement about your credentials, such as "I am a current employee" or "I am over 18", without revealing the credentials.
+      Presenting a full credential reveals all its claims, and repeated presentations can link a holder's activity. *Selective disclosure* lets a holder reveal chosen claims. *Zero-knowledge proofs* can establish a statement, such as "I am a current employee" or "I am over 18", without disclosing the underlying credential or record.
 
       The P2P Trust Stack plans profile credentials with a visibility level "available only through a zero-knowledge proof", without a protocol for it yet, and the Trust Tasks registry already has a task in which a member's agent proves that enough distinct vetters attested for it.
     `,
     diagram: zkDiagram(),
     caption: "Group membership in zero knowledge: the verifier checks a signed root and a nullifier, and never sees the leaf.",
-    here: html`${libLinks(["anon-membership"])} does one kind: a member proves they are in one of up to four groups, that their attributes meet some predicates, and gives a nullifier that's stable per scope, so a verifier can count distinct members without knowing them. It uses Noir and Barretenberg's UltraHonk, which is <strong>designed to be zero-knowledge</strong>: its authors found no published proof that it is, and Noir isn't yet for production use. Field-by-field selective disclosure of one credential (BBS, SD-JWT) isn't implemented here.`,
+    here: html`${libLinks(["anon-membership"])} proves membership in one of up to four groups and checks attribute requirements. A scope-specific nullifier lets a verifier recognize repeat participation without learning which membership produced it. The library uses Noir and Barretenberg's UltraHonk in a mode <strong>designed to be zero-knowledge</strong>; its authors found no published proof of that property, and Noir is not yet intended for production use. Field-level credential disclosure with BBS or SD-JWT is not implemented here.`,
     sources: [
       { href: X.noir, label: "Noir" },
       { href: X.barretenberg, label: "Barretenberg (in Aztec's repository)" },
@@ -160,9 +164,9 @@ export function conceptsPage(): Page {
     <ul>${concepts.map((c) => html`<li><a href="#${c.id}">${c.title}</a></li>`)}</ul>
   </nav>
   <div>
-    ${pageHead("Concepts", "The ideas under the toolkit, in plain words, with the specifications they come from and what this repository implements of each.")}
+    ${pageHead("The ideas behind the code", "Start with identity, follow a message, and see how credentials, governance, and proofs let people work together. Each concept includes a diagram and the toolkit's implementation.")}
     <div class="prose">
-      <p>Each section ends with what the toolkit does about that idea, and where it differs from the stack. What it says about the P2P Trust Stack comes from the repository's ${S("S01-p2p-trust-stack-site.md")} and its ${html`<a href="${gh("docs/sources/S02-trust-tasks-registry-and-openvtc.md")}">follow-up</a>`}, which record that the stack's pages were read through summaries. Check the stack's own pages before relying on a detail.</p>
+      <p>Links at the end of each section lead to the specifications. Comparisons with the P2P Trust Stack draw on the repository's ${S("S01-p2p-trust-stack-site.md")} and ${html`<a href="${gh("docs/sources/S02-trust-tasks-registry-and-openvtc.md")}">follow-up</a>`}. Those notes used summaries of the stack's pages; consult the original sources for implementation decisions.</p>
     </div>
     ${concepts.map(
       (c) => html`<section class="concept" id="${c.id}" aria-labelledby="${c.id}-h">

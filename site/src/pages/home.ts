@@ -58,7 +58,7 @@ function wire(s: SealedSample): Raw {
     <div class="wire__opened-head">${didTag(s.bob, { short: true, name: "Bob" })}<span>opens the message</span><span class="ok">Verified · addressed to Bob · fresh · no replay</span></div>
     <pre class="json" tabindex="0">${raw(jsonHtml(s.document))}</pre>
   </div>
-  <figcaption id="wire-cap">A real message from ${didTag(s.alice, { short: true, name: "Alice" })} to Bob, sealed at build time. The relay sees the sender and recipient. Only Bob can read the contents and verify Alice's signature.</figcaption>
+  <figcaption id="wire-cap">A real message from ${didTag(s.alice, { short: true, name: "Alice" })} to Bob, sealed at build time. The relay sees the sender and recipient. Only Bob can read the contents; Alice's signature proves she sent them.</figcaption>
 </figure>`;
 }
 
@@ -94,7 +94,7 @@ export function homePage(sample: SealedSample, specCount: number): Page {
 
   <section class="band" aria-labelledby="toolkit">
     <h2 id="toolkit">The toolkit</h2>
-    <div class="prose"><p>Start with the pieces your app needs. All eight libraries live in <a href="${REPO}/tree/main/packages"><code>packages/</code></a> and have their own tests. Use them from the repository while npm publishing is in progress.</p></div>
+    <div class="prose"><p>Start with the pieces your app needs. All eight libraries live in <a href="${REPO}/tree/main/packages"><code>packages/</code></a> and have their own tests. Import them directly from the repository; the packages aren't on npm yet.</p></div>
     <table class="rows">
       <thead><tr><th scope="col">Library</th><th scope="col">What it does</th><th scope="col">Status</th></tr></thead>
       <tbody>

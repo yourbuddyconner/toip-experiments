@@ -126,7 +126,7 @@ export const projects: Project[] = [
     name: "Mesh",
     status: "working",
     pitch:
-      "Trust Tasks beyond an internet connection. The design explores delivery over LoRa radio, Bluetooth LE, and files carried by hand. The shared radio transport is implemented and tested in simulation. Planned demos use it to verify a door pass offline and forward a Settle attestation through a gateway.",
+      "Trust Tasks beyond an internet connection. Three simulator demos verify a door pass offline, forward a Settle attestation through a radio gateway, and deliver a sealed bundle by hand. A visualizer shows the frames, retries, and airtime. Real-radio bring-up and Bluetooth LE remain future work.",
     demonstrates: ["Compact Trust Tasks with every proof intact.", "Random-looking address tags instead of DIDs on the air.", "Gateways that hand exact TSP bytes to the relay."],
     libraries: ["mesh-transport", "cose", "trust-core"],
     run: [

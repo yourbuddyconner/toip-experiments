@@ -81,26 +81,26 @@ function specPage(s: Spec, all: Spec[]): Page {
     <dl class="facts">
       ${n ? html`<dt>Sent</dt><dd><span class="flow">${n.from} ${arrow("to")} ${n.to}</span></dd>` : ""}
       ${n ? html`<dt>Kind</dt><dd>${n.kind === "one-way" ? "One-way. No response is expected; any answer is a separate message." : html`Request and response. The response's type is <code>${uri(s.name)}#response</code>.`}</dd>` : ""}
-      <dt>Envelope</dt><dd>Signed by its issuer, addressed to one recipient, timestamped, sealed in a TSP Direct message. Not a bearer token.</dd>
+      <dt>Envelope</dt><dd>Signed by the issuer, addressed to one recipient, timestamped, and encrypted in a TSP Direct message. The signature and recipient binding prevent its use as a bearer token.</dd>
       <dt>Defined in</dt><dd>${lineLink(s.file, s.line)}${s.constName ? html` as <code>${s.constName}</code>` : ""}</dd>
       ${n?.handledIn?.length ? html`<dt>Handled in</dt><dd>${n.handledIn.map((f, i) => html`${i ? ", " : ""}${lineLink(f)}`)}</dd>` : ""}
       ${n ? html`<dt>Design</dt><dd><a href="${gh(n.design, s.designAnchor)}">${n.designSection}</a> in <code>${n.design}</code></dd>` : ""}
     </dl>
-    ${s.doc && n ? html`<div class="prose"><p class="small quiet">From the code's comment: “${s.doc}”</p></div>` : ""}
+    ${s.doc && n ? html`<div class="prose"><p class="small quiet">Source documentation: “${s.doc}”</p></div>` : ""}
 
     <h2>Payload</h2>
     ${
       s.payload
         ? code(s.payload.text, "ts", { caption: s.payload.decl ? html`${s.payload.decl.file}:${s.payload.decl.line}` : html`As the handler declares it, in ${n?.payloadFile ?? s.file}` })
-        : html`<div class="prose"><p>Not documented yet. See the code where it's defined.</p></div>`
+        : html`<div class="prose"><p>A payload declaration is not available on this page. Follow the source links above for the handler's requirements.</p></div>`
     }
     ${s.response ? html`<h2>Response payload</h2>${code(s.response.text, "ts", { caption: s.response.decl ? html`${s.response.decl.file}:${s.response.decl.line}` : html`As the handler declares it, in ${n?.responseFile ?? s.file}` })}` : ""}
     ${s.related.length ? html`<h3>Types it uses</h3>${s.related.map((d) => code(d.text, "ts", { caption: `${d.file}:${d.line}` }))}` : ""}
 
     ${n?.note ? html`<h2>Notes</h2><div class="prose"><p>${n.note}</p></div>` : ""}
 
-    <h2>The whole document</h2>
-    <div class="prose"><p>Every Trust Task shares this envelope. The payload above goes in <code>payload</code>.</p></div>
+    <h2>Document envelope</h2>
+    <div class="prose"><p>Every Trust Task uses this envelope. Replace <code>payload</code> with the structure shown above.</p></div>
     ${code(envelope(s), "json", { caption: "Shape of a document of this type" })}
   </div>
 </div>`;
@@ -120,9 +120,10 @@ function indexPage(specs: Spec[]): Page {
 <div class="wrap docs docs--side-last">
   ${side(specs)}
   <div>
-    ${pageHead("Trust Task types", html`The ${specs.length} message types the toolkit and its apps define, each with what it's for, who sends it to whom, and its payload as the code declares it.`)}
+    ${pageHead("Trust Task reference", html`Explore ${specs.length} message types used by the toolkit and its apps. Each page explains the interaction, identifies the sender and recipient, and shows the payload declared in the code.`)}
     <div class="prose">
-      <p>A Trust Task's <code>type</code> is a URI naming its specification. This toolkit's types live under <code>${SPEC_ORIGIN}/spec/&lt;name&gt;/0.1</code>, and each URI is a page here. Some may be proposed to the <a href="https://trusttasks.org/">Trust Tasks registry</a>; until then they're ours. Code defines them with <code>ourSpec("&lt;name&gt;")</code> from <a href="${u("/toolkit/trust-core/")}"><code>@toip-tools/trust-core</code></a>, and these pages are generated from that code each time the site is built.</p>
+      <p>A Trust Task's <code>type</code> is the URI of its specification. Types defined here use <code>${SPEC_ORIGIN}/spec/&lt;name&gt;/0.1</code>, so the URI also leads to its reference page. These are project-specific definitions, separate from the public <a href="https://trusttasks.org/">Trust Tasks registry</a>.</p>
+      <p>Types are declared with <code>ourSpec("&lt;name&gt;")</code> from <a href="${u("/toolkit/trust-core/")}"><code>@toip-tools/trust-core</code></a>. These pages are generated from the source and accompanying notes at build time.</p>
       ${base && !base.startsWith(SPEC_ORIGIN) ? html`<p class="small quiet">The code in the repository still uses the placeholder namespace <code>${base}</code>; the names after it are the same. It moves to <code>${SPEC_ORIGIN}/spec/</code> with the package rename.</p>` : ""}
     </div>
     ${fams.map(

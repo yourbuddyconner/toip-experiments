@@ -25,6 +25,7 @@ const highlighter = await createHighlighter({ themes: [theme], langs: ["typescri
 export type Lang = "ts" | "bash" | "json" | "text" | "console";
 
 const LANG: Record<Lang, string> = { ts: "typescript", bash: "bash", json: "json", text: "text", console: "text" };
+const LABEL: Record<Lang, string> = { ts: "TypeScript", bash: "Shell", json: "JSON", text: "Text", console: "Output" };
 
 export function highlight(code: string, lang: Lang): string {
   const src = code.replace(/\n+$/, "");
@@ -36,6 +37,6 @@ export function highlight(code: string, lang: Lang): string {
 export function code(src: string, lang: Lang = "ts", opts: { caption?: string | Raw; kind?: "output" | "code" } = {}): Raw {
   const kind = opts.kind ?? (lang === "console" ? "output" : "code");
   return html`<figure class="code code--${kind}" data-lang="${lang}">
-${opts.caption ? html`<figcaption>${opts.caption}</figcaption>` : ""}${raw(highlight(src, lang))}
+<figcaption><span class="code__language">${LABEL[lang]}</span>${opts.caption ? html`<span class="code__title">${opts.caption}</span>` : ""}</figcaption>${raw(highlight(src, lang))}
 </figure>`;
 }

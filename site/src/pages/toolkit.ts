@@ -52,9 +52,9 @@ function libPage(l: Library): Page {
     <div class="prose">${md(l.about)}</div>
 
     <div class="prose">
-      <h2>Reach for it when</h2>
+      <h2>When to use it</h2>
       <ul>${l.reachFor.map((r) => html`<li>${mdi(r)}</li>`)}</ul>
-      ${l.notFor ? html`<h3>It isn't for</h3><ul>${l.notFor.map((r) => html`<li>${mdi(r)}</li>`)}</ul>` : ""}
+      ${l.notFor ? html`<h3>Limitations</h3><ul>${l.notFor.map((r) => html`<li>${mdi(r)}</li>`)}</ul>` : ""}
     </div>
 
     ${
@@ -65,17 +65,17 @@ function libPage(l: Library): Page {
     ${
       l.snippet!.runs
         ? html`${code(`npx tsx --tsconfig site/tsconfig.json site/examples/snippets/${l.snippet!.file}`, "bash", { caption: "Run it from the repository root" })}
-    ${out ? code(out, "console", { caption: "What it printed when this site was built" }) : ""}`
+    ${out ? code(out, "console", { caption: "Recorded output" }) : ""}`
         : ""
     }`
-        : html`<h2>Example</h2><div class="prose"><p>Nothing to run yet. The design's API is at <a href="${designMesh}">section 19.1 of the Mesh design</a>; this page will get a tested example when the package lands.</p></div>`
+        : html`<h2>Explore the API</h2><div class="prose"><p>For the transport API and usage examples, start with <a href="${gh(`${l.dir}/README.md`)}">the package README</a>. The architecture is documented in <a href="${designMesh}">section 19.1 of the Mesh design</a>.</p></div>`
     }
 
     <h2>Import</h2>
     ${code(useFromRepo(l.name), "ts", { caption: "Import" })}
     ${l.subpaths ? html`<div class="prose"><ul>${l.subpaths.map((s) => html`<li><code>${s.path}</code>: ${s.what}.</li>`)}</ul></div>` : ""}
 
-    <h2>Key names</h2>
+    <h2>API at a glance</h2>
     <div class="api">${l.api.map((a) => html`<div><h4>${a.area}</h4><p>${a.names.map((n) => html`<code>${n}</code> `)}</p></div>`)}</div>
     <div class="prose"><p>${l.status === "in progress" ? html`These are the design's names and may change.` : hasReadme(l) ? html`The full list, with every option, is in the <a href="${gh(`${l.dir}/README.md`)}">README</a> and <a href="${gh(entry(l))}"><code>${entry(l).slice(l.dir.length + 1)}</code></a>.` : html`Everything it exports is in <a href="${gh(entry(l))}"><code>${entry(l).slice(l.dir.length + 1)}</code></a>, with short comments on each.`}</p></div>
   </div>
@@ -88,22 +88,22 @@ function indexPage(): Page {
 <div class="wrap docs">
   ${side()}
   <div>
-    ${pageHead("Toolkit", "Eight TypeScript libraries for building on the Trust over IP stack. Each has its own tests, and every example on these pages is typechecked against the real code.")}
+    ${pageHead("The building blocks", "Eight TypeScript libraries, from identity and messaging to delegation and audit trails. Choose a library to see where it fits, how to use it, and what it exports.")}
     <table class="rows">
-      <thead><tr><th scope="col">Library</th><th scope="col">Reach for it when</th><th scope="col">Status</th></tr></thead>
+      <thead><tr><th scope="col">Library</th><th scope="col">What it does</th><th scope="col">Status</th></tr></thead>
       <tbody>${libraries.map((l) => html`<tr><th scope="row"><a href="${u(`/toolkit/${l.slug}/`)}"><code>${l.slug}</code></a></th><td>${l.does}</td><td>${status(l.status)}</td></tr>`)}</tbody>
     </table>
 
     <div class="prose">
       <h2 id="use">Use the libraries</h2>
-      <p>They aren't published to npm yet. There are two ways to use them today.</p>
+      <p>The packages aren't published to npm yet. You can use them as local workspaces or point TypeScript directly at the source. Every example on this site is typechecked against that source.</p>
       <h3>Build inside the repository</h3>
-      <p>Put your project under <code>projects/</code>, add it to <code>workspaces</code> in the root <code>package.json</code>, and depend on the libraries by name at version <code>0.0.0</code>, as <a href="${gh("projects/settle/package.json")}">Settle does</a>. <code>npm install</code> at the root links them.</p>
+      <p>Create a project under <code>projects/</code> and add it to <code>workspaces</code> in the root <code>package.json</code>. Declare the libraries as dependencies at version <code>0.0.0</code>, following <a href="${gh("projects/settle/package.json")}">Settle's example</a>. Then run <code>npm install</code> at the root to link them.</p>
     </div>
     ${code(`{\n  "name": "my-app",\n  "type": "module",\n  "dependencies": {\n    "@toip-tools/trust-core": "0.0.0",\n    "@toip-tools/relay": "0.0.0"\n  }\n}`, "json", { caption: "projects/my-app/package.json" })}
     <div class="prose">
       <h3>Point TypeScript at the source</h3>
-      <p>The libraries are TypeScript source with no build step. A <code>paths</code> mapping resolves the names to the packages' entry points. <code>tsc</code> and <code>tsx</code> follow it; most bundlers need the same mapping as an alias. This is how the examples on this site run. The packages' own dependencies resolve from the repository's <code>node_modules</code>, so run <code>npm install</code> at the root first.</p>
+      <p>The packages expose TypeScript source directly. A <code>paths</code> mapping lets <code>tsc</code> and <code>tsx</code> resolve their import names to local entry points; bundlers may need matching aliases. The configuration below runs this site's examples. Install dependencies at the repository root first.</p>
     </div>
     ${code(exampleSource("tsconfig.json"), "json", { caption: "site/tsconfig.json" })}
   </div>
