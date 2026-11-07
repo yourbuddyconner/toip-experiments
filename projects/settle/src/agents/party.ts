@@ -119,6 +119,17 @@ export interface PartySnapshot {
   names: Record<string, string>;
 }
 
+/**
+ * Checks a payee runs before it invoices and before it agrees terms (agents design §11.3, S1). A party
+ * without gates behaves as before. Gates must not await a TSP request: they run inside Settle's handlers.
+ */
+export interface PayeeGates {
+  /** On settle/checkout/start, after Settle's own checks. Return null to invoice, or a reason to refuse. */
+  beforeInvoice?(c: { link: PaymentLink; sender: string; attachments: unknown; checkout: string }): Promise<string | null>;
+  /** On payment/terms/propose. Any problem refuses the terms. `link` and `checkout` name the invoice's origin, if any. */
+  beforeAccept?(c: { terms: Terms; sender: string; link?: string; checkout?: string }): Promise<string[]>;
+}
+
 export interface PartyOptions extends AgentOptions {
   /** Called whenever the party's state changes, e.g. to save it and redraw a page. */
   onChange?: () => void;
@@ -146,6 +157,8 @@ export class Party extends Agent {
   autoRelease = false;
   readonly checkouts = new Map<string, Checkout>();
   readonly links = new Map<string, { link: PaymentLink; archived: boolean }>();
+  /** Payee-side checks added by an integration, such as a mandate check for agent payers (S1). */
+  gates?: PayeeGates;
   wallet?: { key: PaymentKey; token: Address };
   private readonly keys = new Map<string, { key: PaymentKey; token: Address }>();
   private readonly offers = new Map<string, OfferPayload & { to: string }>();
@@ -264,6 +277,24 @@ export class Party extends Agent {
     });
   }
 
+  /**
+   * Sends USDC from this party's wallet to a token account (S2): a principal funding an agent, or an agent
+   * funding a sub-agent. Runs in the party's queue and notes it.
+   */
+  sendFromWallet(to: Address, amount: bigint): Promise<void> {
+    return this.task(async () => {
+      if (amount <= 0n) throw new Error("the amount must be more than zero");
+      const w = await this.openWallet();
+      if (to === w.token) throw new Error("that is this party's own wallet");
+      const have = await this.chain.balance(w.token);
+      if (have < amount) throw new Error(`not enough in the wallet: ${usdc(have)} of ${usdc(amount)}`);
+      await this.ensureSol(w.key.address, FEE_FLOAT / 5n);
+      const r = await this.chain.transfer(w.token, to, w.key.signer, amount);
+      if (!r.ok) throw new Error(`couldn't send ${usdc(amount)}: ${r.error.split("\n")[0]}`);
+      this.say(`sent ${usdc(amount)} from the wallet to ${to.slice(0, 8)}…`);
+    });
+  }
+
   // ================================================================ payee
 
   /** Creates a payment link anyone can open to pay this party. */
@@ -328,13 +359,22 @@ export class Party extends Agent {
   }
 
   /** Someone opened one of this party's payment links and wants to pay: invoice them under the link's conditions. */
-  private async onCheckout(m: { link: PaymentLink; checkout: string; name?: string }, sender: string): Promise<void> {
+  private async onCheckout(m: { link: PaymentLink; checkout: string; name?: string; attachments?: unknown }, sender: string): Promise<void> {
     const l = m?.link;
     const mine = l && this.links.get(l.id);
     if (!mine || l.issuer !== this.did || typeof m.checkout !== "string" || canonicalJson(mine.link) !== canonicalJson(l)) return;
     if (mine.archived) return this.say(`${this.nameOf(sender)} tried to pay an archived link`);
     if ([...this.offers.values()].some((o) => o.checkout === m.checkout && o.to === sender)) return;
     this.learnName(sender, m.name);
+    if (this.gates?.beforeInvoice) {
+      let refusal: string | null;
+      try {
+        refusal = await this.gates.beforeInvoice({ link: l, sender, attachments: m.attachments, checkout: m.checkout });
+      } catch (e) {
+        refusal = `the check failed: ${String((e as Error)?.message ?? e)}`;
+      }
+      if (refusal) return this.say(`didn't invoice ${this.nameOf(sender)} for "${l.title}": ${refusal}`);
+    }
     await this.invoice(sender, l.title, units(l.units), {
       link: l.id,
       checkout: m.checkout,
@@ -367,6 +407,13 @@ export class Party extends Agent {
       if (t.refundAfter < now + t.conditions.disputeWindowSeconds + ARBITRATION_MARGIN_SECONDS) problems.push("the payer's reclaim deadline too close");
       if (!(await verifyAcceptance(m.acceptance, t, sender, this.clock))) problems.push("not signed by the payer");
       if (!(await verifyBinding(t.payer.binding, { did: t.payer.did, payment: t.payment, key: t.payer.paymentKey }, this.clock))) problems.push("payer's payment key isn't bound to them");
+      if (this.gates?.beforeAccept) {
+        try {
+          problems.push(...(await this.gates.beforeAccept({ terms: t, sender, ...(offer.link ? { link: offer.link } : {}), ...(offer.checkout ? { checkout: offer.checkout } : {}) })));
+        } catch (e) {
+          problems.push(`the check failed: ${String((e as Error)?.message ?? e)}`);
+        }
+      }
     }
     if (problems.length) {
       const p = this.payments.get(t?.payment);
@@ -456,8 +503,11 @@ export class Party extends Agent {
 
   // ================================================================ payer
 
-  /** Opens a payment link: asks the payee for an invoice, then agrees terms, funds and opens the escrow, all without further clicks. */
-  checkout(link: PaymentLink): Promise<Checkout> {
+  /**
+   * Opens a payment link: asks the payee for an invoice, then agrees terms, funds and opens the escrow, all without further clicks.
+   * `attachments` travel with settle/checkout/start for the payee's gates (S1), e.g. a mandate presentation. Settle ignores them.
+   */
+  checkout(link: PaymentLink, opts: { attachments?: unknown } = {}): Promise<Checkout> {
     return this.task(async () => {
       if (!(await verifyLink(link, this.clock))) throw new Error("this payment link isn't valid");
       if (link.issuer === this.did) throw new Error("this is your own payment link");
@@ -467,7 +517,7 @@ export class Party extends Agent {
       this.learnName(link.issuer, link.name);
       const c: Checkout = { id: `checkout-${crypto.randomUUID()}`, link, status: "contacting", at: this.clock.iso() };
       this.checkouts.set(c.id, c);
-      await this.endpoint.notify(link.issuer, CHECKOUT_START, { link, checkout: c.id, name: this.name });
+      await this.endpoint.notify(link.issuer, CHECKOUT_START, { link, checkout: c.id, name: this.name, ...(opts.attachments !== undefined ? { attachments: opts.attachments } : {}) });
       this.say(`asked ${this.nameOf(link.issuer)} for an invoice for "${link.title}"`);
       return c;
     });

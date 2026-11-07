@@ -7,11 +7,11 @@
  *   await settle.addFunds(party, 500_000_000n);
  *   const link = await party.createLink({ title: "Fix the sink", units: 120_000_000n, release: "payer-confirms" });
  */
-import { signDocument, SystemClock, type Clock, type Credential, type Identity, type OutboxStore } from "@zk-toip/trust-core";
+import { signDocument, SystemClock, type Clock, type Credential, type Identity, type OutboxStore, type Traffic } from "@zk-toip/trust-core";
 import { Chain } from "../chain/chain";
 import type { SettlePolicy } from "../protocol/policy";
 import { Party, type PartySnapshot } from "../agents/party";
-import type { Directory } from "../agents/base";
+import type { AgentEvent, Directory } from "../agents/base";
 import type { PlatformConfig } from "../platform/platform";
 
 export type { PlatformConfig };
@@ -35,7 +35,19 @@ export class SettleApi {
   }
 
   /** A party on this network, configured as a person's own device would be: it signs for itself, checks everything, and acts on its own. */
-  async party(o: { identity: Identity; name: string; policy: SettlePolicy; clock?: Clock; outbox?: OutboxStore; onChange?: () => void; snapshot?: PartySnapshot }): Promise<Party> {
+  async party(o: {
+    identity: Identity;
+    name: string;
+    policy: SettlePolicy;
+    clock?: Clock;
+    outbox?: OutboxStore;
+    onChange?: () => void;
+    snapshot?: PartySnapshot;
+    /** Everything the party says, as it says it (S3). */
+    onEvent?: (e: AgentEvent) => void;
+    /** Every Trust Task it sends or receives (S3). */
+    onTraffic?: (who: string, t: Traffic) => void;
+  }): Promise<Party> {
     const config = await this.config();
     // A real cluster's clock only moves with the wall clock, so a reading is reused for a few seconds; a local one can jump.
     const chain = await Chain.connect(config.rpcUrl, config.programId, { clockCacheMs: config.devClock ? 0 : 3000 });
@@ -58,6 +70,8 @@ export class SettleApi {
       directory,
       outbox: o.outbox,
       onChange: o.onChange,
+      onEvent: o.onEvent,
+      onTraffic: o.onTraffic,
       // SOL for the party's own accounts comes from the platform's gas station, on any cluster.
       gas: async (address, lamports) => void (await this.post("/api/gas", { address, lamports: lamports.toString() })),
     });

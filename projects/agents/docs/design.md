@@ -1250,3 +1250,40 @@ The open questions above were settled by the assistant, at the convener's reques
 6. **Arbiter rule.** Yes: a worker who accepted payment without checking the mandate bears the risk in a dispute. Settle's rules text says so.
 7. **Counterparties seeing the principal's DID and limits** is acceptable for the MVP.
 8. **Models.** `claude-opus-5-5` for the ops agent, `claude-sonnet-5-5` for the coder, `claude-haiku-5-5` for the sub-agent. Tests and keyless runs use the scripted model.
+
+## Implementation notes (2026-11-06)
+
+What was built, and where it differs from the sections above. Everything here runs with `npm run agents` or `npm run demo --workspace @zk-toip/agents`.
+
+**Built as designed**
+- The guard (`src/guard/guard.ts`) holds the identity, the Settle party and the trail. The loop reaches it only through `GuardApi` (`src/guard/api.ts`, types only). A test checks the loop's import graph.
+- Every gated tool becomes an action and is decided by `packages/mandates` against the whole chain. Allowed spends and attestations are witnessed (`appendWitnessed`) before they happen. With no witness receipt, the guard refuses (fail closed) and releases the reservation.
+- Escalations go to the root principal over `mandates/approval/request`. On a grant, the guard re-decides with the approval and checks out by itself. Approvals are single use. Requests lapse after 30 minutes.
+- Workers check presentations with Settle's new gates (S1) before invoicing and before accepting terms. They also check the presentation's `trailRef` at the hub's witness and endorse it.
+- Delegation copies the agent's own mandate, tightens it, sets the depth to 0, narrows the attesters to the principal, and funds the sub-agent with `sendFromWallet` (S2). The funding counts against the delegator's own budgets.
+- Trails use `packages/eventlog`. Each agent's AID has the agent's next key and the principal's (`extraNext`, `nt = 1`), two witnesses (the principal's device and the hub, `bt = 1`), and a DID binding. The principal's review asks for a disclosure (`trail/disclose`), verifies the bundle against both witnesses, and shows a banner and a timeline.
+- The decisions above hold: the wallet is the hard limit; the guard is in-process; status lists must be under an hour old; refunds give budget back; categories come from the worker's verified credential when there is one; Settle's arbiter rules say a worker who didn't check bears the risk (`projects/settle/docs/arbiter-rules.md`); the models are `claude-opus-5-5`, `claude-sonnet-5-5` and `claude-haiku-5-5`, with the scripted model for tests and keyless runs.
+
+**Settle changes** (tests in `projects/settle/tests/hooks.test.ts`)
+- S1: `Party.checkout(link, { attachments })`, and `Party.gates` with `beforeInvoice` and `beforeAccept`. The gates also get the checkout id (and `beforeAccept` the link id), so a worker can match terms to the presentation it checked.
+- S2: `Party.sendFromWallet(to, units)`.
+- S3: `SettleApi.party()` passes `onEvent` and `onTraffic`.
+- S4: `projects/settle/docs/arbiter-rules.md`.
+
+**Differences from the design**
+- **The principal's console and Dana's device run in the app's Node process.** Their keys, witness and Settle parties live there. The web pages are their screens, over a local JSON API that refuses cross-site requests. The design puts them in the browser. Moving them means running the same classes (`PrincipalDevice`, `Courier`) in the page.
+- **A task arrives as a Trust Task**, `agents/task`, from the principal or the delegator. The delegator sends it with the sub-mandate. It isn't in §10.1.
+- **Sub-mandate revocation goes through the issuing agent.** Only Ops agent can sign its own status list. When Conner revokes Errands agent's mandate, the console sends `agents/control { op: "revoke" }` to Ops agent. Its guard, not its model, revokes, publishes and tells Errands agent. Conner revokes his own mandates directly.
+- **The guard adds `quote.mismatch` reasons** when a quote doesn't match its job (issuer, attester, window, price). They are never approvable, so an injected quote is refused without bothering the principal.
+- **The operator configures a worker agent's own mandate locally** (`Guard.acceptMandate`), since Byte Works has no device in the demo. It is checked the same way.
+- **A delegation sends a report to the principal** with the child mandate, so the console can show the narrowing.
+- **Strict tool schemas** carry types, enums and descriptions only. The loop checks length and range limits before a call reaches the guard.
+- **Refusal fallbacks** (`fallbacks: "default"`) are on for Opus and Sonnet. Haiku has none.
+- **Guard notices** (paused, revoked, approved) reach the model as mid-conversation system messages.
+- **The CI attester** runs only the repositories it was set up for, and only `node --test`, in a temporary clone. It isn't sandboxed (§17).
+- **Trails and the hub keep everything in memory.** The guard can snapshot and restore (`Guard.snapshot`). The app doesn't persist yet.
+
+**Not built**
+- The guard in a separate process; token delegation; approvers below the root; principal-initiated disputes; push notifications.
+- The "CI never passes, the hirer reclaims after the deadline" flow. Settle's own tests cover reclaim.
+- A live run in this session. No API credentials were available, so the live path is tested against a fake Messages API, and `tests/live.test.ts` is skipped unless `AGENTS_LIVE=1`.
