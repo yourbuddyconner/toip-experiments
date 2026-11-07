@@ -1,0 +1,5 @@
+relay status: connecting
+did:key:z6Mkr9nZse4zH76L6Vn3JzHwcSi67TiHeGHh2jDUrJWr5tr1 uses ws://127.0.0.1:54135/v1; 0 messages waiting to send
+[relay] connected did:key:z6Mkr9nZse4z…
+relay status: connected
+relay status: offline
