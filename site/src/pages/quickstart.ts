@@ -14,7 +14,7 @@ function step(n: number, id: string, title: string, intro: Raw, file: string, af
   ${code(exampleSource(`examples/quickstart/${file}.ts`), "ts", { caption: `site/examples/quickstart/${file}.ts` })}
   <div class="prose"><p>Run it from the repository root:</p></div>
   ${code(run(file), "bash", { caption: "Terminal" })}
-  ${code(exampleOutput(file), "console", { caption: "What it printed when this site was built" })}
+  ${code(exampleOutput(file), "console", { caption: "Recorded output" })}
   <div class="prose">${after}</div>
 </section>`;
 }
@@ -22,25 +22,25 @@ function step(n: number, id: string, title: string, intro: Raw, file: string, af
 export function quickstartPage(): Page {
   const body = html`
 <div class="wrap">
-  ${pageHead("Quickstart", "From nothing to a signed, encrypted exchange between two identities, a relay that holds mail for someone offline, and a credential that gets revoked. About ten minutes.")}
+  ${pageHead("Your first trust exchange", "Create two identities, send a private message, and verify a credential. Four runnable examples, about ten minutes.")}
 
   <section class="prose" aria-labelledby="before">
     <h2 id="before">Before you start</h2>
-    <p>You need Node 22.5 or later (the relay uses <code>node:sqlite</code>) and git. Nothing else: no accounts, no keys to request, no servers to sign up for. Every party in this tutorial runs on your machine.</p>
+    <p>You'll need Node 22.5 or later and Git. Every part of this tutorial runs on your machine, including the relay, so you can start without creating an account or setting up a remote server.</p>
     ${code(`git clone ${CLONE}\ncd toip-experiments\nnpm install`, "bash", { caption: "Get the code" })}
-    <p>The libraries live in <a href="${REPO}/tree/main/packages"><code>packages/</code></a>. The examples import them as <code>@toip-tools/trust-core</code> and so on; <a href="${gh("site/tsconfig.json")}"><code>site/tsconfig.json</code></a> maps those names to the packages' sources, which is why every command passes <code>--tsconfig</code>.</p>
+    <p>Run the commands below from the repository root. The examples import libraries from <a href="${REPO}/tree/main/packages"><code>packages/</code></a> using names such as <code>@toip-tools/trust-core</code>. The <code>--tsconfig</code> option points to <a href="${gh("site/tsconfig.json")}">the configuration</a> that resolves those names to the local source.</p>
   </section>
 
   ${step(
     1,
     "identities",
-    "Make two identities",
+    "Create two identities",
     md`
-      An identity is a key pair. Its name, a \`did:key\`, is the public key written out, so anyone holding the name has the key: there's no registry to ask. Alice and Bob each make one.
+      Alice and Bob each create a key pair. Their identifiers use \`did:key\`, which encodes the public key in the identifier itself. Anyone with the identifier can recover the public key without consulting a registry.
     `,
     "01-identities",
     md`
-      The X25519 encryption key is derived from the Ed25519 signing key, as the P2P Trust Stack derives them. One DID is enough to both check someone's signature and seal a message only they can open.
+      The toolkit derives an X25519 encryption key from each Ed25519 signing key. One DID gives Alice what she needs to verify Bob's signatures and encrypt a message for him.
     `,
   )}
 
@@ -49,28 +49,28 @@ export function quickstartPage(): Page {
     "trust-task",
     "Send a Trust Task",
     md`
-      A Trust Task is a JSON document with a type, an issuer, a recipient, a time and a payload, signed by its issuer. An \`Endpoint\` sends it as a TSP Direct message: signed with Alice's key and sealed to Bob's. Here they talk over the \`Bus\`, an in-memory network that lets you watch every message go by.
+      A Trust Task is a signed JSON document describing one interaction. It names the task type, issuer, recipient, timestamp, and payload. Alice's \`Endpoint\` wraps it in a signed, encrypted TSP Direct message for Bob. For now, they use a \`Bus\`: an in-memory transport that lets you inspect what the network sees.
     `,
     "02-trust-task",
     md`
-      Look at what each side learned. Bob knows exactly who wrote to him, because the signature checks against Alice's DID. The network saw two DIDs and two sizes. The forged copy never reached Bob's handler: his TSP layer refused it because Alice's signature no longer matched.
+      Bob checks the sender's signature against Alice's DID. The network sees the two identifiers and the message sizes, but cannot read the contents. When the example tampers with a message, signature verification fails and Bob's handler never receives it.
 
-      The reply came back signed by Bob, with the type \`…#response\`. A handler can also return \`new Refusal(code, message)\`, which arrives as a signed error that \`request()\` throws as a \`TaskError\`.
+      Bob's reply is signed too, with \`#response\` appended to the task type. A handler can return \`new Refusal(code, message)\` to decline a request. That refusal travels back as a signed response, and \`request()\` throws a \`TaskError\`.
     `,
   )}
 
   ${step(
     3,
     "relay",
-    "Leave a message at a relay",
+    "Deliver a message while Bob is offline",
     md`
-      People are offline most of the time. The relay is a mailbox: it keeps sealed messages until their recipient signs in and acknowledges them. Swap the \`Bus\` for a \`RelayTransport\` and nothing else in your code changes.
+      Alice and Bob won't always be online together. A relay holds encrypted messages until the recipient connects and acknowledges delivery. Replace the \`Bus\` with \`RelayTransport\` to use that mailbox; the Trust Task handlers stay the same.
     `,
     "03-relay",
     md`
-      Each device signed in by signing the relay's challenge with its own key. Node prints an \`ExperimentalWarning\` for SQLite when the relay starts; it's harmless.
+      Each device authenticates by signing a challenge from the relay. The relay uses \`node:sqlite\`; Node may print an \`ExperimentalWarning\` when it starts.
 
-      To run a relay for real, use \`npm start --workspace packages/relay\` behind TLS, and set \`RELAY_PUBLIC_URL\` to the exact URL clients use, because they sign it when they authenticate.
+      To host a relay, run \`npm start --workspace packages/relay\` behind TLS. Set \`RELAY_PUBLIC_URL\` to the exact URL clients use: that URL is part of the authentication challenge they sign.
     `,
   )}
 
@@ -79,21 +79,21 @@ export function quickstartPage(): Page {
     "credentials",
     "Present a credential, then revoke it",
     md`
-      A third party joins: a community garden that vouches for its members. It issues Bob a credential, a signed statement about him in the W3C Verifiable Credentials shape, with a slot in its status list. Bob presents it to Alice inside a Trust Task, and Alice checks it on her own: the garden's signature, who it's about, and whether the garden has since revoked it.
+      A community garden issues Bob a membership credential: a signed statement in the W3C Verifiable Credentials shape, linked to an entry in the garden's status list. Bob sends it to Alice in a Trust Task. She checks the garden's signature, confirms the credential belongs to Bob, and checks whether it has been revoked.
     `,
     "04-credentials",
     md`
-      Alice never contacted the garden to check Bob. She needed the garden's DID, which she trusts, and its latest signed status list, which anyone may host because nobody can forge it. Changing one claim broke the signature; flipping one bit in the list revoked the membership.
+      Alice verifies the credential using the garden's trusted DID and its latest signed status list. The list can be hosted anywhere; its signature lets her detect changes. In the example, altering a claim invalidates the credential, and updating one status bit revokes Bob's membership.
     `,
   )}
 
   <section class="prose" aria-labelledby="next">
-    <h2 id="next">What you just built, and where to go next</h2>
-    <p>Two parties with self-made identifiers exchanged messages that prove their sender and hide their content from everyone in between, through infrastructure they don't have to trust. A third party vouched for one of them, and the other checked that claim, and its revocation, without asking anyone.</p>
+    <h2 id="next">Keep building</h2>
+    <p>You created identities, exchanged signed and encrypted messages, delivered one through a relay, and verified a revocable credential. The relay handled delivery; Alice and Bob checked the messages and claims themselves.</p>
     <ul>
-      <li><a href="${u("/concepts/")}">Concepts</a> explains DIDs, credentials, TSP, Trust Tasks, governance, KERI and zero-knowledge membership, with the specifications behind them.</li>
-      <li><a href="${u("/toolkit/")}">The toolkit</a> has a page per library, from delegation (<a href="${u("/toolkit/mandates/")}"><code>mandates</code></a>) to audit logs (<a href="${u("/toolkit/eventlog/")}"><code>eventlog</code></a>).</li>
-      <li><a href="${u("/examples/#settle")}">Settle</a> is these pieces in a full app: payment links, an escrow nobody controls alone, and <a href="${specHref("settle/escrow/attest")}">Trust Tasks</a> for every step. <code>npm run settle</code> starts it.</li>
+      <li>Understand the protocols in <a href="${u("/concepts/")}">Concepts</a>, with diagrams and links to the specifications.</li>
+      <li>Find your next building block in <a href="${u("/toolkit/")}">the toolkit</a>: try <a href="${u("/toolkit/mandates/")}">delegation</a> or <a href="${u("/toolkit/eventlog/")}">verifiable audit trails</a>.</li>
+      <li>See a complete app in <a href="${u("/examples/#settle")}">Settle</a>, where <a href="${specHref("settle/escrow/attest")}">Trust Tasks</a> coordinate conditional payments. Start it with <code>npm run settle</code>.</li>
       <li>Run all four steps at once from <code>site/</code> with <code>npm install</code> and <code>npm run quickstart</code>.</li>
     </ul>
   </section>

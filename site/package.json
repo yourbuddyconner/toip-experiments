@@ -8,7 +8,7 @@
     "build": "tsx build/build.ts",
     "dev": "tsx build/serve.ts --watch",
     "preview": "tsx build/serve.ts",
-    "check": "tsx build/check.ts",
+    "check": "node --import tsx --test build/highlight.test.ts && tsx build/check.ts",
     "typecheck": "tsc -p tsconfig.json",
     "quickstart": "tsx examples/quickstart/run-all.ts",
     "examples:record": "tsx build/record-examples.ts",

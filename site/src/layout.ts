@@ -18,7 +18,7 @@ const NAV: { section: Section; href: string; label: string }[] = [
   { section: "concepts", href: "/concepts/", label: "Concepts" },
   { section: "toolkit", href: "/toolkit/", label: "Toolkit" },
   { section: "examples", href: "/examples/", label: "Examples" },
-  { section: "spec", href: "/spec/", label: "Spec" },
+  { section: "spec", href: "/spec/", label: "Task specs" },
   { section: "involved", href: "/get-involved/", label: "Get involved" },
 ];
 
@@ -62,7 +62,8 @@ ${p.body}
 </main>
 <footer class="site-foot">
   <div class="wrap">
-    <p>A developer resource for building on the Trust over IP stack, with the open libraries and examples in <a href="${REPO}">toip-experiments</a>. An independent project, not run by the Trust over IP Foundation.</p>
+    <a class="mark" href="${u("/")}">toip.tools</a>
+    <p>Open protocols, working code, and a place to start. Built from the libraries and examples in <a href="${REPO}">toip-experiments</a>. Independently maintained; unaffiliated with the Trust over IP Foundation.</p>
     <ul>
       <li><a href="${u("/quickstart/")}">Quickstart</a></li>
       <li><a href="${u("/spec/")}">Trust Task types</a></li>

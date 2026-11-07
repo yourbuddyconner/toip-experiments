@@ -21,7 +21,7 @@ export const projects: Project[] = [
     name: "Settle",
     status: "working",
     pitch:
-      "Conditional payments between parties who don't trust each other. A customer pays a link; the money waits in a stablecoin escrow on Solana that nobody controls alone, not even the processor; two of payer, payee and arbiter must sign to move it. Every step between the parties is a signed Trust Task over TSP, and each party's device runs the payment's Rego policy before it signs anything.",
+      "Conditional payments with shared control of escrow. A customer pays through a link, and stablecoins wait in a Solana escrow until two of the payer, payee, and arbiter sign to move them. Signed Trust Tasks coordinate each step. Before signing, each party's device checks the payment's Rego policy.",
     demonstrates: [
       "A Trust Task vocabulary for a real protocol: invoices, terms, attestations, disputes, rulings, receipts.",
       "Identity off-chain, fresh keys on-chain, bound together by credentials only the parties see.",
@@ -35,8 +35,8 @@ export const projects: Project[] = [
     ],
     shots: [
       { src: "img/settle-checkout.jpg", alt: "Settle's hosted checkout: Joe's Plumbing, verified, asks 120.00 USDC to fix a kitchen sink, and explains that the money goes into an escrow nobody can empty alone.", caption: "Hosted checkout for a payment link.", width: 1280, height: 974 },
-      { src: "img/settle-released.jpg", alt: "A released payment: payer and payee seals are checked, the arbiter's is empty, and an activity list shows each signed step from invoice to receipt.", caption: "Two of three seals released the money. The activity list is the Trust Tasks.", width: 1280, height: 1245 },
-      { src: "img/settle-arbiter.jpg", alt: "The operator view of a dispute: the payer reported no hot water, and the arbiter is ruling 180 of 300 USDC to the plumber, with reasons.", caption: "An arbiter rules a split. The ruling is signed and goes into the evidence.", width: 1280, height: 860 },
+      { src: "img/settle-released.jpg", alt: "A released payment: payer and payee seals are checked, the arbiter's is empty, and an activity list shows each signed step from invoice to receipt.", caption: "Two signatures release the funds. The activity log records each Trust Task.", width: 1280, height: 1245 },
+      { src: "img/settle-arbiter.jpg", alt: "The operator view of a dispute: the payer reported no hot water, and the arbiter is ruling 180 of 300 USDC to the plumber, with reasons.", caption: "An arbiter signs a split ruling, preserving the decision as evidence.", width: 1280, height: 860 },
     ],
     specs: "settle",
   },
@@ -45,7 +45,7 @@ export const projects: Project[] = [
     name: "Shared To-Do",
     status: "working",
     pitch:
-      "Shared to-do lists for a household, with no server you have to trust. Each person and each list has its own key and DID, made on the device. Membership is a credential the list's key signs; every change is a signed operation sent to each member as an encrypted TSP message and checked by every device before it's applied. A relay only passes sealed messages along.",
+      "Private to-do lists for a household. Each person and list has its own key and DID, created on the device. The list signs membership credentials, and members exchange signed changes in encrypted TSP messages. Every device verifies a change before applying it; the relay handles delivery without reading the list.",
     demonstrates: [
       "The basic ToIP ideas in an app small enough to read in an afternoon.",
       "Invitations, roles, removal, and private items sealed to chosen readers.",
@@ -60,7 +60,7 @@ export const projects: Project[] = [
     name: "Tipline",
     status: "working",
     pitch:
-      "A drop box for whistleblowers. A source proves to a journalist \"I am a current member of organization X\" without saying which member, sends a tip with documents, and can carry on a conversation. Each tip uses a fresh, unlinkable DID, and the source keeps nothing on their device but a code written on paper.",
+      "A drop box that lets sources prove membership without revealing their identity. A source shows a journalist that they belong to an organization, shares documents, and continues the conversation using a fresh DID for the tip. A code written on paper lets them return without keeping the conversation on their device.",
     demonstrates: ["Zero-knowledge group membership in the browser.", "Counting distinct sources by nullifier without knowing any of them."],
     libraries: ["anon-membership", "trust-core", "relay", "web-vault"],
     run: [
@@ -74,7 +74,7 @@ export const projects: Project[] = [
     name: "Agora",
     status: "working",
     pitch:
-      "Forums where every post is anonymous but posting needs a credential: \"only licensed RNs post here\", \"only residents of district 7 vote in this poll\". Each person has one pseudonym per forum, so there are no sockpuppets, and their pseudonyms in different forums can't be linked.",
+      "Anonymous forums with verified membership. A forum can require a nursing license to post, or district residency to vote, without asking members to reveal their identity. Each membership has one pseudonym per forum; the membership proofs keep those pseudonyms from being linked across forums.",
     demonstrates: ["Credential-gated anonymity with attribute predicates.", "One vote per person with secret ballots.", "A signed, append-only feed the host can't quietly rewrite."],
     libraries: ["anon-membership", "eventlog", "trust-core", "relay", "web-vault"],
     run: [
@@ -88,7 +88,7 @@ export const projects: Project[] = [
     name: "Agents",
     status: "working",
     pitch:
-      "Passports and mandates for AI agents. An agent gets its own identity and a bounded, revocable authority to act for a person or a company. It hires people and other agents on Settle; deterministic code between the model and the keys checks every payment and message against the mandate chain; and everything it does goes into a signed log its principal can check.",
+      "AI agents with identities, spending limits, and accountable actions. A person or company gives an agent a revocable mandate. As it hires people and other agents through Settle, a guard checks every payment and message against that mandate chain. A signed audit trail lets the principal review what happened.",
     demonstrates: ["Delegation that only narrows, checked by both the agent's guard and its counterparties.", "Escalation to a human for one exact action.", "Audit trails an agent can't quietly rewrite."],
     libraries: ["mandates", "eventlog", "trust-core", "relay"],
     run: [
@@ -102,7 +102,7 @@ export const projects: Project[] = [
     name: "Trail",
     status: "working",
     pitch:
-      "Verifiable audit trails for agents, devices and services: a small service with three witnesses, a watcher and a web explorer, on top of the event-log library. It catches a forged edit, a fork shown to one party, a witness that signs two versions, and a stolen key rotated away.",
+      "Verifiable audit trails for agents, devices, and services. A local network of witnesses and watchers makes log tampering visible in a web explorer. The demo walks through forged edits, conflicting histories, dishonest witnesses, and recovery from a stolen key.",
     demonstrates: ["KERI key event logs with pre-rotation and witnesses, verified by KERIpy.", "Duplicity detection by watchers."],
     libraries: ["eventlog", "trust-core"],
     run: [
@@ -116,27 +116,31 @@ export const projects: Project[] = [
     name: "Capture",
     status: "being built",
     pitch:
-      "Cameras and sensors with their own identities. A device signs what it captures with a key the page or chip won't give up; every edit adds a signed link; anyone can check in a browser where a photo or reading came from, when, and what was done to it. Redactions are provable: the verifier checks that every pixel outside the redacted area is what the camera captured.",
+      "Verifiable origins for photos and sensor readings. The design gives each device an identity and a key it can use without exporting. Captures and edits form a signed history that readers can check in a browser. Redaction proofs are designed to show that pixels outside a hidden region still match the original capture.",
     demonstrates: ["Device keys in WebCrypto and passkeys.", "Owner-to-device mandates.", "Key histories that keep old captures verifiable after a rotation."],
     libraries: ["cose", "eventlog", "mandates", "web-vault", "mesh-transport"],
-    coming: "The MVP is being built now.",
+    coming: "The first implementation is in progress. The design describes device enrollment, capture, editing, and verification.",
   },
   {
     slug: "mesh",
     name: "Mesh",
-    status: "being built",
+    status: "working",
     pitch:
-      "Trust Tasks without the internet: over LoRa radio, Bluetooth LE, and on a USB stick carried by hand. A sealed message needs its carrier to be trusted only to deliver it, so a radio can carry it as well as a relay can. The demo opens a door with no internet in under two seconds, and forwards a Settle attestation from a cabin through a gateway.",
+      "Trust Tasks beyond an internet connection. The design explores delivery over LoRa radio, Bluetooth LE, and files carried by hand. The shared radio transport is implemented and tested in simulation. Planned demos use it to verify a door pass offline and forward a Settle attestation through a gateway.",
     demonstrates: ["Compact Trust Tasks with every proof intact.", "Random-looking address tags instead of DIDs on the air.", "Gateways that hand exact TSP bytes to the relay."],
     libraries: ["mesh-transport", "cose", "trust-core"],
-    coming: "Being built now, on a simulated radio first.",
+    run: [
+      { what: "The radio visualizer on http://localhost:4360: a field map, frames in flight, airtime meters", cmd: "npm run mesh" },
+      { what: "All three acts on the simulated radio, narrated in the terminal", cmd: "npm run demo --workspace projects/mesh" },
+      { what: "Checks a LoRa gateway or RAK3172 is talking to you (see HARDWARE.md)", cmd: "npm run mesh --workspace projects/mesh -- doctor" },
+    ],
   },
   {
     slug: "commons",
     name: "Commons",
     status: "design only",
     pitch:
-      "A suite of small apps for an apartment building and its households: guest and delivery passes checked by a door kiosk, shared expenses, maintenance requests, household votes, a board and lists. One identity per person; the building and each household are nested communities.",
+      "Everyday tools for an apartment building and its households. The design brings guest passes, shared expenses, maintenance requests, votes, and noticeboards under one identity per person. The building and its households form nested communities with their own roles.",
     demonstrates: ["Nested communities and roles.", "Many small apps sharing one identity and one trust core."],
     libraries: ["trust-core", "relay"],
   },
@@ -145,7 +149,7 @@ export const projects: Project[] = [
     name: "Community Rides",
     status: "design only",
     pitch:
-      "A straw-man ride share for a local community, written for show and tell. It makes \"the community vouches, peers verify\" concrete, and shows what each party learns at each step. It is designed directly on the OpenVTC libraries, using real Trust Tasks registry specs where their required fields can be filled honestly.",
+      "A proposal for ride sharing within a local community. The community vouches for its members, and riders and drivers verify those claims directly. Built around the OpenVTC libraries and applicable registry specifications, the design traces what each party learns at every step.",
     demonstrates: ["Registry Trust Tasks alongside your own.", "What each party learns, step by step."],
     libraries: [],
   },

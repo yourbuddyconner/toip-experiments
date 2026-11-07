@@ -33,9 +33,9 @@ export const libraries: Library[] = [
     status: "ready",
     does: "Identities, signed and encrypted Trust Tasks over TSP, credentials, status lists and local policy.",
     about: `
-The plumbing every project here shares. An \`Identity\` is an Ed25519 key with its \`did:key\`, and an X25519 encryption key derived from it, as the P2P Trust Stack derives them. An \`Endpoint\` sends and receives Trust Task documents as TSP Direct messages: each one is signed with a Data Integrity proof (\`eddsa-jcs-2022\`), sealed to the recipient with HPKE, and checked on arrival for signature, addressing, freshness and replay before your handler runs.
+The shared foundation for identities, messaging, credentials, and policy. An \`Identity\` combines an Ed25519 signing key, its \`did:key\` identifier, and a derived X25519 encryption key. An \`Endpoint\` sends Trust Tasks in TSP Direct messages. Each document carries a Data Integrity proof (\`eddsa-jcs-2022\`) and is encrypted for its recipient with HPKE. The receiver checks the signature, recipient, timestamp, and replay history before calling your handler.
 
-It wraps the OpenVTC TypeScript libraries (\`@openvtc/vti-tsp-js\`, \`@openvtc/trust-tasks\`, \`@openvtc/trust-tasks-tsp\`, \`@openvtc/trust-tasks-proof\`) rather than reimplementing TSP. Messages travel over a \`Transport\`: the in-memory \`Bus\` for tests and demos, or \`RelayTransport\` for a real relay.
+The protocol implementation comes from the OpenVTC TypeScript libraries: \`@openvtc/vti-tsp-js\`, \`@openvtc/trust-tasks\`, \`@openvtc/trust-tasks-tsp\`, and \`@openvtc/trust-tasks-proof\`. Choose a \`Transport\` for delivery: the in-memory \`Bus\` for tests and demos, or \`RelayTransport\` for a WebSocket relay.
 `,
     reachFor: [
       "Two parties need to exchange messages that prove who sent them and that only the recipient can read.",
@@ -68,11 +68,11 @@ It wraps the OpenVTC TypeScript libraries (\`@openvtc/vti-tsp-js\`, \`@openvtc/t
     name: "@toip-tools/relay",
     dir: "packages/relay",
     status: "ready",
-    does: "A mailbox for sealed TSP messages. It sees who writes to whom, never what.",
+    does: "A WebSocket mailbox that stores and delivers encrypted TSP messages.",
     about: `
-A WebSocket server that holds sealed messages until their recipient collects them. Devices sign in as their \`did:key\` by signing a challenge bound to the relay's URL. The relay delivers live when the recipient is connected, keeps the message in SQLite until the recipient acknowledges it, and applies per-sender and per-recipient limits.
+A relay lets parties exchange messages even when they aren't online together. Devices authenticate with their \`did:key\` by signing a challenge bound to the relay's URL. Messages are delivered immediately to connected recipients and stored in SQLite until acknowledged, with limits per sender and recipient.
 
-It is this repository's stand-in for the stack's own transports. It is not TSP Routed Mode and not the P2P Trust Stack's libp2p relays.
+The relay can see sender and recipient identifiers, timing, and message sizes. Contents stay encrypted. This is the toolkit's own WebSocket transport; TSP Routed Mode and the P2P Trust Stack's libp2p relays use different designs.
 `,
     reachFor: [
       "Parties are often offline, and messages must wait for them.",
@@ -97,7 +97,7 @@ It is this repository's stand-in for the stack's own transports. It is not TSP R
     status: "ready",
     does: "Deterministic CBOR and COSE_Sign1, with Ed25519, P-256, WebCrypto and passkey signers.",
     about: `
-Small signed binary messages. \`encodeCbor\` writes RFC 8949 Core Deterministic Encoding, and \`decodeCbor\` refuses anything that isn't in that form unless you ask it not to. \`signCose1\` and \`verifyCose1\` implement COSE_Sign1 (RFC 9052) with async signers, so the key can be a seed, a non-extractable WebCrypto key, or a passkey.
+Sign and verify compact binary messages. \`encodeCbor\` produces RFC 8949 Core Deterministic Encoding; \`decodeCbor\` requires that form by default. The COSE_Sign1 implementation (RFC 9052) accepts asynchronous signers, so keys can come from a seed, a non-extractable WebCrypto key, or a passkey.
 
 The tests reproduce the COSE working group's Ed25519 example byte for byte and verify RFC 9052's ES256 example.
 `,
@@ -122,11 +122,11 @@ The tests reproduce the COSE working group's Ed25519 example byte for byte and v
     name: "@toip-tools/web-vault",
     dir: "packages/web-vault",
     status: "ready",
-    does: "Keeps an account's identity seed in the browser, sealed by a passkey or a passphrase.",
+    does: "Browser storage for identity seeds and account data, encrypted with a passkey or passphrase.",
     about: `
-A web app that holds its users' keys has to keep them somewhere. The vault seals the identity seed with an AES-GCM key from a passkey's PRF output (Touch ID, Windows Hello, a security key), or from a passphrase through PBKDF2 when the passkey can't do PRF. Other data for the account (credentials, state, receipts) is sealed under the same key and bound to the account and its name. A backup code restores the account in another browser.
+Keep a user's identity seed encrypted in their browser. The vault derives an AES-GCM key from a passkey's PRF output, or uses PBKDF2 with a passphrase when PRF is unavailable. Credentials, state, and receipts can share that encryption key, with each stored item bound to its account and name. A backup code restores the account in another browser.
 
-It was Settle's vault, moved into a package so other apps can share it.
+Originally built for Settle, the vault is now shared by several apps. The passkey unlocks the seed; signing happens with the seed in memory while the account is open.
 `,
     reachFor: ["A browser app whose users hold their own keys.", "You need several apps on one origin, each with its own accounts."],
     notFor: ["Signing with the passkey itself. The seed is unsealed in memory while the account is open."],
@@ -147,11 +147,11 @@ It was Settle's vault, moved into a package so other apps can share it.
     name: "@toip-tools/mandates",
     dir: "packages/mandates",
     status: "ready",
-    does: "Delegation credentials: bounded, revocable authority that can only narrow down a chain.",
+    does: "Revocable delegation with spending limits, policy checks, and approvals.",
     about: `
-A principal (a person, a company, a device owner) gives a delegate (an agent, a sub-agent, a camera) a mandate: a signed credential saying what it may do, how much it may spend, until when, and whether it may pass on a narrower mandate. Anyone can check an action against the whole chain on their own and get **allow**, **escalate** or **deny**, with reasons and plain sentences.
+A mandate is a signed credential that gives someone authority to act for a principal: a person, company, or device owner. It defines permitted actions, spending limits, expiry, and whether the delegate may pass on narrower authority. Anyone can check an action against the full delegation chain and receive **allow**, **escalate**, or **deny**, with an explanation.
 
-The decision runs a compiled Rego policy, and every decision carries the policy's hash, so it can be re-run later. Escalations go to the right approver over Trust Tasks, and an approval clears exactly one action.
+Decisions run through a compiled Rego policy and record its hash so the same policy can be used in a later review. Trust Tasks carry approval requests to the designated approver; each approval authorizes one specific action.
 `,
     reachFor: [
       "An AI agent spends money or sends messages for someone, within limits.",
@@ -179,11 +179,11 @@ The decision runs a compiled Rego policy, and every decision carries the policy'
     name: "@toip-tools/anon-membership",
     dir: "packages/anon-membership",
     status: "ready",
-    does: "Prove you belong to a group, and meet its rules, without saying which member you are.",
+    does: "Prove group membership and attribute requirements without revealing which member you are.",
     about: `
-A member proves: "I am in one of these groups, my attributes meet these predicates, and this is my nullifier for this scope", bound to one message. The verifier learns that the statement is true and gets a nullifier that is the same each time this member acts in this scope, so it can count distinct members and enforce one vote or one pseudonym per person. It doesn't learn which member.
+A member proves that they belong to an accepted group and meet its attribute requirements, without revealing their membership record. Each proof is bound to a message and includes a *nullifier*: a value that stays the same for that member within a chosen scope. A verifier can use it to count distinct memberships or enforce one vote or pseudonym per membership.
 
-Issuers keep a Merkle tree of commitments and sign one root per epoch in a hash-chained log. Proofs are UltraHonk (Barretenberg) over a Noir circuit, always in zero-knowledge mode. That mode is **designed to be zero-knowledge**; the library's authors found no published proof that it is, and Noir says it is not yet for production use.
+Issuers maintain a Merkle tree of membership commitments and publish a signed root for each epoch in a hash-chained log. Proofs use a Noir circuit and Barretenberg's UltraHonk in zero-knowledge mode. This is experimental cryptography: that mode is **designed to be zero-knowledge**, but the library authors found no published proof of that property, and Noir is not yet intended for production use.
 `,
     reachFor: [
       "Anonymous but gated speech: whistleblowing, forums for licensed professionals, resident-only polls.",
@@ -211,11 +211,11 @@ Issuers keep a Merkle tree of commitments and sign one root per epoch in a hash-
     name: "@toip-tools/eventlog",
     dir: "packages/eventlog",
     status: "ready",
-    does: "KERI key event logs and signed, witnessed audit trails that their writer can't quietly change.",
+    does: "KERI key histories and witnessed audit trails that make tampering detectable.",
     about: `
-Two kinds of append-only log. A **KEL** is a KERI 1.0 key event log for one identifier (an AID): inception, rotations with pre-rotation, interaction events, witness receipts. KERIpy 1.3.6 computes the same key state from these logs; the tests hand them to KERIpy to check. A **trail** is this repository's own audit log, owned by an AID: each entry is a small signed header committing to a private body, and a key rotation seals every open trail.
+The library provides two append-only logs. A **key event log (KEL)** records a KERI identifier's inception, key rotations, interaction events, and witness receipts. Interoperability tests verify that KERIpy 1.3.6 derives the same key state. A **trail** is the toolkit's own audit log, controlled by a KERI identifier: signed headers commit to private entry bodies, and each key rotation seals the open trails.
 
-Witnesses receipt the first version they see at each position, watchers compare versions and record duplicity, and bundles verify offline. Delegated identifiers, weighted thresholds and KERI 2.0 are refused as unsupported.
+Witnesses sign receipts for the first event they see at each position. Watchers compare histories to detect *duplicity*: conflicting signed versions. Exported bundles can be verified offline. Delegated identifiers, weighted thresholds, and KERI 2.0 are currently unsupported and rejected.
 `,
     reachFor: [
       "An agent's or device's actions must be reviewable later, and the writer must not be able to rewrite history.",
@@ -243,11 +243,13 @@ Witnesses receipt the first version they see at each position, watchers compare 
     name: "@toip-tools/mesh-transport",
     dir: "packages/mesh-transport",
     status: "ready",
-    does: "TSP and Trust Tasks over LoRa radio and files carried by hand, without the internet.",
+    does: "Deliver TSP messages over LoRa radio or portable files when the internet is unavailable.",
     about: `
-\`MeshTransport\` implements trust-core's \`Transport\` over radio links, so an \`Endpoint\` on it works as it does on the relay. The TSP envelope never goes on the air: each packet carries a fresh 4-byte address tag instead, and the receiver rebuilds the exact bytes the sender sealed. Trust Task bodies travel in CTT1, a compact CBOR form that decodes to the identical document, so every proof still verifies. A guest-pass presentation shrinks from about 1.8 KB to about 500 bytes. Packets are cut into frames with selective acknowledgements and retries for lossy, half-duplex links, and a scheduler keeps each link within its region's airtime rules (the 400 ms dwell limit in the US). A gateway hands messages to the internet relay unchanged. When there's no link at all, a bundle file carries them.
+\`MeshTransport\` brings trust-core's \`Transport\` interface to radio links. Your \`Endpoint\` uses the same handlers as it would over a relay. On the air, fresh 4-byte address tags replace the visible TSP identifiers; the receiver reconstructs the original envelope. Trust Task bodies use CTT1, a compact CBOR encoding that preserves the signed document. A guest-pass presentation shrinks from about 1.8 KB to about 500 bytes.
 
-Every test runs on a simulated radio. Adapters exist for a LoRaWAN gateway's packet forwarder (GWMP) and a RAK3172 module's AT commands; real-radio bring-up is described in the Mesh project.
+Fragmentation, selective acknowledgements, and retries handle lossy, half-duplex links. A scheduler enforces configured regional airtime limits. Gateways forward the original TSP bytes to an internet relay, and portable bundle files provide delivery when no link is available.
+
+Tests run on simulated radios. Adapters are implemented for a LoRaWAN gateway's packet forwarder (GWMP) and a RAK3172 module's AT commands; the Mesh project documents the remaining hardware bring-up.
 `,
     reachFor: ["Trust interactions where there is no internet: a door, a cabin, a field sensor.", "Carrying sealed messages by hand until a gateway is back."],
     notFor: ["Hiding where you are. A transmitting radio can be located.", "Large payloads: a radio frame holds about 250 bytes."],

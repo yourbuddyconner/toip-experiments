@@ -851,5 +851,21 @@
    "projects/tipline/src/agents/inbox.ts",
    "projects/tipline/src/agents/source.ts"
   ]
+ },
+ "mesh-demo/door/open": {
+  "purpose": "A guest asks a door to open, with no internet. The request carries a guest pass (a credential the building issued) and the nonce from the door's signed challenge beacon, so the signed request can't be replayed later. The door checks the pass offline: its signature, that the sender holds it, that it's for this door, the cached revocation list and its age, and the time window. It answers open or refused, with a reason.",
+  "from": "guest",
+  "to": "door",
+  "kind": "request/response",
+  "payloadType": "DoorRequest",
+  "payloadFile": "projects/mesh/src/door.ts",
+  "responseType": "DoorAnswer",
+  "responseFile": "projects/mesh/src/door.ts",
+  "design": "projects/mesh/docs/design.md",
+  "designSection": "4.2 The MVP demo",
+  "handledIn": [
+   "projects/mesh/src/door.ts"
+  ],
+  "note": "It travels over LoRa in the CTT1 compact form: about 670 bytes on the air in 3 frames, against about 2.1 KB as JSON. The mesh-demo/ prefix marks it as the demo's own type."
  }
 }

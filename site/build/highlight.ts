@@ -5,14 +5,14 @@ import { esc, html, raw, type Raw } from "./html";
 const theme: ThemeRegistrationRaw = {
   name: "toip-ink",
   type: "dark",
-  settings: [],
   colors: { "editor.background": "#0f1d3a", "editor.foreground": "#dde6ef" },
-  tokenColors: [
+  // The rules go under the TextMate `settings` key, which ThemeRegistrationRaw requires.
+  settings: [
     { scope: ["comment", "punctuation.definition.comment"], settings: { foreground: "#93a6bf", fontStyle: "" } },
     { scope: ["keyword", "storage", "storage.type", "keyword.control", "keyword.operator.new", "keyword.operator.expression"], settings: { foreground: "#b4c3ff" } },
     { scope: ["string", "string.quoted", "string.template", "punctuation.definition.string"], settings: { foreground: "#a8e2c6" } },
     { scope: ["constant.numeric", "constant.language", "support.constant"], settings: { foreground: "#f2c48d" } },
-    { scope: ["entity.name.function", "support.function", "meta.function-call entity.name.function"], settings: { foreground: "#ffffff" } },
+    { scope: ["entity.name.function", "support.function", "meta.function-call entity.name.function"], settings: { foreground: "#91d7f5" } },
     { scope: ["entity.name.type", "support.type", "entity.name.class", "support.class"], settings: { foreground: "#e5d3ff" } },
     { scope: ["variable.other.property", "meta.object-literal.key", "support.type.property-name"], settings: { foreground: "#cfdcea" } },
     { scope: ["variable.parameter"], settings: { foreground: "#e8eef5" } },

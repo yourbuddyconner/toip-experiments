@@ -32,7 +32,7 @@ function wire(s: SealedSample): Raw {
   const shownSealed = 192;
   return html`<figure class="wire" aria-labelledby="wire-cap">
   <div class="wire__panel">
-    <div class="wire__top"><span>What a relay carries: <strong>${s.bytes.toLocaleString("en-US")} bytes</strong></span><span>TSP Direct message</span></div>
+    <div class="wire__top"><span>On the wire <strong>${s.bytes.toLocaleString("en-US")} bytes</strong></span><span>TSP Direct</span></div>
     <div class="seg">
       <div class="seg__label">TSP header<br>${head.length} bytes</div>
       <p class="seg__bytes">${head.hex}</p>
@@ -50,51 +50,51 @@ function wire(s: SealedSample): Raw {
       <p class="seg__bytes">${sealed.hex.slice(0, shownSealed)}<span class="gap">… ${sealed.length - shownSealed / 2 - 16} more bytes …</span>${sealed.hex.slice(-32)}</p>
     </div>
     <div class="seg seg--sig" style="--h:${hueOf(s.alice)}">
-      <div class="seg__label">Alice's signature over all of it</div>
+      <div class="seg__label">Signed by Alice</div>
       <p class="seg__bytes">${sig.hex}</p>
     </div>
   </div>
   <div class="wire__opened">
-    <div class="wire__opened-head">${didTag(s.bob, { short: true, name: "Bob" })}<span>opened it:</span><span class="ok">signature valid, addressed to Bob, fresh, not a replay</span></div>
+    <div class="wire__opened-head">${didTag(s.bob, { short: true, name: "Bob" })}<span>opens the message</span><span class="ok">Verified · addressed to Bob · fresh · no replay</span></div>
     <pre class="json" tabindex="0">${raw(jsonHtml(s.document))}</pre>
   </div>
-  <figcaption id="wire-cap">A real Trust Task from ${didTag(s.alice, { short: true, name: "Alice" })} to Bob, sealed when this page was built. Anyone carrying it can see who it's from and who it's for. Only Bob can open it, and Alice's signature proves she sent it.</figcaption>
+  <figcaption id="wire-cap">A real message from ${didTag(s.alice, { short: true, name: "Alice" })} to Bob, sealed at build time. The relay sees the sender and recipient. Only Bob can read the contents and verify Alice's signature.</figcaption>
 </figure>`;
 }
 
 export function homePage(sample: SealedSample, specCount: number): Page {
-  const building = projects.filter((p) => p.status === "being built").length;
-  const words = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
   const first = exampleRegion("examples/quickstart/02-trust-task.ts", "hero");
   const body = html`
 <div class="wrap">
   <section class="hero" aria-labelledby="hero-title">
     <div>
-      <h1 id="hero-title">Trust between people and machines, with no platform in the middle.</h1>
-      <p class="lede">Trust over IP (ToIP) is a family of open specifications for that: identifiers that people, organizations and devices make for themselves, credentials anyone can check, and the Trust Spanning Protocol (TSP), which carries signed, encrypted messages between any two of them.</p>
-      <p>This site is a TypeScript toolkit for building on that stack today, with working apps that show what it's for. Two parties who have never met can check each other's claims directly, and no server in between gets to read, forge or decide.</p>
-      <p class="actions"><a class="btn" href="${u("/quickstart/")}">Send your first Trust Task</a><a href="${u("/concepts/")}">Read the concepts</a></p>
+      <p class="eyebrow">TypeScript tools for Trust over IP</p>
+      <h1 id="hero-title">Trust people can verify.</h1>
+      <p class="lede">Build apps where people hold their own keys, exchange private messages, and check each other's claims directly.</p>
+      <p>Trust over IP (ToIP) provides the open protocols. This toolkit brings them together in eight TypeScript libraries, with working apps to learn from. Start with two identities and a signed, encrypted message.</p>
+      <p class="actions"><a class="btn" href="${u("/quickstart/")}">Send your first Trust Task <span aria-hidden="true">↗</span></a><a href="${u("/concepts/")}">Explore the concepts</a></p>
+      <p class="hero__note">Open source. Runs in browsers and Node. No account required for the quickstart.</p>
     </div>
     ${wire(sample)}
   </section>
 
   <section class="band" aria-labelledby="layers">
-    <h2 id="layers">The stack, in four layers</h2>
+    <h2 id="layers">From keys to working apps</h2>
     <div class="prose">
-      <p>The <a href="${X.p2pStack}">P2P Trust Stack</a> arranges ToIP's ideas in four layers, each building on the one below. Here is each layer, and what in this toolkit works at it.</p>
+      <p>The <a href="${X.p2pStack}">P2P Trust Stack</a> organizes this work into four layers. Each answers a different question: who are you, how do we communicate, what can we do together, and what can we build?</p>
     </div>
     <ol class="layers">
-      <li><span class="n">Layer 1</span><h3>Trust support</h3><p>Keys and the identifiers made from them. The stack uses <code>did:peer:4</code> and <code>did:scid:vh</code>. Here, ${libLinks(["trust-core"])} uses <code>did:key</code>, and ${libLinks(["eventlog"])} keeps KERI key event logs, whose keys can rotate.</p></li>
-      <li><span class="n">Layer 2</span><h3>Trust spanning</h3><p>TSP: messages signed by the sender and sealed to the receiver, between agents that each hold their own keys. ${libLinks(["trust-core"])} sends real TSP Direct messages through the OpenVTC libraries, over ${libLinks(["relay"])}, and soon over radio with ${libLinks(["mesh-transport"])}.</p></li>
-      <li><span class="n">Layer 3</span><h3>Trust tasks</h3><p>What parties do with a trusted channel: issue and check credentials, join communities, delegate authority, prove membership. Here: credentials and status lists, ${libLinks(["mandates"])} for delegation, ${libLinks(["anon-membership"])} for zero-knowledge membership, and <a href="${u("/spec/")}">${specCount} Trust Task types</a> of our own.</p></li>
-      <li><span class="n">Layer 4</span><h3>Trust applications</h3><p>The apps people use. Upstream this layer hasn't started. Here, <a href="${u("/examples/#settle")}">Settle</a> and <a href="${u("/examples/#shared-todo")}">Shared To-Do</a> work today, and ${words[building] ?? building} more are being built.</p></li>
+      <li><span class="n">Layer 1</span><h3>Trust support</h3><p>Create an identity and control its keys. ${libLinks(["trust-core"])} provides <code>did:key</code> identities; ${libLinks(["eventlog"])} adds KERI key histories so an identifier can survive key rotation.</p></li>
+      <li><span class="n">Layer 2</span><h3>Trust spanning</h3><p>Exchange messages signed by the sender and encrypted for the recipient. ${libLinks(["trust-core"])} implements TSP Direct messaging through OpenVTC, with ${libLinks(["relay"])} for internet delivery and ${libLinks(["mesh-transport"])} for radio links.</p></li>
+      <li><span class="n">Layer 3</span><h3>Trust tasks</h3><p>Put that connection to work: issue credentials, delegate authority with ${libLinks(["mandates"])}, or prove group membership with ${libLinks(["anon-membership"])}. Browse <a href="${u("/spec/")}">${specCount} message specifications</a> used by the toolkit and its apps.</p></li>
+      <li><span class="n">Layer 4</span><h3>Trust applications</h3><p>Build something people can use. Explore conditional payments in <a href="${u("/examples/#settle")}">Settle</a>, private collaboration in <a href="${u("/examples/#shared-todo")}">Shared To-Do</a>, and <a href="${u("/examples/")}">more working examples</a> for anonymous speech, agent delegation, and audit trails.</p></li>
     </ol>
-    <p class="prose small quiet">Where this toolkit differs from the stack: it uses <code>did:key</code> rather than <code>did:peer:4</code>, and its own WebSocket relay rather than TSP Routed Mode or the stack's libp2p transport. Whether it interoperates on the wire with the P2P Trust Stack's own implementation hasn't been tested yet.</p>
+    <p class="prose small quiet">This toolkit uses <code>did:key</code> identities and a WebSocket relay. The P2P Trust Stack uses other DID methods and libp2p transport. Interoperability between the two implementations has not yet been tested.</p>
   </section>
 
   <section class="band" aria-labelledby="toolkit">
     <h2 id="toolkit">The toolkit</h2>
-    <div class="prose"><p>Eight libraries in <a href="${REPO}/tree/main/packages"><code>packages/</code></a>, each with its own tests. Import them from the repository today.</p></div>
+    <div class="prose"><p>Start with the pieces your app needs. All eight libraries live in <a href="${REPO}/tree/main/packages"><code>packages/</code></a> and have their own tests. Use them from the repository while npm publishing is in progress.</p></div>
     <table class="rows">
       <thead><tr><th scope="col">Library</th><th scope="col">What it does</th><th scope="col">Status</th></tr></thead>
       <tbody>
@@ -104,8 +104,8 @@ export function homePage(sample: SealedSample, specCount: number): Page {
   </section>
 
   <section class="band" aria-labelledby="built">
-    <h2 id="built">What's been built with it</h2>
-    <div class="prose"><p>Each project stands on its own, with a design you can read and, where it's built, commands that run it.</p></div>
+    <h2 id="built">See the ideas at work</h2>
+    <div class="prose"><p>Each project explores a concrete trust problem. Read the design, inspect the protocol, or run a working example on your machine.</p></div>
     <table class="rows">
       <thead><tr><th scope="col">Project</th><th scope="col">What it is</th><th scope="col">Status</th></tr></thead>
       <tbody>
@@ -117,7 +117,7 @@ export function homePage(sample: SealedSample, specCount: number): Page {
   <section class="band first" aria-labelledby="first">
     <h2 id="first">Your first trust interaction</h2>
     <div class="prose">
-      <p>Two identities, one signed and encrypted request, one signed reply. These lines are from the quickstart's second step, which runs as written. Bob's handler only runs after his side has decrypted the message, checked Alice's signature against her DID, and checked that it's addressed to him, fresh, and not a replay.</p>
+      <p>Alice sends a request. Bob verifies it and signs his reply. Before Bob's handler runs, the toolkit decrypts the message and checks its signature, recipient, timestamp, and replay history. This is working code from the quickstart.</p>
     </div>
     ${code(first, "ts", { caption: "From site/examples/quickstart/02-trust-task.ts" })}
     <p class="actions"><a class="btn" href="${u("/quickstart/")}">Start the quickstart</a></p>
@@ -126,8 +126,8 @@ export function homePage(sample: SealedSample, specCount: number): Page {
   <section class="band" aria-labelledby="involved">
     <h2 id="involved">Get involved</h2>
     <div class="prose">
-      <p>The specifications are made in the open at the <a href="${X.toip}">Trust over IP Foundation</a>, and the P2P Trust Stack is a partner project of the First Person Cooperative. This toolkit started at <a href="${X.iiw}">IIW</a> in November 2026. Try the quickstart, read a design, or <a href="${u("/get-involved/#propose")}">propose an example</a> of your own.</p>
-      <p><a href="${u("/get-involved/")}">Where to take part</a></p>
+      <p>This toolkit began at the <a href="${X.iiw}">Internet Identity Workshop</a> in November 2026, building on specifications developed at the <a href="${X.toip}">Trust over IP Foundation</a>. Help by trying an example, improving an implementation, or <a href="${u("/get-involved/#propose")}">bringing a trust problem of your own</a>.</p>
+      <p><a href="${u("/get-involved/")}">Find a place to contribute</a></p>
     </div>
   </section>
 </div>`;

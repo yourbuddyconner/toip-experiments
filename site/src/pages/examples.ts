@@ -13,10 +13,10 @@ export function examplesPage(): Page {
     <ul>${projects.map((p) => html`<li><a href="#${p.slug}">${p.name}</a></li>`)}</ul>
   </nav>
   <div>
-    ${pageHead("Examples", "What people have built on the toolkit, and what's being built now. Every project has a design you can read; the working ones run with one command from the repository root.")}
+    ${pageHead("Ideas you can run", "Explore the toolkit through payments, private collaboration, anonymous speech, and agent delegation. Each project has a written design; working examples include commands to run them locally.")}
     <div class="prose">
-      <p><strong>Working</strong> means it runs today and has tests. <strong>Being built</strong> means the design is done and an MVP is being written now. <strong>Design only</strong> means there's a design and no code yet.</p>
-      ${code("git clone https://github.com/yourbuddyconner/toip-experiments.git\ncd toip-experiments\nnpm install", "bash", { caption: "Once, before running any of them" })}
+      <p><strong>Working</strong> projects run and have tests. <strong>Being built</strong> projects have a design and an implementation in progress. <strong>Design only</strong> projects are proposals ready to build.</p>
+      ${code("git clone https://github.com/yourbuddyconner/toip-experiments.git\ncd toip-experiments\nnpm install", "bash", { caption: "Set up the repository once" })}
     </div>
     ${projects.map(
       (p) => html`<section class="project" id="${p.slug}" aria-labelledby="${p.slug}-h">
@@ -28,13 +28,13 @@ export function examplesPage(): Page {
         <p>${
           p.libraries.length
             ? html`Built on ${libLinks(p.libraries)}.`
-            : html`Designed directly on the <a href="https://github.com/OpenVTC">OpenVTC</a> TypeScript libraries rather than this toolkit.`
-        }${p.specs ? html` Its messages are the <a href="${u(`/spec/#${p.specs}`)}"><code>${p.specs}/…</code> Trust Task types</a>.` : ""}</p>
+            : html`Designed using the <a href="https://github.com/OpenVTC">OpenVTC</a> TypeScript libraries directly.`
+        }${p.specs ? html` Message reference: <a href="${u(`/spec/#${p.specs}`)}"><code>${p.specs}/…</code> Trust Tasks</a>.` : ""}</p>
       </div>
       ${
         p.run
           ? html`<div class="prose"><h3>Run it</h3></div>${p.run.map((r) => code(r.cmd, "bash", { caption: r.what }))}`
-          : html`<div class="prose"><h3>Run it</h3><p>${p.coming ? html`Coming. ${p.coming}` : html`Not built yet. Read the design, or <a href="${u("/get-involved/#propose")}">build it yourself</a>.`}</p></div>`
+          : html`<div class="prose"><h3>Build status</h3><p>${p.coming ? html`${p.coming}` : html`The design is ready for an implementation. Read it below, or <a href="${u("/get-involved/#propose")}">help build it</a>.`}</p></div>`
       }
       ${
         p.shots
@@ -51,7 +51,7 @@ export function examplesPage(): Page {
   return {
     path: "/examples/",
     title: "Examples",
-    description: "Settle, Shared To-Do, and the projects being built on the Trust over IP toolkit: what each shows, which libraries it uses, and how to run it.",
+    description: "Run Trust over IP examples for payments, collaboration, anonymous speech, agent delegation, and audit trails. Explore the designs and the libraries behind them.",
     section: "examples",
     body,
   };
