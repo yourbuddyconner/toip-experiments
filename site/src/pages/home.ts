@@ -1,4 +1,4 @@
-import { REPO, u } from "../../build/config";
+import { u } from "../../build/config";
 import { didTag, hueOf } from "../../build/fingerprint";
 import type { SealedSample } from "../../build/hero";
 import { code } from "../../build/highlight";
@@ -9,6 +9,7 @@ import { projects } from "../data/projects";
 import { externals as X } from "../data/links";
 import type { Page } from "../layout";
 import { libLinks, status } from "../parts";
+import { toolkitShowcase } from "../toolkit-showcase";
 
 /** JSON with light markup, for the opened document. */
 function jsonHtml(v: unknown, indent = 0): string {
@@ -95,16 +96,7 @@ export function homePage(sample: SealedSample, specCount: number): Page {
 
   <a class="ecosystem-invitation" href="${u("/ecosystem/")}"><div><span class="eyebrow">Beyond this toolkit</span><h2>Find your way around the ecosystem.</h2><p>Coming from ToIP? Meet the related communities and compare their implementation choices.</p></div><span class="ecosystem-invitation__arrow" aria-hidden="true">↗</span></a>
 
-  <section class="band" aria-labelledby="toolkit">
-    <h2 id="toolkit">The toolkit</h2>
-    <div class="prose"><p>Start with the pieces your app needs. All eight libraries live in <a href="${REPO}/tree/main/packages"><code>packages/</code></a> and have their own tests. Import them directly from the repository; the packages aren't on npm yet.</p></div>
-    <table class="rows">
-      <thead><tr><th scope="col">Library</th><th scope="col">What it does</th><th scope="col">Status</th></tr></thead>
-      <tbody>
-        ${libraries.map((l) => html`<tr><th scope="row"><a href="${u(`/toolkit/${l.slug}/`)}"><code>${l.name}</code></a></th><td>${l.does}</td><td>${status(l.status)}</td></tr>`)}
-      </tbody>
-    </table>
-  </section>
+  ${toolkitShowcase()}
 
   <section class="band" aria-labelledby="built">
     <h2 id="built">See the ideas at work</h2>

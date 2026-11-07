@@ -3,7 +3,7 @@ import { html, md, type Raw } from "../../build/html";
 import { externals as X } from "../data/links";
 import { credentialDiagram, didDiagram, governanceDiagram, keriDiagram, taskDiagram, tspDiagram, zkDiagram } from "../diagrams";
 import type { Page } from "../layout";
-import { libLinks, pageHead } from "../parts";
+import { libLink, pageHead } from "../parts";
 
 interface Concept {
   id: string;
@@ -12,7 +12,12 @@ interface Concept {
   body: Raw;
   diagram: Raw;
   caption: string;
-  here: Raw;
+  here: {
+    libraries: string[];
+    points: Raw[];
+    note?: Raw;
+    noteLabel?: string;
+  };
   sources: { href: string; label: string }[];
 }
 
@@ -30,7 +35,14 @@ const concepts: Concept[] = [
     `,
     diagram: didDiagram(),
     caption: "A did:key is its public key, written out. A KERI identifier (AID) is a digest of its first event, which already commits to the next key.",
-    here: html`${libLinks(["trust-core"])} makes Ed25519 <code>did:key</code> identities (<code>identityFromSeed</code>) and resolves them offline (<code>resolveDidKey</code>). ${libLinks(["eventlog"])} makes KERI identifiers and writes them as <code>did:keri:&lt;AID&gt;</code>, resolved from the key event log alone. Nothing here resolves other DID methods.`,
+    here: {
+      libraries: ["trust-core", "eventlog"],
+      points: [
+        html`<strong>Fixed-key identities.</strong> Create Ed25519 <code>did:key</code> identities with <code>identityFromSeed</code> and resolve them offline with <code>resolveDidKey</code>.`,
+        html`<strong>Key histories.</strong> Eventlog creates KERI identifiers as <code>did:keri:&lt;AID&gt;</code> and resolves them from their key-event logs.`,
+      ],
+      note: html`Other DID methods are not supported by these resolvers.`,
+    },
     sources: [
       { href: X.didCore, label: "W3C Decentralized Identifiers (DIDs) v1.0" },
       { href: X.didKey, label: "The did:key method (W3C CCG draft)" },
@@ -47,7 +59,14 @@ const concepts: Concept[] = [
     `,
     diagram: credentialDiagram(),
     caption: "The issuer makes the claim, the holder presents it, and the verifier checks it against an issuer it trusts.",
-    here: html`${libLinks(["trust-core"])} provides <code>issueCredential</code> and <code>verifyCredential</code> for credentials in the W3C Verifiable Credentials 2.0 shape, signed with Data Integrity <code>eddsa-jcs-2022</code> proofs. Its signed <code>StatusList</code> format is inspired by the W3C Bitstring Status List but is not format-compatible. ${libLinks(["mandates"])} uses these credentials for delegation.`,
+    here: {
+      libraries: ["trust-core", "mandates"],
+      points: [
+        html`<strong>Issue and verify.</strong> <code>issueCredential</code> and <code>verifyCredential</code> use the W3C Verifiable Credentials 2.0 shape with <code>eddsa-jcs-2022</code> Data Integrity proofs.`,
+        html`<strong>Delegate authority.</strong> Mandates builds delegation chains from these credentials.`,
+      ],
+      note: html`The signed <code>StatusList</code> format is inspired by the W3C Bitstring Status List but is not format-compatible.`,
+    },
     sources: [
       { href: X.vc2, label: "W3C Verifiable Credentials Data Model v2.0" },
       { href: X.bitstring, label: "W3C Bitstring Status List" },
@@ -67,7 +86,14 @@ const concepts: Concept[] = [
     `,
     diagram: tspDiagram(),
     caption: "What each part of a Direct-mode TSP message reveals. The landing page shows a real one, byte for byte.",
-    here: html`${libLinks(["trust-core"])} uses <code>@openvtc/vti-tsp-js</code> for TSP Direct messaging over the in-memory <code>Bus</code> or ${libLinks(["relay"])}. Communication starts with a Direct message; the invitation handshake and Routed mode are not implemented here. ${libLinks(["mesh-transport"])} carries the same messages over radio, replacing visible identifiers with short address tags on the air.`,
+    here: {
+      libraries: ["trust-core", "relay", "mesh-transport"],
+      points: [
+        html`<strong>Direct messages.</strong> Trust-core uses <code>@openvtc/vti-tsp-js</code> over an in-memory <code>Bus</code> or the WebSocket relay.`,
+        html`<strong>Radio delivery.</strong> Mesh transport carries the same messages, replacing visible identifiers with short address tags on the air.`,
+      ],
+      note: html`Communication starts with a Direct message. The invitation handshake and Routed mode are not implemented here.`,
+    },
     sources: [
       { href: X.tspSpec, label: "ToIP Trust Spanning Protocol specification" },
       { href: X.hpke, label: "RFC 9180: Hybrid Public Key Encryption" },
@@ -85,7 +111,13 @@ const concepts: Concept[] = [
     `,
     diagram: taskDiagram(),
     caption: "Every Trust Task in this toolkit is signed by its issuer, and every response by its responder, refusals included.",
-    here: html`${libLinks(["trust-core"])}'s <code>Endpoint</code> builds, signs, seals and checks Trust Task documents with the OpenVTC libraries, and runs your handler for each type you register. This repository's own types live under <code>https://toip.tools/spec/</code>; <a href="${u("/spec/")}">the Spec pages</a> describe every one of them.`,
+    here: {
+      libraries: ["trust-core"],
+      points: [
+        html`<strong>Send and handle.</strong> <code>Endpoint</code> builds, signs, encrypts, and checks Trust Tasks using the OpenVTC libraries, then dispatches them to registered handlers.`,
+        html`<strong>Define interactions.</strong> This repository's types use the <code>https://toip.tools/spec/</code> namespace. The <a href="${u("/spec/")}">task reference</a> documents each one.`,
+      ],
+    },
     sources: [
       { href: X.trustTasks, label: "Trust Tasks registry" },
       { href: X.trustTasksTf, label: "ToIP Trust Tasks task force" },
@@ -104,7 +136,15 @@ const concepts: Concept[] = [
     `,
     diagram: governanceDiagram(),
     caption: "Governance turns 'this key signed it' into 'this is an authority for this claim'.",
-    here: html`There is no trust registry library here yet. The projects decide trust in simpler ways you can read: a verifier pins the issuers it accepts (${libLinks(["anon-membership"])}'s <code>AcceptPolicy</code>), a list's own key signs its roster (<a href="${u("/examples/#shared-todo")}">Shared To-Do</a>), authority flows down a chain from a principal (${libLinks(["mandates"])}), and each party decides with a Rego policy it runs itself (<code>Policies</code> in trust-core).`,
+    here: {
+      libraries: ["anon-membership", "mandates", "trust-core"],
+      points: [
+        html`<strong>Accepted issuers.</strong> Anonymous membership uses <code>AcceptPolicy</code> to pin issuers. <a href="${u("/examples/#shared-todo")}">Shared To-Do</a> checks rosters signed by the list's own key.`,
+        html`<strong>Delegated authority.</strong> Mandates checks a chain of credentials leading back to a principal.`,
+        html`<strong>Local decisions.</strong> Trust-core's <code>Policies</code> runs Rego policy on the party's own device.`,
+      ],
+      note: html`There is no general trust-registry library in this toolkit yet.`,
+    },
     sources: [
       { href: X.toip, label: "Trust over IP Foundation" },
       { href: X.toipModel, label: "The ToIP model: technology, governance, and ecosystems" },
@@ -121,7 +161,14 @@ const concepts: Concept[] = [
     `,
     diagram: keriDiagram(),
     caption: "Each event commits to the next key before it is needed. Witnesses make a forked history detectable.",
-    here: html`${libLinks(["eventlog"])} writes KERI 1.0 key event logs that KERIpy 1.3.6 verifies, with Ed25519 and P-256 keys, witnesses and watchers. On top of a KEL it keeps <em>trails</em>, this repository's own signed audit logs, which a rotation seals. Delegated identifiers, weighted thresholds and KERI 2.0 are refused as unsupported.`,
+    here: {
+      libraries: ["eventlog"],
+      points: [
+        html`<strong>Verifiable key histories.</strong> Write KERI 1.0 logs with Ed25519 or P-256 keys, witnesses, and watchers. Interoperability tests verify the logs with KERIpy 1.3.6.`,
+        html`<strong>Audit trails.</strong> The toolkit adds its own signed logs, called <em>trails</em>. A key rotation seals the open trails.`,
+      ],
+      note: html`Delegated identifiers, weighted thresholds, and KERI 2.0 are unsupported and rejected.`,
+    },
     sources: [
       { href: X.keriSpec, label: "KERI specification (ToIP)" },
       { href: X.cesrSpec, label: "CESR specification (ToIP)" },
@@ -139,7 +186,16 @@ const concepts: Concept[] = [
     `,
     diagram: zkDiagram(),
     caption: "Group membership in zero knowledge: the verifier checks a signed root and a nullifier, and never sees the leaf.",
-    here: html`${libLinks(["anon-membership"])} proves membership in one of up to four groups and checks attribute requirements. A scope-specific nullifier lets a verifier recognize repeat participation without learning which membership produced it. The library uses Noir and Barretenberg's UltraHonk in a mode <strong>designed to be zero-knowledge</strong>; its authors found no published proof of that property, and Noir is not yet intended for production use. Field-level credential disclosure with BBS or SD-JWT is not implemented here.`,
+    here: {
+      libraries: ["anon-membership"],
+      points: [
+        html`<strong>Membership proofs.</strong> Prove membership in one of up to four groups and check attribute requirements.`,
+        html`<strong>Repeat participation.</strong> A scope-specific nullifier lets a verifier recognize the same membership without learning which record it is.`,
+        html`<strong>Disclosure scope.</strong> Field-level credential disclosure with BBS or SD-JWT is not implemented.`,
+      ],
+      noteLabel: "Experimental cryptography",
+      note: html`The library uses Noir and Barretenberg's UltraHonk in a mode <strong>designed to be zero-knowledge</strong>. Its authors found no published proof of that property, and Noir is not yet intended for production use.`,
+    },
     sources: [
       { href: X.noir, label: "Noir" },
       { href: X.barretenberg, label: "Barretenberg (in Aztec's repository)" },
@@ -158,7 +214,7 @@ export function conceptsPage(): Page {
     <ul>${concepts.map((c) => html`<li><a href="#${c.id}">${c.title}</a></li>`)}</ul>
   </nav>
   <div>
-    ${pageHead("The ideas behind the code", "Identity, messaging, credentials, governance, and proofs: what each does and how this toolkit uses it.")}
+    ${pageHead("Core concepts", "Identity, messaging, credentials, governance, and proofs: what each does and how this toolkit uses it.")}
     <div class="prose">
       <p>Each section links to its specifications. For the communities behind them and their different implementation choices, see the <a href="${u("/ecosystem/")}">ecosystem guide</a>.</p>
     </div>
@@ -168,7 +224,12 @@ export function conceptsPage(): Page {
       <p class="lede prose">${c.short}</p>
       <div class="prose">${c.body}</div>
       <figure class="diagram"><div class="diagram__scroll" tabindex="0">${c.diagram}</div><figcaption>${c.caption}</figcaption></figure>
-      <div class="prose"><h3>In this toolkit</h3><p>${c.here}</p></div>
+      <div class="concept-implementation">
+        <div class="concept-implementation__heading"><span aria-hidden="true">&lt;/&gt;</span><h3>In this toolkit</h3></div>
+        <div class="concept-implementation__libraries">${c.here.libraries.map((slug) => libLink(slug))}</div>
+        <ul class="concept-implementation__points">${c.here.points.map((point) => html`<li>${point}</li>`)}</ul>
+        ${c.here.note ? html`<div class="concept-implementation__note"><strong>${c.here.noteLabel ?? "Scope"}</strong><p>${c.here.note}</p></div>` : ""}
+      </div>
       <div class="sources"><strong>Read the source</strong><ul>${c.sources.map((s) => html`<li><a href="${s.href}">${s.label}</a></li>`)}</ul></div>
     </section>`,
     )}
@@ -176,7 +237,7 @@ export function conceptsPage(): Page {
 </div>`;
   return {
     path: "/concepts/",
-    title: "Concepts",
+    title: "Core concepts",
     description: "Decentralized identifiers, verifiable credentials, the Trust Spanning Protocol, Trust Tasks, governance, KERI and zero-knowledge membership, in plain words.",
     section: "concepts",
     body,

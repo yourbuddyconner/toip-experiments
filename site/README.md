@@ -11,6 +11,8 @@ The developer site at https://toip.tools: a quickstart, illustrated concepts, li
 - **Code.** Build-time highlighting uses a custom Shiki theme with distinct colors for comments, keywords, strings, functions, and types. Each panel labels its language, provides a copy button, and scrolls horizontally. Recorded output has a separate light treatment.
 - **Images.** Project screenshots open in a native dialog with a caption, close button, Escape dismissal, and focus restoration. Without JavaScript, the links open the original images.
 - **Ecosystem.** A directory, approach profiles, and a comparison table distinguish shared specifications from independent implementation choices. Concepts and the home page link to this guide rather than mixing project comparisons into protocol explanations.
+- **Libraries.** The home page uses an illustrated collection of library links, with a larger trust-core feature and compact supporting tools. The full reference keeps the detailed library table.
+- **Concepts.** Implementation notes use separate inset panels with library links, short points, and distinct scope notes.
 - Status badges use a shape and a word. Numbered markers are reserved for the quickstart's steps.
 
 ## Run it
