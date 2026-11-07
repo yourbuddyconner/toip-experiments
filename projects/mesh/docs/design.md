@@ -1234,3 +1234,12 @@ What we read, on 2026-11-06. These should become source notes in `docs/sources/`
 | US915 dwell time and channel plan | The Things Network's US915 page via search summary; matches the sx1302_hal configuration | secondary; the FCC text (47 CFR 15.247) was not read |
 | LoRa time-on-air formula | from memory of Semtech's modem documentation | unverified; check against Semtech AN1200.13 |
 | npm registry metadata (`npm view`) for every package in section 19.6 and those rejected | registry | primary for versions and publish dates |
+
+## Decisions made (2026-11-06)
+
+The open questions above were settled by the assistant, at the convener's request, so the MVP can be built. Each can be revisited.
+
+- **Radios.** The user's RAK Helium miner (via GWMP) plus a RAK3172 board running stock AT firmware, as the design recommends. Region US915. No amateur license is assumed, so frames stay in the licence-free band, and encryption is allowed.
+- **Where the gateway program runs.** On a laptop, talking to the miner's packet forwarder over the LAN. It can move to the Pi later.
+- **The MVP runs entirely on the simulator.** Real-radio bring-up follows when the hardware is ready, with the same code.
+- **Bluetooth** is deferred until after LoRa.

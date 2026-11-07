@@ -1050,3 +1050,15 @@ Read on 2026-11-06 unless noted.
 - RLN documentation, "RLN in details": https://rate-limiting-nullifier.github.io/rln-docs/rln_in_details.html. Read through a summarizing fetch tool, so summary only.
 - zk-kit.noir: https://github.com/privacy-scaling-explorations/zk-kit.noir. Package list only.
 - npm registry metadata for `@noir-lang/noir_js`, `@aztec/bb.js`, `@aztec-foundation/bb.js` and `@zk-kit/lean-imt`: versions and dependencies.
+
+## Decisions made (2026-11-06)
+
+The open questions above were settled by the assistant, at the convener's request, so the MVP can be built. Each can be revisited.
+
+- **Registrars.** Issuer-run groups first: the licensing board (or the employer, or the building's management) runs its own group. Third-party registrars come later.
+- **Votes.** The last vote counts while the poll is open: a voter may change their mind, and the host replaces the earlier vote with the same nullifier. When the poll closes, the result is final.
+- **Pseudonym scope.** Per forum by default. A thread can ask for its own scope.
+- **Nym pass lifetime.** 24 hours.
+- **Moderators** are not anonymous. They act under their own DIDs, and their actions are signed and logged.
+- **Escrowed thread pseudonyms** (deanonymization by a threshold of trustees) stay out of the design, as an anti-goal.
+- **Reading** is public in the MVP. Only posting and voting are gated.

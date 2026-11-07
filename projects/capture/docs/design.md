@@ -1035,3 +1035,13 @@ Read on 2026-11-06 unless noted. Per `docs/provenance.md`, these should get note
 | KERI specification (Trust over IP) | from knowledge; trail owns the details | secondary | 7.3 |
 | IPTC Digital Source Type vocabulary, `http://cv.iptc.org/newscodes/digitalsourcetype/` | via the C2PA specification | summary only | 11.1, 13.3 |
 | This repository: `packages/trust-core/src`, `@openvtc/trust-tasks-proof` 0.1.6 type declarations (curves `ed25519`, `p256`, `p384`; synchronous `Signer`), `projects/settle/docs/design.md`, `projects/settle/web/src/vault.ts` | read directly | primary | 7, 19 |
+
+## Decisions made (2026-11-06)
+
+The open questions above were settled by the assistant, at the convener's request, so the MVP can be built. Each can be revisited.
+
+- **Camera.** The browser camera app runs on a laptop at `http://localhost`, where passkeys and the camera both work without HTTPS. A phone needs HTTPS on a real hostname; the README explains how with a tunnel, but the MVP doesn't depend on it.
+- **Keys.** WebCrypto non-extractable keys for the camera app, and a software key file for the sensor. Secure elements (ATECC608, YubiKey) are deferred.
+- **Sensors.** A sensor runs as a Node process with simulated readings (temperature and air quality), and can send them over the mesh transport's simulator, and over the user's LoRa radio once that's set up. A Raspberry Pi with a real sensor comes later.
+- **Location.** No GPS: location is a claim made by the owner's installation credential, not something the device proves.
+- **Anchoring time.** drand for "not before", and trail witness receipts for "not after". The Solana anchor is optional and off by default.

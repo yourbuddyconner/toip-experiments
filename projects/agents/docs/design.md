@@ -1237,3 +1237,16 @@ From memory, **not re-read** in this session (trust: background only):
 | S-V2 | W3C Bitstring Status List v1.0, https://www.w3.org/TR/vc-bitstring-status-list/ | 2025 | revocation by status list; the trust core's list follows it |
 | S-K1 | ToIP KERI specification, https://trustoverip.github.io/tswg-keri-specification/ | — | delegated identifiers and key event logs; what trail builds on |
 | S-X1 | x402, https://www.x402.org | 2025 | HTTP-native agent payments; relevant when Settle adds Base (Settle design §11) |
+
+## Decisions made (2026-11-06)
+
+The open questions above were settled by the assistant, at the convener's request, so the MVP can be built. Each can be revisited.
+
+1. **Hard spending limit.** The agent's own funded wallet is the hard limit in the MVP; the mandate is checked by the guard and by counterparties. Solana token delegation is deferred.
+2. **The guard** runs in the same process as the model loop in the MVP, behind a narrow interface, so it can move to its own process later without changes.
+3. **Status-list freshness.** 1 hour.
+4. **Refunds** give budget back.
+5. **Categories** are taken from the worker's verified credential when there is one. Otherwise the worker's declared category is used, and the decision says so.
+6. **Arbiter rule.** Yes: a worker who accepted payment without checking the mandate bears the risk in a dispute. Settle's rules text says so.
+7. **Counterparties seeing the principal's DID and limits** is acceptable for the MVP.
+8. **Models.** `claude-opus-5-5` for the ops agent, `claude-sonnet-5-5` for the coder, `claude-haiku-5-5` for the sub-agent. Tests and keyless runs use the scripted model.

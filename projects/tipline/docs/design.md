@@ -777,3 +777,14 @@ All read on 2026-11-06.
 | S12 | `noir-lang/poseidon` v0.4.0, `src/poseidon2.nr`, from the local nargo cache (`~/nargo/github.com/noir-lang/poseidon/v0.4.0`) | Read locally | Primary |
 | S13 | npm registry metadata (versions, publication dates, dependencies) for `@aztec/bb.js`, `@aztec-foundation/bb.js`, `@noir-lang/noir_js`, `@semaphore-protocol/*`, `@hashcloak/semaphore-noir-proof`, `@digitalbazaar/bbs-signatures`, `@mattrglobal/pairing-crypto` | `npm view` | Primary for the metadata |
 | S14 | `@openvtc/trust-tasks` 0.28.17 `src/_runtime/freshness.ts`: default freshness has no maximum age and 60 s of skew | Read locally in `node_modules` | Primary |
+
+## Decisions made (2026-11-06)
+
+The open questions above were settled by the assistant, at the convener's request, so the MVP can be built. Each can be revisited.
+
+- **Who runs the group.** The organization itself runs it in the demo (Acme, the employer), because that shows the hardest case: the issuer is the adversary. The same code serves a union or a professional body, and the README says so.
+- **Revocation window.** One signed root a day, with proofs accepted against the last 3 days' roots. Someone who leaves can still send a tip for up to 4 days. That is acceptable for a drop box.
+- **Tor.** The source app warns when it isn't running in Tor Browser and explains why. It doesn't refuse to run.
+- **"Designed to be zero-knowledge".** Accepted for the MVP, and stated plainly in the app and the README.
+- **Coercion** (someone forced to prove membership or reveal a tip code) is out of scope for the MVP.
+- **Paying sources through Settle** is deferred. It is not in the MVP.

@@ -954,3 +954,13 @@ All read on 2026-11-06 through the GitHub API and the npm and PyPI registries. T
 - **K7. DID methods**, metadata only, not read: did:webs (https://github.com/trustoverip/tswg-did-method-webs-specification) and did:webvh (https://github.com/decentralized-identity/didwebvh). **Summary only.**
 - **S01, S02** in `docs/sources/`: the P2P Trust Stack's `did:scid:vh` (Layer 1), and the OpenVTC libraries' `did:key` resolution.
 - **This repository:** `projects/settle/src/protocol/log.ts` and `projects/settle/docs/design.md` §9 and §18; `packages/trust-core/src/` (`identity.ts`, `credentials.ts`, `tasks.ts`, `encoding.ts`, `statusList.ts`, `clock.ts`). `@noble/hashes` 2.4.0 in the workspace ships `blake3.js` and `hkdf.js`, as checked in `node_modules`.
+
+## Decisions made (2026-11-06)
+
+The open questions above were settled by the assistant, at the convener's request, so the MVP can be built. Each can be revisited.
+
+1. **The principal holds a rotation key for every agent by default** (`nt = 1`, the principal's next key alongside the agent's). That gives recovery and a kill switch.
+2. **Witnesses** are run by the platform in the MVP: three local witnesses. The principal's console can also run one in the browser.
+3. **KERI version.** 1.0. Moving to 2.0 is deferred.
+4. **keri-ts** is revisited at its 1.1 release.
+5. **KERI delegation** for agents and **Merkle batching** for capture are deferred.
