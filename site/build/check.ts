@@ -1,10 +1,10 @@
-// npm run check: typechecks every example and snippet against the real packages, runs the quickstart
-// and the runnable snippets, builds the site strictly (every spec documented, every design heading found)
-// and checks its links.
+// npm run check: typechecks every example and snippet against the real packages, runs the quickstart,
+// the runnable snippets and the guides, builds the site strictly (every spec documented, every design
+// heading found), validates what the build wrote for crawlers and agents, and checks its links.
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { SITE_DIR } from "./config";
-import { QUICKSTART, RUNNABLE_SNIPPETS, runExample } from "./run-example";
+import { GUIDES, QUICKSTART, RUNNABLE_SNIPPETS, runExample } from "./run-example";
 
 let failed = false;
 const bin = (n: string) => join(SITE_DIR, "node_modules", ".bin", n);
@@ -27,10 +27,19 @@ for (const s of RUNNABLE_SNIPPETS) {
   step(`snippet ${s}`, r.ok, `(${r.ms} ms)`);
   if (!r.ok) console.log(r.stdout + r.stderr);
 }
+for (const g of GUIDES) {
+  const r = runExample(`examples/guides/${g.slug}.ts`);
+  step(`guide ${g.slug}`, r.ok, `(${r.ms} ms)`);
+  if (!r.ok) console.log(r.stdout + r.stderr);
+}
 
 const build = spawnSync(bin("tsx"), ["build/build.ts"], { cwd: SITE_DIR, encoding: "utf8", env: { ...process.env, STRICT: "1" } });
 step("build (strict)", build.status === 0);
 if (build.status !== 0 || build.stderr) console.log(build.stdout + build.stderr);
+
+const outputs = spawnSync(bin("tsx"), ["build/verify-outputs.ts"], { cwd: SITE_DIR, encoding: "utf8" });
+step("outputs: Markdown twins, llms.txt, JSON indexes, sitemap, robots.txt, JSON-LD, social images, feed", outputs.status === 0, outputs.stdout.trim().split("\n").pop());
+if (outputs.status !== 0) console.log(outputs.stdout + outputs.stderr);
 
 const links = spawnSync(bin("tsx"), ["build/links.ts"], { cwd: SITE_DIR, encoding: "utf8" });
 step("links", links.status === 0, links.stdout.split("\n")[0]);

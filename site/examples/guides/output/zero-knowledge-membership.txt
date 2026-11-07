@@ -1,0 +1,4 @@
+"yes": a member voted (Member A); proof 20274 bytes
+"no": a member voted (Member B); proof 20274 bytes
+"yes": a member voted (Member A, again: count it once); proof 20274 bytes
+An outsider: not a member: no group holds this secret's leaf

@@ -1,0 +1,5 @@
+DID: did:key:z6MkoMDtsgSyN7GBcCQN5UmnNDe3tP57hKu3B9m4J8m7TsSh
+Public key from the DID: 842d44221b776a19de0d74b4e41d6aa69a7753f16c3f53c89037ab0f3c724e0a
+Proof: DataIntegrityProof eddsa-jcs-2022
+Valid: true
+Valid after changing the price: false (signatureInvalid)

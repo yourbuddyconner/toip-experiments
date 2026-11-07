@@ -26,7 +26,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # The full history: the sitemap's lastmod and each article's dateModified come from git.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v7
         with:
@@ -45,6 +48,11 @@ jobs:
         run: npm ci
         working-directory: site
 
+      # The build draws each page's social image (og.png) in Chromium.
+      - name: Install Chromium for the social images
+        run: npx playwright install --with-deps chromium
+        working-directory: site
+
       - name: Choose the base path
         id: base
         run: |
@@ -57,7 +65,7 @@ jobs:
             echo "origin=https://${GITHUB_REPOSITORY_OWNER}.github.io" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Check (typecheck and run every example, strict build, links)
+      - name: Check (typecheck and run every example and guide, strict build, outputs, links)
         run: npm run check
         working-directory: site
         env:
@@ -73,9 +81,11 @@ jobs:
           SITE_BASE: ${{ steps.base.outputs.base }}
           SITE_ORIGIN: ${{ steps.base.outputs.origin }}
 
+      # .well-known/security.txt is a dotfile folder; the action leaves those out unless asked.
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site/dist
+          include-hidden-files: true
 
   deploy:
     needs: build

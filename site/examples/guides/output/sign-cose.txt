@@ -1,0 +1,6 @@
+Algorithms: -19 (Ed25519), -9 (ESP256)
+Message sizes: 136 and 137 bytes
+From the sensor: { v: 1, at: 1762416000, kind: 'temp', milliC: 21375 }
+From the gateway: { v: 1, at: 1762416000, kind: 'temp', milliC: 21375 }
+Tampered: signatureInvalid
+Signed by an unknown key claiming sensor-7: signatureInvalid

@@ -37,6 +37,11 @@ export function involvedPage(): Page {
   return {
     path: "/get-involved/",
     title: "Contribute",
+    seoTitle: "Contribute to toip.tools: code, specifications and new Trust over IP examples",
+    kind: "page",
+    eyebrow: "Contribute",
+    ogFooter: "git clone https://github.com/yourbuddyconner/toip-tools.git",
+    sources: ["site/src/pages/involved.ts"],
     description: "Contribute code, report bugs, work on specifications, or propose a new Trust over IP example.",
     section: "involved",
     body,

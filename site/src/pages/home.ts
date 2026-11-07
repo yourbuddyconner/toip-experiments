@@ -7,6 +7,7 @@ import { exampleRegion } from "../../build/source";
 import { libraries } from "../data/libraries";
 import { projects } from "../data/projects";
 import type { Page } from "../layout";
+import { guides } from "../data/guides";
 
 /** JSON with light markup, for the opened document. */
 function jsonHtml(v: unknown, indent = 0): string {
@@ -76,7 +77,7 @@ export function homePage(sample: SealedSample, specCount: number): Page {
       <p class="lede">A TypeScript SDK for identities, private messages, verifiable credentials, and delegation.</p>
       <p>Run a signed request and response locally, then use the same libraries in your application.</p>
       <p class="actions"><a class="btn" href="${u("/docs/")}">Get started <span aria-hidden="true">↗</span></a><a href="${u("/quickstart/")}">Run the quickstart</a></p>
-      <p class="landing-meta">${libraries.length} SDK libraries · Browser and Node · Source workspace</p>
+      <p class="landing-meta">${libraries.length} libraries on npm · Browser and Node · ${guides.length} guides</p>
     </div>
     <div class="landing-example">${code(first, "ts", { caption: "Quickstart: a signed request and response" })}<p><a href="${u("/quickstart/#trust-task")}">View the complete example</a></p></div>
   </section>
@@ -84,10 +85,15 @@ export function homePage(sample: SealedSample, specCount: number): Page {
   <section class="landing-section" aria-labelledby="start-building">
     <h2 id="start-building">Start building</h2>
     <ol class="landing-paths">
-      <li><a href="${u("/docs/#setup")}"><span class="landing-paths__step">01</span><h3>Set up the SDK</h3><p>Install the source workspace and choose your runtime.</p><span class="landing-paths__link">Setup <span aria-hidden="true">↗</span></span></a></li>
+      <li><a href="${u("/docs/#setup")}"><span class="landing-paths__step">01</span><h3>Set up the SDK</h3><p>Install the libraries from npm and choose your runtime.</p><span class="landing-paths__link">Setup <span aria-hidden="true">↗</span></span></a></li>
       <li><a href="${u("/quickstart/")}"><span class="landing-paths__step">02</span><h3>Run a trust exchange</h3><p>Create identities, send a private message, and verify a credential.</p><span class="landing-paths__link">Quickstart <span aria-hidden="true">↗</span></span></a></li>
       <li><a href="${u("/toolkit/")}"><span class="landing-paths__step">03</span><h3>Build your application</h3><p>Find usage guides, parameters, return types, and working examples.</p><span class="landing-paths__link">SDK reference <span aria-hidden="true">↗</span></span></a></li>
     </ol>
+  </section>
+
+  <section class="landing-section" aria-labelledby="how-to">
+    <div class="landing-section__heading"><h2 id="how-to">Guides</h2><a href="${u("/guides/")}">All guides <span aria-hidden="true">↗</span></a></div>
+    <ul class="landing-guides">${guides.map(g => html`<li><a href="${u(`/guides/${g.slug}/`)}">${g.title}</a></li>`)}</ul>
   </section>
 
   <section class="landing-section" aria-labelledby="built">
@@ -101,13 +107,19 @@ export function homePage(sample: SealedSample, specCount: number): Page {
     <div><h2>Trust Tasks</h2><p>Look up ${specCount} message types used by the SDK and example applications.</p><a href="${u("/spec/")}">Task reference <span aria-hidden="true">↗</span></a></div>
   </section>
 
-  <details class="landing-inspector"><summary>Inspect a signed, encrypted message</summary>${wire(sample)}</details>
+  <details class="landing-inspector" data-md-skip><summary>Inspect a signed, encrypted message</summary>${wire(sample)}</details>
 </div>`;
   return {
     path: "/",
     title: "toip.tools — TypeScript SDK for Trust over IP",
-    description: "A TypeScript toolkit and working examples for building on Trust over IP: DIDs, credentials, the Trust Spanning Protocol and Trust Tasks.",
+    seoTitle: "toip.tools: TypeScript libraries for Trust over IP, DIDs, verifiable credentials and TSP",
+    description: "TypeScript libraries on npm and runnable examples for Trust over IP: did:key identities, verifiable credentials, the Trust Spanning Protocol and Trust Tasks.",
     section: "home",
+    kind: "home",
+    eyebrow: "TypeScript SDK",
+    ogTitle: "Build with Trust over IP.",
+    ogFooter: "npm install @toip-tools/trust-core",
+    sources: ["site/src/pages/home.ts", "site/src/data/projects.ts", "site/examples/quickstart/02-trust-task.ts"],
     body,
   };
 }

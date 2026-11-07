@@ -32,6 +32,14 @@ export function u(path: string): string {
   return BASE + path.replace(/^\//, "");
 }
 
+/** An absolute URL on the site, as search engines and agents should cite it. */
+export function abs(path: string): string {
+  return ORIGIN + u(path);
+}
+
+/** The site's name, as it appears in titles, feeds and structured data. */
+export const SITE_NAME = "toip.tools";
+
 /** A file in the repository on GitHub. */
 export function gh(path: string, anchor?: string): string {
   return `${REPO}/blob/main/${path}${anchor ? `#${anchor}` : ""}`;

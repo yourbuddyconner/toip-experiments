@@ -5,6 +5,9 @@ import type { ApiMember, ApiModule, ApiParameter, ApiSignature, ApiSymbol } from
 import { docsNav } from "./docs-nav";
 import type { Page } from "./layout";
 
+/** The package a module belongs to: "@toip-tools/x" for "@toip-tools/x/sub". */
+const libraryName = (module: ApiModule) => module.name.split("/").slice(0, 2).join("/");
+
 export function apiModulePath(module: ApiModule): string {
   return `/toolkit/${module.library}/api/${module.subpath === "." ? "" : `${module.subpath.slice(2)}/`}`;
 }
@@ -36,14 +39,17 @@ function typeMarkup(text: string, module: ApiModule, all: ApiModule[]): Raw {
 }
 
 function fields(items: (ApiParameter | ApiMember)[], module: ApiModule, all: ApiModule[]): Raw {
-  return html`<dl class="api-fields">${items.map(item => html`<div>
-    <dt><code>${item.name}</code><span>${item.optional ? "optional" : "required"}${"readonly" in item && item.readonly ? " · readonly" : ""}${"static" in item && item.static ? " · static" : ""}</span></dt>
+  return html`<dl class="api-fields">${items.map(item => {
+    const flags = `${item.optional ? "optional" : "required"}${"readonly" in item && item.readonly ? " · readonly" : ""}${"static" in item && item.static ? " · static" : ""}`;
+    return html`<div>
+    <dt><code>${item.name}</code><span data-md=" (${flags})">${flags}</span></dt>
     <dd>${typeMarkup(item.type, module, all)}
       ${item.description ? html`<div class="api-description">${md(item.description)}</div>` : ""}
       ${"defaultValue" in item && item.defaultValue !== undefined ? html`<p class="api-default">Default: <code>${item.defaultValue}</code></p>` : ""}
       ${"properties" in item && item.properties.length ? html`<details class="api-options"><summary>Fields of <code>${item.name}</code></summary>${fields(item.properties, module, all)}</details>` : ""}
     </dd>
-  </div>`)}</dl>`;
+  </div>`;
+  })}</dl>`;
 }
 
 function signature(signature: ApiSignature, module: ApiModule, all: ApiModule[], opts: { name: string; member?: boolean; construct?: boolean }): Raw {
@@ -73,7 +79,7 @@ export function moduleIndex(module: ApiModule, all: ApiModule[]): Page {
   const kinds = Object.keys(kindTitle) as ApiSymbol["kind"][];
   const active = kinds.filter(kind => module.symbols.some(s => s.kind === kind));
   const body = html`<div class="wrap docs">${docsNav(path, active.map(k => ({ label: kindTitle[k], href: `#${k}` })))}<div class="docs__content">
-    <div class="doc-breadcrumbs"><a href="${u("/toolkit/")}">SDK reference</a><span>/</span><a href="${u(`/toolkit/${module.library}/`)}">${module.library}</a><span>/</span><span>API</span></div>
+    <div class="doc-breadcrumbs" data-md-skip><a href="${u("/toolkit/")}">SDK reference</a><span>/</span><a href="${u(`/toolkit/${module.library}/`)}">${module.library}</a><span>/</span><span>API</span></div>
     <div class="page-head"><p class="eyebrow">API reference · ${module.runtime}</p><h1 class="mono">${module.name}</h1><p class="lede">${module.symbols.length} public exports.</p></div>
     ${code(`import { ${module.symbols.slice(0, 3).map(s => `${["interface", "type"].includes(s.kind) ? "type " : ""}${s.name}`).join(", ")} } from "${module.name}";`, "ts", { caption: "Module import" })}
     ${active.map(kind => html`<section class="sdk-api-group" id="${kind}"><h2>${kindTitle[kind]}</h2><ul class="sdk-export-list">${module.symbols.filter(s => s.kind === kind).map(symbol => html`<li>
@@ -82,7 +88,12 @@ export function moduleIndex(module: ApiModule, all: ApiModule[]): Page {
     </li>`)}</ul></section>`)}
     <p class="small quiet">Signatures and source documentation are generated from <a href="${gh(module.file)}"><code>${module.file}</code></a>.</p>
   </div></div>`;
-  return { path, title: `${module.name} API`, description: `Public functions, classes, interfaces, types, and constants exported by ${module.name}.`, section: "toolkit", body };
+  return {
+    path, title: `${module.name} API`, seoTitle: `${module.name} API reference: all ${module.symbols.length} exports · toip.tools`,
+    description: `Every public function, class, interface, type and constant exported by ${module.name} (${module.runtime}), with signatures and source links.`,
+    section: "toolkit", kind: "reference", eyebrow: "API reference", monoTitle: true, ogFooter: `npm install ${libraryName(module)}`,
+    sources: [module.file], tools: true, body,
+  };
 }
 
 export function symbolPage(module: ApiModule, symbol: ApiSymbol, all: ApiModule[]): Page {
@@ -92,7 +103,7 @@ export function symbolPage(module: ApiModule, symbol: ApiSymbol, all: ApiModule[
   if (symbol.members.some(m => m.signatures.length)) local.push({ label: "Methods", href: "#methods" });
   if (symbol.returnedMembers.length) local.push({ label: "Returned object", href: "#returned-object" });
   const body = html`<div class="wrap docs">${docsNav(path, local)}<div class="docs__content">
-    <div class="doc-breadcrumbs"><a href="${u("/toolkit/")}">SDK reference</a><span>/</span><a href="${u(`/toolkit/${module.library}/`)}">${module.library}</a><span>/</span><a href="${u(apiModulePath(module))}">API</a></div>
+    <div class="doc-breadcrumbs" data-md-skip><a href="${u("/toolkit/")}">SDK reference</a><span>/</span><a href="${u(`/toolkit/${module.library}/`)}">${module.library}</a><span>/</span><a href="${u(apiModulePath(module))}">API</a></div>
     <div class="page-head"><p class="eyebrow">${symbol.kind} · ${module.runtime}</p><h1 class="mono">${symbol.name}</h1>${symbol.description ? html`<div class="prose">${md(symbol.description)}</div>` : ""}</div>
     <div class="sdk-source"><code>${module.name}</code><a href="${gh(symbol.source.file)}#L${symbol.source.line}">View source</a></div>
     ${symbol.deprecated !== undefined ? html`<div class="sdk-note"><strong>Deprecated</strong>${md(symbol.deprecated || "This export is marked deprecated in the source.")}</div>` : ""}
@@ -107,5 +118,12 @@ export function symbolPage(module: ApiModule, symbol: ApiSymbol, all: ApiModule[
     ${symbol.throws.length ? html`<h2>Throws</h2><div class="prose">${symbol.throws.map(t => md(t))}</div>` : ""}
     <div class="sdk-next"><a href="${u(`/toolkit/${module.library}/#usage`)}">Usage guide</a><a href="${u(`/toolkit/${module.library}/#errors`)}">Error handling</a><a href="${u(apiModulePath(module))}">All exports</a></div>
   </div></div>`;
-  return { path, title: `${symbol.name} · ${module.name}`, description: symbol.description.split(/\n|(?<=\.)\s/)[0] || `${symbol.name}: ${symbol.kind} exported by ${module.name}.`, section: "toolkit", body };
+  const summary = symbol.description.split(/\n|(?<=\.)\s/)[0];
+  return {
+    path, title: `${symbol.name} · ${module.name}`, seoTitle: `${symbol.name} (${symbol.kind}) · ${module.name} API reference`,
+    description: summary ? `${symbol.name}, a ${symbol.kind} in ${module.name}: ${summary}` : `${symbol.name}: a ${symbol.kind} exported by ${module.name}, with its declaration and source.`,
+    section: "toolkit", kind: "reference", eyebrow: `API · ${symbol.kind}`, monoTitle: true, ogTitle: symbol.name,
+    ogText: summary ? `${module.name}: ${summary}` : `A ${symbol.kind} exported by ${module.name}.`,
+    ogFooter: `import { ${symbol.name} } from "${module.name}"`, sources: [symbol.source.file], tools: true, body,
+  };
 }

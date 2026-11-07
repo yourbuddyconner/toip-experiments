@@ -6,6 +6,8 @@ import { SITE_DIR } from "./config";
 export const QUICKSTART = ["01-identities", "02-trust-task", "03-relay", "04-credentials"];
 /** Snippets that run quickly and need nothing but Node. The others are typechecked only. */
 export const RUNNABLE_SNIPPETS = ["trust-core", "relay", "cose", "mandates", "eventlog", "anon-membership", "mesh-transport"];
+/** Every guide's program, in examples/guides/. All of them run. */
+export { guides as GUIDES } from "../src/data/guides";
 
 export function runExample(relPath: string): { ok: boolean; stdout: string; stderr: string; ms: number } {
   const t0 = Date.now();

@@ -1,0 +1,7 @@
+Relay at ws://127.0.0.1:60693/v1
+[relay] z6MkuaXR… -> z6MkpDnq…: 1020 bytes, queued
+Alice sent: queued
+Waiting for Bob: 1
+Restarted; waiting for Bob: 1
+Bob read: Back at 6.
+Waiting for Bob: 0

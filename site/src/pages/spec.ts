@@ -101,8 +101,15 @@ function specPage(s: Spec): Page {
   return {
     path: `/spec/${s.name}/0.1/`,
     title: s.name,
-    description: n ? firstSentence(n.purpose) : `The ${s.name} Trust Task type.`,
+    seoTitle: `${s.name} Trust Task: payload, sender and receiver · toip.tools`,
+    description: n ? `${firstSentence(n.purpose)} ${n.kind === "one-way" ? "One-way" : "Request and response"}, from ${n.from} to ${n.to}.` : `The ${s.name} Trust Task type, with its payload as declared in the code.`,
     section: "spec",
+    kind: "reference",
+    eyebrow: "Trust Task",
+    monoTitle: true,
+    ogFooter: uri(s.name),
+    tools: true,
+    sources: [s.file, "site/src/data/spec-notes.json", ...(n?.payloadFile ? [n.payloadFile] : [])],
     body,
   };
 }
@@ -136,8 +143,14 @@ function indexPage(specs: Spec[]): Page {
   return {
     path: "/spec/",
     title: "Trust Task reference",
+    seoTitle: `Trust Task reference: ${specs.length} message types with payloads · toip.tools`,
     description: "Every Trust Task type defined in the toolkit and its apps: purpose, sender and receiver, and payload, generated from the code.",
     section: "spec",
+    kind: "collection",
+    eyebrow: "Trust Tasks",
+    ogFooter: `${SPEC_ORIGIN}/spec/<name>/0.1`,
+    tools: true,
+    sources: ["site/src/data/spec-notes.json", "site/build/specs.ts"],
     body,
   };
 }

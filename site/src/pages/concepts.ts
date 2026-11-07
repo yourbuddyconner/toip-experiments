@@ -236,6 +236,12 @@ export function conceptsPage(): Page {
   return {
     path: "/concepts/",
     title: "Concepts",
+    seoTitle: "Trust over IP concepts: DIDs, verifiable credentials, TSP, Trust Tasks, KERI and ZK · toip.tools",
+    kind: "article",
+    eyebrow: "Concepts",
+    ogFooter: "Identifiers · Credentials · TSP · Trust Tasks · KERI",
+    tools: true,
+    sources: ["site/src/pages/concepts.ts", "site/src/diagrams.ts"],
     description: "Decentralized identifiers, verifiable credentials, the Trust Spanning Protocol, Trust Tasks, governance, KERI and zero-knowledge membership, in plain words.",
     section: "concepts",
     body,

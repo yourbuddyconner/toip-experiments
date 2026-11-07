@@ -120,6 +120,11 @@ export function ecosystemPage(): Page {
   return {
     path: "/ecosystem/",
     title: "Ecosystem",
+    seoTitle: "Trust over IP ecosystem guide: ToIP, First Person, OpenVTC, P2P Trust Stack, KERI, DIF · toip.tools",
+    kind: "article",
+    eyebrow: "Ecosystem guide",
+    ogFooter: "ToIP · First Person · OpenVTC · KERI · DIF",
+    sources: ["site/src/pages/ecosystem.ts", "docs/sources"],
     description: "Understand ToIP, First Person, OpenVTC, the P2P Trust Stack, KERI, and DIF: their roles, implementation choices, and relationship to this toolkit.",
     section: "ecosystem",
     body,

@@ -1,0 +1,11 @@
+groceries at grocer.example, $42.00: allow
+  This purchase is within every limit of the chain from Sam to the shopping agent.
+chips at casino.example, $20.00: deny
+  The merchant “casino.example” isn't one Sam allowed the shopping agent (merchants). This purchase can't go ahead.
+allergy medicine at pharmacy.example, $65.00: escalate
+  $65.00 is more than the $50.00 per purchase that Sam allowed the shopping agent. Sam can approve this purchase.
+With Sam's approval: allow
+more groceries at grocer.example, $49.00: deny
+  Spending $49.00 would bring the spending in the last 7 days to $156.00, over the $150.00 budget that Sam allowed the shopping agent (per week). This purchase can't go ahead.
+milk at grocer.example, $3.00: deny
+  Sam has revoked the mandate to the shopping agent. This purchase can't go ahead.
