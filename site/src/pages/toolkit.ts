@@ -11,9 +11,9 @@ import { pageHead, status } from "../parts";
 
 function side(current?: string): Raw {
   return html`<nav class="docs__side" aria-label="Libraries">
-    <h2>Toolkit</h2>
+    <p class="side-h">Toolkit</p>
     <ul><li><a href="${u("/toolkit/")}"${current ? "" : html` aria-current="page"`}>Overview</a></li></ul>
-    <h2>Libraries</h2>
+    <p class="side-h">Libraries</p>
     <ul>${libraries.map((l) => html`<li><a href="${u(`/toolkit/${l.slug}/`)}"${current === l.slug ? html` aria-current="page"` : ""}><code>${l.slug}</code></a></li>`)}</ul>
   </nav>`;
 }

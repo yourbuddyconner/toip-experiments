@@ -36,5 +36,9 @@ const links = spawnSync(bin("tsx"), ["build/links.ts"], { cwd: SITE_DIR, encodin
 step("links", links.status === 0, links.stdout.split("\n")[0]);
 if (links.status !== 0) console.log(links.stdout + links.stderr);
 
+const lic = spawnSync(bin("tsx"), ["build/licenses.ts"], { cwd: SITE_DIR, encoding: "utf8" });
+step("dependencies: no copyleft", lic.status === 0, lic.stdout.trim().split("\n").pop());
+if (lic.status !== 0) console.log(lic.stdout + lic.stderr);
+
 if (failed) process.exit(1);
 console.log("\nAll checks passed.");

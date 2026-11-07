@@ -27,7 +27,8 @@ const scope = scopeOf("tipline/v1", newsroom.did, "story-41");
 const signal = messageOf("tipline/v1", { kind: "tip", body: "sha256:9f86d081" });
 const tree = treeFromRoot(root, snapshot); // checks the snapshot against the signed root
 const { statement, witness } = membershipInputs({ secret, groups: [{ group: issuer.groupId, tree }], scope, signal, today: dayOf(clock.now()) });
-const proof = await (await MembershipProver.create()).prove(statement, witness);
+const prover = await MembershipProver.create();
+const proof = await prover.prove(statement, witness);
 
 // The newsroom accepts or refuses, and counts distinct sources by nullifier.
 const verifier = await MembershipVerifier.create();
@@ -38,3 +39,6 @@ const r = await acceptMembership(proof, {
 });
 const book = new NullifierBook();
 if (r.ok) console.log("accepted:", book.label(issuer.groupId, scope, r.nullifier));
+else console.log("refused:", r.reason);
+await prover.destroy(); // the prover and verifier hold worker threads until destroyed
+await verifier.destroy();

@@ -156,7 +156,7 @@ export function conceptsPage(): Page {
   const body = html`
 <div class="wrap docs">
   <nav class="docs__side" aria-label="Concepts">
-    <h2>On this page</h2>
+    <p class="side-h">On this page</p>
     <ul>${concepts.map((c) => html`<li><a href="#${c.id}">${c.title}</a></li>`)}</ul>
   </nav>
   <div>

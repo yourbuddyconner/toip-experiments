@@ -191,7 +191,7 @@ Issuers keep a Merkle tree of commitments and sign one root per epoch in a hash-
     ],
     notFor: ["Selective disclosure of individual credential fields (BBS+, SD-JWT). This is group membership only."],
     runsIn: "Node and browsers, proving in a Web Worker. Proving takes about 0.15 s on an Apple M1 Max; phones aren't measured.",
-    snippet: { file: "anon-membership.ts", caption: "An employee proves membership to a newsroom", runs: false, note: "Typechecked. It runs, but proving setup makes it slower than the others, so the check doesn't run it." },
+    snippet: { file: "anon-membership.ts", caption: "An employee proves membership to a newsroom", runs: true },
     api: [
       { area: "Issuer", names: ["GroupIssuer", "enroll", "ENROLL", "EnrollRequest", "EnrollResponse"] },
       { area: "Member", names: ["memberSecret", "membershipInputs", "treeFromRoot", "scopeOf", "messageOf", "dayOf"] },

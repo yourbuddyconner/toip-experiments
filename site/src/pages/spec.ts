@@ -28,16 +28,23 @@ const FAMILIES: Record<string, { title: string; what: Raw }> = {
   },
 };
 
+/** Families in FAMILIES' order (apps first), then any new ones alphabetically. */
+function familyOrder(specs: Spec[]): string[] {
+  const known = Object.keys(FAMILIES);
+  const rank = (f: string) => (known.includes(f) ? known.indexOf(f) : known.length);
+  return [...new Set(specs.map((s) => s.family))].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+}
+
 const uri = (name: string) => `${SPEC_ORIGIN}/spec/${name}/0.1`;
 const firstSentence = (s: string) => s.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? s;
 const lineLink = (file: string, line?: number) => html`<a href="${gh(file)}${line ? `#L${line}` : ""}"><code>${file}${line ? `:${line}` : ""}</code></a>`;
 
 function side(specs: Spec[], current?: string): Raw {
-  const fams = [...new Set(specs.map((s) => s.family))];
+  const fams = familyOrder(specs);
   return html`<nav class="docs__side" aria-label="Trust Task types">
     <ul><li><a href="${u("/spec/")}"${current ? "" : html` aria-current="page"`}>All types</a></li></ul>
     ${fams.map(
-      (f) => html`<h2>${f}</h2><ul>${specs
+      (f) => html`<p class="side-h">${f}</p><ul>${specs
         .filter((s) => s.family === f)
         .map((s) => html`<li><a href="${specHref(s.name)}"${current === s.name ? html` aria-current="page"` : ""}><code>${s.name.slice(f.length + 1) || s.name}</code></a></li>`)}</ul>`,
     )}
@@ -63,7 +70,7 @@ function envelope(s: Spec): string {
 function specPage(s: Spec, all: Spec[]): Page {
   const n = s.note;
   const body = html`
-<div class="wrap docs">
+<div class="wrap docs docs--side-last">
   ${side(all, s.name)}
   <div>
     <div class="page-head">
@@ -108,9 +115,9 @@ function specPage(s: Spec, all: Spec[]): Page {
 
 function indexPage(specs: Spec[]): Page {
   const base = currentSpecBase();
-  const fams = [...new Set(specs.map((s) => s.family))];
+  const fams = familyOrder(specs);
   const body = html`
-<div class="wrap docs">
+<div class="wrap docs docs--side-last">
   ${side(specs)}
   <div>
     ${pageHead("Trust Task types", html`The ${specs.length} message types the toolkit and its apps define, each with what it's for, who sends it to whom, and its payload as the code declares it.`)}

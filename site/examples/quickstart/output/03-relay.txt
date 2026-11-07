@@ -1,4 +1,4 @@
-Relay listening at ws://127.0.0.1:54116/v1
+Relay listening at ws://127.0.0.1:57514/v1
 Alice connected as did:key:z6Mkfk…WuZc
 Alice sent a note: queued. Waiting at the relay for Bob: 1
 Bob connected as did:key:z6MkoY…1aCu

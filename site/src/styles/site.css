@@ -315,11 +315,17 @@ main {
   font-size: var(--step--1);
   padding-top: 3.6rem;
 }
-.docs__side h2 {
+@media (max-width: 61.99rem) {
+  .docs--side-last > .docs__side {
+    order: 2;
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+  }
+}
+.docs__side .side-h {
   font-size: var(--step--1);
   font-weight: 700;
   margin: 0 0 0.5rem;
-  letter-spacing: 0;
   color: var(--ink-2);
 }
 .docs__side ul {
@@ -368,6 +374,7 @@ main {
   padding: 0.6rem 1rem 0;
   padding-right: 5.5rem;
   font-variation-settings: "MONO" 1;
+  overflow-wrap: anywhere;
 }
 .code pre {
   margin: 0;
@@ -381,6 +388,12 @@ main {
 .code pre:focus-visible {
   outline-offset: -3px;
   outline-color: #9db5ff;
+}
+@media (max-width: 40rem) {
+  .code pre {
+    font-size: 0.78rem;
+    padding: 0.75rem 0.85rem 0.9rem;
+  }
 }
 .code pre code {
   font-size: inherit;
@@ -553,7 +566,7 @@ main {
   font-size: 0.755rem;
 }
 .seg--sealed .seg__bytes {
-  color: #6f83a3;
+  color: #7d91b1;
 }
 .seg--sig .seg__bytes {
   color: oklch(0.8 0.08 var(--h));

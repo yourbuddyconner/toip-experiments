@@ -25,11 +25,15 @@ export async function sealSample(): Promise<SealedSample> {
     isRecipientRequired: true,
     isIssuedAtRequired: true,
   };
-  bob.handle(HELLO, () => undefined);
+  // The handler runs only after Bob's side has checked the signature, recipient, freshness and replay.
+  let handled = false;
+  bob.handle(HELLO, () => {
+    handled = true;
+  });
   await alice.notify(bob.vid, HELLO, { text: "Hello Bob, it's Alice." });
   await bus.settle();
   const rec = bus.records()[0];
-  if (!rec.opened) throw new Error(`hero: Bob could not open the sample (${rec.refused})`);
+  if (!rec.opened || !handled) throw new Error(`hero: Bob did not accept the sample (${rec.refused ?? "handler not run"})`);
 
   const wire = rec.raw;
   const latin = Buffer.from(wire).toString("latin1");

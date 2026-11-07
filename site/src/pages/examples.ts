@@ -9,7 +9,7 @@ export function examplesPage(): Page {
   const body = html`
 <div class="wrap docs">
   <nav class="docs__side" aria-label="Projects">
-    <h2>Projects</h2>
+    <p class="side-h">Projects</p>
     <ul>${projects.map((p) => html`<li><a href="#${p.slug}">${p.name}</a></li>`)}</ul>
   </nav>
   <div>
