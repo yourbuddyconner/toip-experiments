@@ -1,5 +1,6 @@
 /** A mandate in plain words, for the console and the terminal. Browser-safe. */
 import type { Constraint, Mandate } from "@zk-toip/mandates";
+import { DIMENSION_LABELS } from "./config";
 
 const usdc = (u: string | number) => `${(Number(u) / 1e6).toFixed(2)} USDC`;
 const PERIOD: Record<string, string> = { P1D: "per day", P7D: "per week", P30D: "per 30 days", total: "in total" };
@@ -31,7 +32,7 @@ export function mandateLines(m: Mandate, names: (did: string) => string): Mandat
     else if (k.attr === "counterpartyCredentials" && "anyOf" in k) out.push({ dimension: dim, text: `Only pays workers holding ${k.anyOf.join(" or ")}.` });
   }
   out.push({ dimension: "delegation", text: s.delegation.maxDepth > 0 ? `May pass a narrower mandate on, ${s.delegation.maxDepth} level${s.delegation.maxDepth > 1 ? "s" : ""} deep.` : "May not delegate." });
-  if (s.escalation?.approvable.length) out.push({ dimension: "escalation", text: `Over a limit in ${s.escalation.approvable.join(", ")}, ${s.parent ? "the root principal" : names(m.issuer)} can approve one exact action, for up to ${Math.round(s.escalation.approvalTtlSeconds / 60)} minutes.` });
+  if (s.escalation?.approvable.length) out.push({ dimension: "escalation", text: `Over a limit (${s.escalation.approvable.map((d) => DIMENSION_LABELS[d] ?? d).join(", ")}), ${s.parent ? "the root principal" : names(m.issuer)} can approve one exact action, for up to ${Math.round(s.escalation.approvalTtlSeconds / 60)} minutes.` });
   out.push({ dimension: "window", text: `Valid until ${m.validUntil.slice(0, 16).replace("T", " ")} UTC. Revocation lists must be under ${Math.round(s.revocation.maxAgeSeconds / 60)} minutes old.` });
   return out;
 }

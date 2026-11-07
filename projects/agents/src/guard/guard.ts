@@ -151,6 +151,23 @@ interface WorkerJob {
   delivered?: string;
 }
 
+export interface GuardSnapshot {
+  v: 1;
+  did: string;
+  chain: Mandate[];
+  ledger: ReturnType<SpendLedger["save"]>;
+  jobs: (Omit<HirerJob, "maxUnits"> & { maxUnits: string })[];
+  quotes: Quote[];
+  quoteSeq: number;
+  pending: Pending[];
+  offers: [string, WorkerJob][];
+  issued: { mandate: Mandate; to: string; funded: string }[];
+  checkoutAction: [string, { action: string; job: string }][];
+  paymentSeen: [string, string][];
+  paused: boolean;
+  revoked: boolean;
+}
+
 const uuid = () => globalThis.crypto.randomUUID();
 const short = (s: string) => s.slice(0, 8);
 
@@ -178,11 +195,50 @@ export class Guard implements GuardApi {
   private readonly checkoutAction = new Map<string, { action: string; job: string }>();
   private lastDecision?: { s: number; d: string };
 
-  constructor(private readonly o: GuardOptions) {
+  constructor(private readonly o: GuardOptions & { snapshot?: GuardSnapshot }) {
     this.did = o.identity.did;
     this.name = o.name;
     this.chain = o.chain ?? [];
+    if (o.snapshot) this.restore(o.snapshot);
     this.mount();
+  }
+
+  /** Everything the guard needs to pick up where it left off. Keys aren't in it. Save it with the Settle party's snapshot. */
+  snapshot(): GuardSnapshot {
+    return structuredClone({
+      v: 1 as const,
+      did: this.did,
+      chain: this.chain,
+      ledger: this.ledger.save(),
+      jobs: [...this.jobs.values()].map((j) => ({ ...j, maxUnits: j.maxUnits.toString() })),
+      quotes: [...this.quotes.values()],
+      quoteSeq: this.quoteSeq,
+      pending: [...this.pending.values()],
+      offers: [...this.offers.entries()],
+      issued: this.issued,
+      checkoutAction: [...this.checkoutAction.entries()],
+      paymentSeen: [...this.paymentSeen.entries()],
+      paused: this.paused,
+      revoked: this.revoked,
+    });
+  }
+
+  private restore(s: GuardSnapshot): void {
+    if (s?.v !== 1 || s.did !== this.did) throw new Error("not this guard's snapshot");
+    this.chain = s.chain;
+    for (const e of s.ledger.entries) this.ledger.reserve(e.mandate, e.actionId, e.spend, e.at);
+    for (const e of s.ledger.entries) if (e.refunded) this.ledger.refund(e.actionId, e.refunded);
+    for (const id of s.ledger.usedApprovals) this.ledger.markApprovalUsed(id);
+    for (const j of s.jobs) this.jobs.set(j.id, { ...j, maxUnits: BigInt(j.maxUnits) });
+    for (const q of s.quotes) this.quotes.set(q.id, q);
+    this.quoteSeq = s.quoteSeq;
+    for (const p of s.pending) this.pending.set(p.request, p);
+    for (const [k, v] of s.offers) this.offers.set(k, v);
+    this.issued.push(...s.issued);
+    for (const [k, v] of s.checkoutAction) this.checkoutAction.set(k, v);
+    for (const [k, v] of s.paymentSeen) this.paymentSeen.set(k, v);
+    this.paused = s.paused;
+    this.revoked = s.revoked;
   }
 
   // ================================================================ plumbing

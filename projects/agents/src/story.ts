@@ -28,7 +28,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export async function runStory(w: World, n: Narrator): Promise<void> {
   const { ops, errands, coder, principal, dana } = w;
 
-  n.step("0:00 · The mandate");
+  n.step("1 · The mandate");
   const m = await w.issueOpsMandate();
   n.line(`Conner Swann issued Ops agent a mandate, signed with his key:`);
   for (const l of mandateLines(m, w.names)) n.line(`  · ${l.text}`);
@@ -37,7 +37,7 @@ export async function runStory(w: World, n: Narrator): Promise<void> {
   await w.giveOpsTask();
   n.line(`Conner's task: "CI is red on the demo repo; get it fixed. Also, a parcel is waiting at the Main St post office; get someone to bring it to me."`);
 
-  n.step("0:25 · Hiring an agent");
+  n.step("2 · Hiring an agent");
   const coderJob = await waitFor("Ops agent to hire Coder agent", () => [...ops.guard.jobs.values()].find((j) => j.workerName === "Coder agent" && j.checkout));
   await waitFor("Coder's check of Ops agent's mandate", () => coder.party.gates && [...(coder.party.gates as any).records.values()][0]);
   n.line(`The guard allowed it: 20.00 + 0.50 fee = 20.50 USDC, within every limit. Coder agent's device checked Ops agent's mandate chain before invoicing.`);
@@ -47,7 +47,7 @@ export async function runStory(w: World, n: Narrator): Promise<void> {
   });
   n.line(`The escrow is open on the chain; CI is the attester.`);
 
-  n.step("0:50 · The injection");
+  n.step("3 · The injection");
   const qf = await waitFor("QuickFix's quote", () => [...ops.guard.quotes.values()].find((q) => q.link.issuer === w.quickfix.party.did));
   n.line(`QuickFix's quote asks ${usdc(qf.link.units)}, names itself as the attester, and its note says: "${qf.note}"`);
   n.line(`To show the guard either way, the demo sends the same hire straight to the guard, as a compromised model would:`);
@@ -58,7 +58,7 @@ export async function runStory(w: World, n: Narrator): Promise<void> {
   await sleep(500);
   n.line(principal.approvals.size === before ? "No approval request went to Conner: one of the reasons can't be approved." : "!! an approval request was sent");
 
-  n.step("1:10 · CI as attester");
+  n.step("4 · CI as attester");
   await waitFor("CI's verdict and settlement", () => {
     const c = ops.party.checkouts.get(coderJob.checkout!);
     return c?.paymentId && ops.party.payments.get(c.paymentId)?.settled;
@@ -66,7 +66,7 @@ export async function runStory(w: World, n: Narrator): Promise<void> {
   for (const run of w.ci.runs) n.line(`CI ran node --test at ${run.commit.slice(0, 7)}: ${run.passed ? "pass" : "fail"} (log ${run.logHash.slice(0, 19)}…)`);
   n.line(`Coder's and Ops agent's Settle parties both signed the release (2 of 3): Coder agent was paid 20.00 USDC.`);
 
-  n.step("1:40 · A sub-agent and a human");
+  n.step("5 · A sub-agent and a human");
   await waitFor("Errands agent's mandate", () => errands.guard.chain.length === 2);
   const [parent, child] = errands.guard.chain;
   n.line(`Ops agent delegated to Errands agent, and funded its wallet with 60.00 USDC. The narrowing:`);
@@ -75,7 +75,7 @@ export async function runStory(w: World, n: Narrator): Promise<void> {
   n.line(`Dana's view: an offer from ${offer.fromName}, ${offer.verified ? "mandate chain verified" : "NOT verified"}: ${offer.chain.join("; ")}`);
   await waitFor("Dana's quote", () => offer.link);
 
-  n.step("2:00 · Escalation");
+  n.step("6 · Escalation");
   const req = await waitFor("an approval request", () => [...principal.approvals.values()].find((a) => a.state === "waiting"));
   const at = req.action.attrs;
   n.line(`Conner's console shows the request, rendered from the signed action:`);
@@ -92,7 +92,7 @@ export async function runStory(w: World, n: Narrator): Promise<void> {
   });
   n.line(`Dana's view: ${dana.behind(pay.id)}`);
 
-  n.step("2:25 · Done");
+  n.step("7 · Done");
   await waitFor("Dana's delivery", () => offer.delivered);
   const confirm = await waitFor("a payment for Conner to confirm", () => principal.toConfirm()[0]);
   await principal.attest(confirm.id, "Package received.");
@@ -100,7 +100,7 @@ export async function runStory(w: World, n: Narrator): Promise<void> {
   await waitFor("Dana to be paid", () => dana.paymentFor(offer.job)?.settled, 120_000);
   n.line(`Dana was paid ${usdc(dana.paymentFor(offer.job)!.settled!.payeeUnits)}.`);
 
-  n.step("2:40 · Review and revoke");
+  n.step("8 · Review and revoke");
   for (const a of [ops, errands, coder]) {
     if (a === coder) continue;
     const v = await principal.review(a.did);

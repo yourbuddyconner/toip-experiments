@@ -1,0 +1,663 @@
+/*
+ * An operations board. Agents, mandates and requests are flight-progress strips: buff paper on a cool
+ * board, with a coloured band that says what state each one is in. Green: in force or working. Amber: held,
+ * waiting for you. Red: refused or revoked. Grey: idle.
+ */
+:root {
+  --board: #dce3e8;
+  --board-2: #cfd8df;
+  --ink: #13212e;
+  --ink-2: #3b4c5c;
+  --strip: #f7f1d6;
+  --strip-edge: #b9af8a;
+  --rule: #93a2ae;
+  --cleared: #1e6b45;
+  --held: #9a5800;
+  --refused: #a3241c;
+  --idle: #6b7782;
+  --info: #24527e;
+  --focus: #0b57d0;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: "Atkinson Hyperlegible", system-ui, sans-serif;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+html {
+  background: var(--board);
+  color: var(--ink);
+  font: 400 16px/1.5 var(--sans);
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+h1,
+h2,
+h3,
+h4 {
+  line-height: 1.2;
+  margin: 0;
+}
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+h3 {
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+h4 {
+  font-size: 0.9375rem;
+  margin-top: 0.75rem;
+}
+p {
+  margin: 0.4rem 0;
+  max-width: 72ch;
+}
+.mono,
+.num,
+time {
+  font-family: var(--mono);
+  font-size: 0.875em;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.small {
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.skip {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  background: var(--strip);
+  color: var(--ink);
+  padding: 0.5rem 0.75rem;
+  z-index: 10;
+}
+.skip:focus {
+  top: 0.5rem;
+}
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+a {
+  color: var(--info);
+}
+
+.loading {
+  padding: 3rem;
+  font-size: 1.125rem;
+}
+
+/* ---------------------------------------------------------------- masthead */
+.masthead {
+  background: var(--ink);
+  color: #eef3f6;
+  padding: 1.25rem clamp(1rem, 3vw, 2.5rem);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2.5rem;
+  align-items: flex-end;
+  justify-content: space-between;
+  border-bottom: 6px solid var(--cleared);
+}
+.courier-head {
+  border-bottom-color: var(--info);
+}
+.masthead .sub {
+  color: #c4d1da;
+  margin-top: 0.35rem;
+}
+.masthead-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  margin: 0;
+}
+.masthead-facts dt {
+  font-size: 0.8125rem;
+  color: #a9b9c4;
+}
+.masthead-facts dd {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* ---------------------------------------------------------------- setup sequence */
+.setup {
+  padding: 1rem clamp(1rem, 3vw, 2.5rem) 1.25rem;
+  background: var(--board-2);
+  border-bottom: 1px solid var(--rule);
+}
+.setup ol {
+  list-style: none;
+  counter-reset: step;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.75rem 1.5rem;
+  padding: 0;
+  margin: 0.75rem 0 0;
+}
+.setup li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 2.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+.setup li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+}
+.setup li[data-done="true"]::before {
+  content: "✓";
+  background: var(--cleared);
+  border-color: var(--cleared);
+  color: #fff;
+}
+.setup li p {
+  margin: 0;
+}
+.setup textarea {
+  width: 100%;
+}
+
+/* ---------------------------------------------------------------- the board */
+.board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 0 clamp(1rem, 3vw, 2.5rem);
+  padding: 0 clamp(1rem, 3vw, 2.5rem) 3rem;
+}
+@media (max-width: 900px) {
+  .board {
+    grid-template-columns: 1fr;
+  }
+}
+.col {
+  min-width: 0;
+}
+.panel {
+  border-top: 2px solid var(--ink);
+  margin-top: 1.5rem;
+  padding-top: 0.75rem;
+}
+.panel > p {
+  color: var(--ink-2);
+}
+.empty {
+  color: var(--ink-2);
+  font-style: italic;
+}
+.count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  padding: 0 0.4rem;
+  margin-left: 0.4rem;
+  border-radius: 0.8rem;
+  background: var(--held);
+  color: #fff;
+  font-size: 0.875rem;
+  vertical-align: 0.1em;
+}
+
+/* The hold bay: what's waiting for the principal gets a hatched amber edge, so it can't be missed. */
+.panel-waiting {
+  border-top: 0;
+  padding-top: 0.9rem;
+  background-image: repeating-linear-gradient(135deg, var(--held) 0 10px, var(--strip) 10px 20px);
+  background-size: 100% 8px;
+  background-repeat: no-repeat;
+}
+.panel-waiting > h2 {
+  margin-top: 0.4rem;
+}
+
+/* ---------------------------------------------------------------- strips */
+.strips {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.strip {
+  --band: var(--idle);
+  background: var(--strip);
+  border: 1px solid var(--strip-edge);
+  border-left: 0;
+  border-radius: 0 3px 3px 0;
+  padding: 0.75rem 1rem 0.85rem 1.4rem;
+  position: relative;
+  margin-top: 0.6rem;
+}
+.strip::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -1px;
+  bottom: -1px;
+  width: 0.55rem;
+  background: var(--band);
+}
+.strips > .strip {
+  margin-top: 0;
+}
+.strip[data-state="cleared"] {
+  --band: var(--cleared);
+}
+.strip[data-state="held"] {
+  --band: var(--held);
+}
+.strip[data-state="refused"] {
+  --band: var(--refused);
+}
+.strip-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.state {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--band);
+}
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.35rem 1rem;
+  margin: 0.5rem 0 0;
+}
+.facts dt,
+.ticket dt {
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+}
+.facts dd,
+.ticket dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.meters {
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 0;
+  display: grid;
+  gap: 0.3rem;
+}
+.meters li {
+  display: grid;
+  grid-template-columns: 7rem 1fr auto;
+  gap: 0.6rem;
+  align-items: center;
+  font-size: 0.875rem;
+}
+meter {
+  width: 100%;
+  height: 0.7rem;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+  align-items: flex-start;
+}
+details.task {
+  flex: 1 1 18rem;
+}
+details.task summary {
+  cursor: pointer;
+  padding: 0.35rem 0;
+  color: var(--info);
+  font-weight: 700;
+}
+details.task form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-start;
+  margin-top: 0.35rem;
+}
+details.task textarea {
+  width: 100%;
+}
+.lines {
+  margin: 0.5rem 0;
+  padding-left: 1.1rem;
+}
+.lines li {
+  margin: 0.15rem 0;
+}
+.narrowing {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5rem 0;
+  font-size: 0.875rem;
+}
+.narrowing caption {
+  text-align: left;
+  font-weight: 700;
+  padding-bottom: 0.25rem;
+}
+.narrowing th,
+.narrowing td {
+  text-align: left;
+  padding: 0.25rem 0.5rem 0.25rem 0;
+  border-bottom: 1px solid var(--strip-edge);
+}
+.narrowing td:last-child {
+  color: var(--cleared);
+  font-weight: 700;
+}
+.confirm-row {
+  border: 2px solid var(--refused);
+  padding: 0.6rem 0.75rem;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.confirm-row p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------- approvals */
+.approval h3 {
+  font-size: 1.1875rem;
+}
+.ticket {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr;
+  gap: 0.25rem 0.75rem;
+  margin: 0.6rem 0;
+  padding: 0.6rem 0;
+  border-top: 1px dashed var(--strip-edge);
+  border-bottom: 1px dashed var(--strip-edge);
+}
+.ticket > div {
+  display: contents;
+}
+.reasons {
+  margin: 0.3rem 0;
+  padding-left: 1.1rem;
+}
+.reasons li {
+  margin: 0.15rem 0;
+}
+.untrusted {
+  margin: 0.75rem 0;
+  border: 2px dashed var(--ink-2);
+  padding: 0.5rem 0.75rem;
+  background: #fffdf3;
+}
+.untrusted figcaption {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.untrusted blockquote {
+  margin: 0.25rem 0 0;
+  font-style: italic;
+}
+.decide {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.6rem;
+}
+.badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 2px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border: 1px solid currentColor;
+}
+.badge.ok {
+  color: var(--cleared);
+}
+.badge.warn {
+  color: var(--refused);
+}
+.history {
+  margin-top: 0.75rem;
+}
+.history summary {
+  cursor: pointer;
+  color: var(--info);
+}
+
+/* ---------------------------------------------------------------- reports and activity */
+.reports {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+.reports li {
+  border-left: 3px solid var(--info);
+  padding: 0.2rem 0 0.2rem 0.75rem;
+  margin: 0.5rem 0;
+}
+.reports .who {
+  font-weight: 700;
+}
+.reports time {
+  color: var(--ink-2);
+}
+.reports p {
+  margin: 0.1rem 0;
+}
+.tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0.75rem 0 0;
+}
+.tabs button[aria-pressed="true"] {
+  background: var(--ink);
+  color: #fff;
+}
+.banner {
+  padding: 0.55rem 0.75rem;
+  border: 2px solid currentColor;
+  font-weight: 400;
+}
+.banner.ok {
+  color: var(--cleared);
+  background: #e9f3ec;
+}
+.banner.bad {
+  color: var(--refused);
+  background: #f8e9e7;
+}
+.audit-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  margin: 0.6rem 0;
+}
+.timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 34rem;
+  overflow: auto;
+  border-top: 1px solid var(--rule);
+}
+.timeline li {
+  display: grid;
+  grid-template-columns: 3.2rem 5.6rem 1fr;
+  gap: 0 0.6rem;
+  padding: 0.3rem 0.4rem;
+  border-bottom: 1px solid var(--board-2);
+  font-size: 0.875rem;
+}
+.timeline .receipts {
+  grid-column: 3;
+}
+.timeline .s,
+.timeline time {
+  color: var(--ink-2);
+}
+.timeline li[data-tone="allow"] {
+  border-left: 4px solid var(--cleared);
+}
+.timeline li[data-tone="escalate"] {
+  border-left: 4px solid var(--held);
+}
+.timeline li[data-tone="money"] {
+  border-left: 4px solid var(--info);
+}
+.timeline li[data-tone="refuse"] {
+  border-left: 4px solid var(--refused);
+  background: #f6e4e1;
+  font-weight: 700;
+}
+.timeline .empty {
+  display: block;
+}
+
+/* ---------------------------------------------------------------- courier */
+.courier {
+  max-width: 54rem;
+  padding: 0 clamp(1rem, 3vw, 2.5rem) 3rem;
+}
+.chain {
+  margin: 0.3rem 0;
+  padding-left: 1.3rem;
+}
+.quote {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: flex-end;
+  margin-top: 0.75rem;
+}
+.quote > div {
+  display: flex;
+  flex-direction: column;
+}
+.quote .grow {
+  flex: 1 1 14rem;
+}
+.quote input {
+  width: 100%;
+}
+.status {
+  font-weight: 700;
+}
+.status.done {
+  color: var(--cleared);
+}
+.behind {
+  border-left: 4px solid var(--cleared);
+  padding-left: 0.75rem;
+}
+
+/* ---------------------------------------------------------------- controls */
+button {
+  font: 700 0.9375rem/1.2 var(--sans);
+  padding: 0.5rem 0.9rem;
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+}
+button:hover:not(:disabled) {
+  background: var(--board-2);
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+button.primary {
+  background: var(--cleared);
+  border-color: var(--cleared);
+  color: #fff;
+}
+button.primary:hover:not(:disabled) {
+  background: #15553a;
+}
+button.danger {
+  background: var(--refused);
+  border-color: var(--refused);
+  color: #fff;
+}
+button.danger-outline {
+  border-color: var(--refused);
+  color: var(--refused);
+  background: transparent;
+}
+input,
+textarea,
+select {
+  font: 400 0.9375rem/1.4 var(--sans);
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--ink-2);
+  border-radius: 2px;
+  background: #fff;
+  color: var(--ink);
+}
+label {
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+.error {
+  color: var(--refused);
+  font-weight: 700;
+  margin: 0.5rem clamp(1rem, 3vw, 2.5rem);
+}
+.strip .error,
+.setup .error,
+.panel .error {
+  margin: 0.5rem 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}

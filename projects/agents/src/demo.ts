@@ -58,9 +58,10 @@ try {
   });
   await runStory(world, { step, line, say, errandsTask: ERRANDS_TASK_2 });
 
-  step("3:00 · The end");
+  step("9 · The end");
   const dir = mkdtempSync(join(tmpdir(), "agents-export-"));
   for (const a of [world.ops, world.errands, world.coder]) {
+    await a.sink.flush();
     const head = a.sink.trail.head();
     const receipts = await a.sink.controller.receiptCount({ logId: a.sink.trailId, s: head.s, d: head.d });
     const file = join(dir, `${a.name.replace(/\s/g, "-").toLowerCase()}.bundle.json`);

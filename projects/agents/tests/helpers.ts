@@ -5,11 +5,12 @@ import { DemoClock, identityFromSeed, issueCredential, seedFrom, signDocument, t
 import type { Checkout, PaymentLink } from "@zk-toip/settle/src/agents/party";
 import type { PaymentState } from "@zk-toip/settle/src/agents/base";
 import { createAgentTrail, type EventlogSink } from "../src/audit/sink";
-import { Guard, type SettlePort } from "../src/guard/guard";
+import { Guard, type GuardOptions, type SettlePort } from "../src/guard/guard";
 import { signProfile, type HubPort, type WorkerProfile } from "../src/hub/client";
 import { issuePassport } from "../src/passport";
 import { JOB_QUOTE } from "../src/protocol/tasks";
 import { USDC } from "../src/config";
+import type { GuardApi } from "../src/guard/api";
 
 export const MINT = "TestUsdcMint1111111111111111111111111111111";
 export const id = (label: string): Identity => identityFromSeed(seedFrom(`agents-test/${label}`));
@@ -195,6 +196,7 @@ export function rootConstraints(o: { perTx?: number; perDay?: number; total?: nu
 }
 
 export interface Fixture {
+  options: GuardOptions;
   clock: DemoClock;
   engine: MandateEngine;
   guard: Guard;
@@ -251,7 +253,7 @@ export async function fixture(o: { approvable?: string[]; constraints?: Record<s
     endpoints: [],
     audit: { aid: sink.aid, trail: sink.trailId, witnesses: sink.witnesses },
   });
-  const guard = new Guard({
+  const options: GuardOptions = {
     name: "Ops agent",
     identity: people.ops,
     settle,
@@ -268,8 +270,10 @@ export async function fixture(o: { approvable?: string[]; constraints?: Record<s
     ci: { did: people.ci.did, repo: "/tmp/repo.git" },
     names: (d) => NAMES[d],
     maxWaitSeconds: 1,
-  });
+  };
+  const guard = new Guard(options);
   return {
+    options,
     clock,
     engine,
     guard,
@@ -307,3 +311,40 @@ export async function trailBodies(sink: EventlogSink): Promise<{ kind: string; b
   }
   return out;
 }
+
+/** A guard that records which tools reached it. */
+export function recordingGuard(): GuardApi & { reached: string[] } {
+  const reached: string[] = [];
+  const ok = async (name: string) => {
+    reached.push(name);
+    return { ok: true as const, value: {} };
+  };
+  return {
+    reached,
+    whoami: async () => (reached.push("whoami"), { name: "x", did: "did:x", principal: "p", passport: null, mandate: [], budgets: [], wallet: "0", paused: false, revoked: false }),
+    findWorkers: async () => (reached.push("find_workers"), [{ name: "Coder agent", did: "did:key:z6Mkcoder", kind: "agent" as const, skills: ["software"], verified: null }]),
+    offerJob: () => ok("offer_job") as never,
+    inbox: async () => (reached.push("inbox"), []),
+    checkMandate: () => ok("check_mandate") as never,
+    hire: async () => (reached.push("hire"), { status: "error", error: "x" }),
+    attest: () => ok("attest"),
+    dispute: () => ok("dispute"),
+    delegate: () => ok("delegate") as never,
+    payments: async () => (reached.push("payments"), []),
+    report: () => ok("report"),
+    quote: () => ok("quote") as never,
+    decline: () => ok("decline"),
+    deliver: () => ok("deliver"),
+    readFile: () => ok("read_file") as never,
+    writeFile: () => ok("write_file") as never,
+    runTests: () => ok("run_tests") as never,
+    sessionStart: async () => undefined,
+    modelTurn: async () => undefined,
+    toolCall: async (t) => void reached.push(`call:${t.tool}`),
+    toolResult: async () => undefined,
+    sessionEnd: async () => undefined,
+    control: () => "run",
+    notices: () => [],
+  };
+}
+
