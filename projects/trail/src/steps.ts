@@ -89,7 +89,7 @@ export const STEPS: StepDef[] = [
       const valid = t.entries.filter((e) => e.s >= 1 && e.status === "valid" && e.receipts.length === 3).length;
       say("Explorer", `${valid} of ${entries.length} entries are valid 3/3, anchored at KEL ${t.entries[entries.length]?.anchoredBy}.`, valid === entries.length ? "ok" : "bad");
       const endorsed = t.entries.find((e) => e.endorsements.length);
-      if (endorsed) say("Explorer", `Entry ${endorsed.s} carries ${endorsed.endorsements[0].name}'s endorsement.`, "ok");
+      if (endorsed) say("Explorer", `Entry ${endorsed.s} carries ${endorsed.endorsements[0].name}'s endorsement: her own signature on it.`, "ok");
     },
   },
   {
@@ -123,7 +123,9 @@ export const STEPS: StepDef[] = [
         const here = codes(at(r.problems, s));
         const all = codes(r.problems);
         say("Red team", `layer ${l.layer}: ${l.what}.`);
-        say("Verify", `fails: ${all.join(", ")}${here.length ? ` (at entry ${s}: ${here.join(", ")})` : ""}. ${explainProblem((here[0] ?? all[0]) as Problem["code"])}`, r.ok ? "warn" : "bad");
+        const first = (here[0] ?? all[0]) as Problem["code"];
+        const others = all.filter((c) => c !== first);
+        say("Verify", `fails at entry ${s} with ${first}. ${explainProblem(first)}${others.length ? ` Also: ${others.join(", ")}.` : ""}`, r.ok ? "warn" : "bad");
         w.state.samples = w.state.samples.filter((x) => x.id !== `tamper-${l.layer}`);
         w.state.samples.push({ id: `tamper-${l.layer}`, title: `Tampered, layer ${l.layer}`, note: `Amount 340 → 3,400: ${l.what}.`, bundle: l.bundle });
       }

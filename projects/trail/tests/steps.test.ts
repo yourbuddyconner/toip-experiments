@@ -53,7 +53,7 @@ describe("the demo, step by step", () => {
     ]);
     expect(t.entries.every((e) => e.chip === "valid 3/3")).toBe(true);
     expect(t.entries[7].anchoredBy).toBe(2);
-    expect(t.entries[6].endorsements.map((e) => e.name)).toEqual(["Ada (principal)"]);
+    expect(t.entries[6].endorsements.map((e) => e.name)).toEqual(["Ada"]);
     expect(t.entries.every((e) => e.body?.ok ?? e.s === 0)).toBe(true);
     expect(t.entries.flatMap((e) => e.flags)).toEqual([]);
     expect(v.ok).toBe(true);

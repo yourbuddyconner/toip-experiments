@@ -294,7 +294,7 @@ export class World {
   names(): Record<string, string> {
     const out: Record<string, string> = {};
     for (const w of this.witnesses) out[w.aid] = w.name;
-    out[nonTransferableAid(this.ada.signingPublic)] = "Ada (principal)";
+    out[nonTransferableAid(this.ada.signingPublic)] = "Ada";
     out[nonTransferableAid(this.supplier.signingPublic)] = "Quarry Supply";
     out[nonTransferableAid(this.bram.signingPublic)] = "Bram";
     if (this.saved.scout) out[this.saved.scout.aid] = "Scout";

@@ -298,7 +298,7 @@ export async function buildView(bundle: Bundle, opts: ViewOptions = {}): Promise
 
   // evidence: the bundle's own, then what watchers and witnesses hold
   const all = new Map<string, DuplicityEvidence>();
-  for (const e of [...kel.evidence, ...result.trails.flatMap((t) => t.evidence), ...(opts.evidence ?? [])]) {
+  for (const e of [...(opts.evidence ?? []), ...kel.evidence, ...result.trails.flatMap((t) => t.evidence)]) {
     if (e.logId !== kel.aid && !result.trails.some((t) => t.trailId === e.logId)) continue;
     if (!all.has(evKey(e))) all.set(evKey(e), e);
   }
@@ -387,6 +387,7 @@ export async function buildView(bundle: Bundle, opts: ViewOptions = {}): Promise
 const order = (e: EntryView) => ({ valid: 0, pending: 1, invalid: 2, cut: 3, rejected: 4 })[e.status];
 
 function rejected(s: number, d: string, t: string, kind: string, dt: string, raw: string, problems: Problem[]): EntryView {
+  const second = d !== "" && problems.some((p) => p.code === "duplicity");
   return {
     s,
     d,
@@ -394,7 +395,7 @@ function rejected(s: number, d: string, t: string, kind: string, dt: string, raw
     kind: kind || "(unreadable)",
     dt,
     status: "rejected",
-    chip: problems[0]?.code ?? "rejected",
+    chip: second ? "second version" : (problems[0]?.code ?? "rejected"),
     epoch: -1,
     receipts: [],
     bt: 0,
@@ -404,6 +405,8 @@ function rejected(s: number, d: string, t: string, kind: string, dt: string, raw
     duplicity: false,
     flags: [],
     checks: problems.length ? problems.map((p) => ({ label: p.code, result: "fail" as const, detail: `${p.message}. ${explainProblem(p.code)}` })) : [{ label: "Read", result: "fail", detail: STATUS_TEXT.rejected }],
-    explanation: STATUS_TEXT.rejected,
+    explanation: second
+      ? `Another version of entry ${s}, also validly signed by the controller. It was seen second, so it isn't part of the trail. The two versions together are duplicity evidence.`
+      : STATUS_TEXT.rejected,
   };
 }

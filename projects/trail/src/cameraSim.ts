@@ -46,7 +46,7 @@ export async function capture(world: World, photo: string): Promise<Capture> {
   const sig = await signCapture(camera.aid, st, camera.signers()[0], bytes);
   await camera.trail(world.state.camera!.trailId).append({ kind: "device/capture", body: { photo, manifestDigest: digest(bytes) }, refs: [{ d: digest(bytes) }] });
   await camera.publish(world.scoutClients());
-  return { label: `Photo ${photo}`, bytes: toB64u(bytes), sig: encodeKeyRefSig(sig), note: `signed under key state ${st.estSn}, anchored in the captures trail` };
+  return { label: `Photo ${photo}`, bytes: toB64u(bytes), sig: encodeKeyRefSig(sig), note: `Signed under key state ${st.estSn}, anchored in the captures trail` };
 }
 
 /** A photo signed with a retired key and never anchored: what a thief with an old key could make. */
@@ -56,5 +56,5 @@ export async function captureWithRetiredKey(world: World, photo: string, set: nu
   const est = kel.filter((m) => m.t === "icp" || m.t === "rot")[set];
   const bytes = manifest(photo, world.clock.iso());
   const sig = await signCapture(camera.aid, { estSn: est.s, estSaid: est.d }, world.cameraCold.release(set, 1)[0], bytes);
-  return { label: `Photo ${photo}`, bytes: toB64u(bytes), sig: encodeKeyRefSig(sig), note: `signed later with retired key ${set}, never anchored` };
+  return { label: `Photo ${photo}`, bytes: toB64u(bytes), sig: encodeKeyRefSig(sig), note: `Signed later with retired key ${set}, never anchored` };
 }
