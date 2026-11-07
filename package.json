@@ -8,6 +8,7 @@
     "packages/web-vault",
     "packages/relay",
     "packages/mandates",
+    "packages/anon-membership",
     "projects/shared-todo",
     "projects/settle"
   ],
