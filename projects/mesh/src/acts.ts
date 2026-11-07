@@ -21,7 +21,7 @@ import { CAST, member } from "./cast";
 import { Door, Guest, OFFLINE_FRESHNESS, nextChallenge, type DoorEvent } from "./door";
 import { issuePass, type DoorCache, type GuestPass } from "./pass";
 import { Recorder, type RecorderHooks } from "./recorder";
-import { ESCROW_ATTEST, SettleParty, attest, demoTerms } from "./settle";
+import { ESCROW_ATTEST, PAYMENTS, SettleParty, attest, demoPayment } from "./settle";
 import { fmtBytes, fmtMs, type Fact, type Trace } from "./trace";
 
 /** A Friday lunchtime: inside Rosa's pass window. */
@@ -482,10 +482,6 @@ async function cabinWorld(o: ActOptions & { lodgeUp: boolean; courier?: boolean 
   };
 }
 
-async function sinkTerms(clock: { now(): number; iso(): string; date(): Date }, payment: string, purpose: string, units: bigint) {
-  return demoTerms({ payment, purpose, units, payer: member("landlord"), payee: member("joe"), attester: member("alice"), arbiter: member("arbiter"), clock });
-}
-
 /** Act 2: Alice attests "work complete" from the cabin. The Lodge's gateway posts the exact TSP bytes to the relay. */
 export async function act2(o: ActOptions = {}): Promise<Trace> {
   const loss = o.loss ?? 0;
@@ -494,7 +490,7 @@ export async function act2(o: ActOptions = {}): Promise<Trace> {
   const facts: Fact[] = [];
   let ok = false;
   try {
-    const terms = await sinkTerms(sched, "pay-sink-4b", "Fix kitchen sink leak, Unit 4B", 340_000_000n);
+    const terms = await demoPayment("sink");
     w.landlord.know(terms);
     rec.say("landlord", `online, earlier: agreed Settle terms for "${terms.purpose}", ${terms.amount.display}, with Alice as the attester`, "step");
     rec.say("alice", `at the cabin. No internet, no cell signal. Plan us915-a: one frequency, 904.6 MHz, SF8 at 500 kHz. ${loss ? `Frame loss ${Math.round(loss * 100)}%.` : "No frame loss."}`, "info");
@@ -507,7 +503,7 @@ export async function act2(o: ActOptions = {}): Promise<Trace> {
     ).catch(() => false);
     await sched.advance(500);
     rec.say("alice", heard ? "heard the Lodge's gateway beacon, repeated by the Ridge (one hop)" : "heard no gateway", heard ? "info" : "bad");
-    const attestation = attest(member("alice"), terms, "complete", sched, "Sink fixed; dry after an hour");
+    const attestation = attest(member("alice"), terms, "complete", sched, PAYMENTS.sink.note);
     rec.say("alice", `selects "work complete": Settle's attest() signs a settle/attestation, sent as settle/escrow/attest`, "info");
     const startAt = rec.now;
     const startAir = rec.airtime();
@@ -553,13 +549,13 @@ export async function act3(o: ActOptions = {}): Promise<Trace> {
   const usb = o.usbDir ?? mkdtempSync(join(tmpdir(), "mesh-usb-"));
   let ok = false;
   try {
-    const terms = await sinkTerms(sched, "pay-fan-4b", "Replace bathroom fan, Unit 4B", 120_000_000n);
+    const terms = await demoPayment("fan");
     w.landlord.know(terms);
     rec.say("landlord", `online, earlier: agreed Settle terms for "${terms.purpose}", ${terms.amount.display}, with Alice as the attester`, "step");
     rec.say("lodge", "is down: a power cut. No gateway beacon tonight.", "bad");
     await sched.advance(65_000);
     rec.say("alice", "listened for a minute and heard no gateway", "info");
-    const attestation = attest(member("alice"), terms, "complete", sched, "New fan installed and tested");
+    const attestation = attest(member("alice"), terms, "complete", sched, PAYMENTS.fan.note);
     rec.say("alice", `selects "work complete" for the fan: Settle's attest() signs a second attestation`, "info");
     const delivery = await sched.run(w.alice.notify(member("landlord").did, ESCROW_ATTEST, attestation));
     rec.say("alice", `post() → "${delivery}": ${w.aliceMesh.pending()} message waiting in the outbox`, delivery === "queued" ? "warn" : "bad");

@@ -6,7 +6,8 @@
  * No chain is needed for that check, so none runs here.
  */
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Endpoint, ctt1, utf8, type Clock, type Identity, type Transport } from "@zk-toip/trust-core";
+import { DemoClock, Endpoint, ctt1, utf8, type Clock, type Identity, type Transport } from "@zk-toip/trust-core";
+import { member } from "./cast";
 import { attest, bindPaymentKey, derivePaymentKey, hexHash, termsHash, verifySigned, type Attestation, type Terms } from "@zk-toip/settle/src/protocol/documents";
 import { ESCROW_ATTEST } from "@zk-toip/settle/src/protocol/specs";
 import { bytesAddress } from "@zk-toip/settle/src/chain/escrow";
@@ -15,6 +16,21 @@ export { ESCROW_ATTEST, attest, type Attestation, type Terms };
 
 const addressFor = (label: string) => bytesAddress(sha256(utf8(`zk-toip/mesh-demo/address/${label}`)));
 const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+
+/** The demo's two payments: Joe fixes things at Unit 4B, the landlord pays, Alice confirms. */
+export const PAYMENTS = {
+  sink: { payment: "pay-sink-4b", purpose: "Fix kitchen sink leak, Unit 4B", units: 340_000_000n, note: "Sink fixed; dry after an hour" },
+  fan: { payment: "pay-fan-4b", purpose: "Replace bathroom fan, Unit 4B", units: 120_000_000n, note: "New fan installed and tested" },
+} as const;
+
+/**
+ * The terms of a demo payment, agreed online on 1 November. They are the same bytes in every process,
+ * so a landlord's agent started separately (`mesh receive`) knows the terms Alice attests to.
+ */
+export function demoPayment(which: keyof typeof PAYMENTS): Promise<Terms> {
+  const p = PAYMENTS[which];
+  return demoTerms({ ...p, payer: member("landlord"), payee: member("joe"), attester: member("alice"), arbiter: member("arbiter"), clock: new DemoClock("2026-11-01T09:00:00.000Z") });
+}
 
 /** Terms for a payment, as the landlord's Settle agent would propose them, with Alice as attester. */
 export async function demoTerms(o: {
