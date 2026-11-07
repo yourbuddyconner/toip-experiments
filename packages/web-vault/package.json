@@ -1,0 +1,25 @@
+{
+  "name": "@zk-toip/web-vault",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@zk-toip/trust-core": "0.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "fake-indexeddb": "6.2.7",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  },
+  "license": "UNLICENSED"
+}

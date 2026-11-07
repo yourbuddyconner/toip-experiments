@@ -4,6 +4,8 @@
   "type": "module",
   "workspaces": [
     "packages/trust-core",
+    "packages/cose",
+    "packages/web-vault",
     "packages/relay",
     "projects/shared-todo",
     "projects/settle"
