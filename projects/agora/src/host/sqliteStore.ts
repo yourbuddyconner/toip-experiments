@@ -7,6 +7,7 @@ import { DatabaseSync } from "node:sqlite";
 
 export class SqliteLogStore extends MemoryStore {
   private timer?: ReturnType<typeof setTimeout>;
+  private closed = false;
 
   private constructor(
     private readonly db: DatabaseSync,
@@ -59,6 +60,7 @@ export class SqliteLogStore extends MemoryStore {
 
   /** Writes everything now, in one transaction. */
   flush(): void {
+    if (this.closed) return;
     if (this.timer) clearTimeout(this.timer);
     this.timer = undefined;
     const d = this.dump();
@@ -82,7 +84,9 @@ export class SqliteLogStore extends MemoryStore {
   }
 
   close(): void {
+    if (this.closed) return;
     this.flush();
     this.db.close();
+    this.closed = true;
   }
 }

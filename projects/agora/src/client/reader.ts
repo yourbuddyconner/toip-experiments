@@ -232,11 +232,12 @@ export class ForumReader {
         return false;
       }
     };
-    const placeholder = (thread: string, id: string, seq: number, at: string, reason: string): PostView => {
+    const placeholder = (thread: string, id: string, seq: number, at: string, reason: string, nym: string): PostView => {
       let t = threads.get(thread);
       if (!t) threads.set(thread, (t = { id: thread, title: "Removed thread", scope: "forum", locked: false, posts: [], lastAt: at }));
       const deleted = reason.startsWith("Deleted");
-      const v: PostView = { id, seq, thread, parent: null, nym: "", name: "", at, status: deleted ? "deleted" : "hidden", note: reason, reports: 0 };
+      const v: PostView = { id, seq, thread, parent: null, nym, name: nym ? nymName(nym) : "", at, status: deleted ? "deleted" : "hidden", note: reason, reports: 0 };
+      if (nym) nymOf(nym, at).posts++;
       t.posts.push(v);
       posts.set(id, v);
       return v;
@@ -248,7 +249,7 @@ export class ForumReader {
       const body = e.a ? bodyBySaid.get(e.a) : undefined;
       if (!body) {
         const h = hiddenBySeq.get(e.s);
-        if (h && e.kind === "agora/post" && h.post) placeholder(h.thread, h.post, e.s, at, h.reason);
+        if (h && e.kind === "agora/post" && h.post) placeholder(h.thread, h.post, e.s, at, h.reason, h.nym);
         continue;
       }
       const doc = (body as unknown as { doc: ForumDoc }).doc;

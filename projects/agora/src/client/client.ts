@@ -376,6 +376,13 @@ export class AgoraClient {
     return out;
   }
 
+  /** Whether the wallet holds a live pass for this forum (or thread) under this policy. */
+  hasLivePass(forumId: string, thread: string | null, policyHash: string): boolean {
+    return this.state.sessions.some(
+      (s) => s.forum === forumId && s.thread === thread && s.gen === this.state.gen && s.pass.policy === policyHash && Date.parse(s.pass.validUntil) > this.clock.now() + 10 * 60_000,
+    );
+  }
+
   /** A live pass for this forum (or thread), from the wallet, or proved now. */
   async ensurePass(forumId: string, thread: string | null, onProgress?: (p: ProveProgress) => void): Promise<SessionRec> {
     const info = await this.host.forum(forumId);

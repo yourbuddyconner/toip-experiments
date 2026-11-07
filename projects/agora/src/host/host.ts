@@ -128,8 +128,8 @@ export interface FeedView {
   trail: string;
   /** The bodies the host serves. Hidden and deleted posts' bodies are left out; their headers stay. */
   bodies: Body[];
-  /** Entries whose bodies aren't served: the post, its thread, and why. The host vouches for post and thread. */
-  hidden: { s: number; reason: string; post: string; thread: string }[];
+  /** Entries whose bodies aren't served: the post, its thread, its nym (public before it was hidden), and why. The host vouches for these. */
+  hidden: { s: number; reason: string; post: string; thread: string; nym: string }[];
   head: { s: number; d: string };
 }
 
@@ -712,7 +712,7 @@ export class ForumHost {
       bodies,
       hidden: [...f.hidden].map(([s, reason]) => {
         const p = [...f.posts].find(([, r]) => r.seq === s);
-        return { s, reason, post: p?.[0] ?? "", thread: p?.[1].thread ?? "" };
+        return { s, reason, post: p?.[0] ?? "", thread: p?.[1].thread ?? "", nym: p?.[1].nym ?? "" };
       }),
       head: f.trail.head(),
     };
