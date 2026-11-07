@@ -1,0 +1,28 @@
+{
+  "name": "@zk-toip/mandates",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./policy.wasm": "./policy/policy.wasm"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "policy": "opa build -t wasm -e mandates/check/decision -e mandates/check/narrowing -o policy/bundle.tar.gz policy/check.rego && tar -xzf policy/bundle.tar.gz -C policy /policy.wasm && rm policy/bundle.tar.gz && node scripts/policy-hash.mjs",
+    "policy:test": "opa test policy/"
+  },
+  "dependencies": {
+    "@noble/hashes": "2.4.0",
+    "@zk-toip/trust-core": "0.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  },
+  "license": "UNLICENSED"
+}

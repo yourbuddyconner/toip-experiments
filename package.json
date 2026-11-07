@@ -5,6 +5,7 @@
   "workspaces": [
     "packages/trust-core",
     "packages/relay",
+    "packages/mandates",
     "projects/shared-todo",
     "projects/settle"
   ],
