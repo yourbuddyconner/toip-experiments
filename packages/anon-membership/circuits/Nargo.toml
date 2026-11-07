@@ -1,0 +1,3 @@
+[workspace]
+members = ["lib", "gate_d20"]
+default-member = "gate_d20"

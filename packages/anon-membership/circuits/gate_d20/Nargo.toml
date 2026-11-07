@@ -1,0 +1,8 @@
+[package]
+name = "gate_d20"
+type = "bin"
+authors = [""]
+compiler_version = ">=1.0.0"
+
+[dependencies]
+anon_membership = { path = "../lib" }

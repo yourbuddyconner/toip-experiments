@@ -1,0 +1,35 @@
+{
+  "name": "@zk-toip/anon-membership",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "browser": "./src/browser.ts",
+      "default": "./src/index.ts"
+    },
+    "./browser": "./src/browser.ts",
+    "./crs/*": "./crs/*"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "build:circuits": "tsx scripts/build-circuits.ts",
+    "vectors": "tsx scripts/vectors.ts"
+  },
+  "dependencies": {
+    "@aztec/bb.js": "npm:@aztec-foundation/bb.js@6.0.0",
+    "@noble/hashes": "2.4.0",
+    "@noir-lang/noir_js": "1.0.0",
+    "@zk-toip/trust-core": "0.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  },
+  "license": "UNLICENSED"
+}
