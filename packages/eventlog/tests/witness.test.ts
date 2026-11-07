@@ -294,6 +294,15 @@ describe("fork and duplicity", () => {
     expect(v.trails[0].evidence).toEqual([]);
     expect(v.trails[0].entries.filter((e) => e.status === "cut").map((e) => e.s)).toEqual([4, 5]);
     expect(v.trails[0].head?.d).toBe(new4.d);
+    // the witnesses' heads are the new entry, not the last cut one, so a watcher fetches it and a bundle isn't "truncated"
+    for (const cl of clients) expect((await cl.head(t.id))?.d).toBe(new4.d);
+    const watcher = new Watcher({ id: "ada", store: new MemoryStore(), sources: clients, clock: c.clock });
+    watcher.watch(t.id, c.aid);
+    await watcher.poll();
+    expect((await watcher.store.versions(t.id, 4)).map((m) => m.d)).toContain(new4.d);
+    const own = await verifyBundle(await exportBundle(c.store, c.aid), { witnesses: clients });
+    expect(own.problems).toEqual([]);
+    expect(own.witnessChecked).toBe(true);
   });
 });
 

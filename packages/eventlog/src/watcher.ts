@@ -119,7 +119,8 @@ export class Watcher extends LogKeeper {
       head: async (logId) => {
         const msgs = await this.store.range(logId);
         for (let i = msgs.length - 1; i >= 0; i--) {
-          const r = (await this.store.receipts(logId, msgs[i].s, msgs[i].d)).find((x) => x.kind === "witness");
+          if (msgs[i].cutBy !== undefined || msgs[i].superseded) continue;
+          const r =(await this.store.receipts(logId, msgs[i].s, msgs[i].d)).find((x) => x.kind === "witness");
           if (r) return receiptMessage(r);
         }
         return undefined;
