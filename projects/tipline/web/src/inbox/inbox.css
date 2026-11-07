@@ -1,0 +1,424 @@
+/* The journalist's desk: an ink bar, a rail of stories and sources, and a reading pane set in serif.
+   Sources are marked by a letter, the only thing the inbox knows them by. */
+:root {
+  --rail: #eceeea;
+}
+
+.muted {
+  color: var(--graphite);
+}
+
+.small {
+  font-size: 0.8125rem;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.65rem 1.25rem;
+  background: var(--ink);
+  color: #e8ebee;
+  font-size: 0.875rem;
+  flex-wrap: wrap;
+}
+
+.topbar .brand {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.topbar .who {
+  color: #b9c0c8;
+}
+
+.topbar .relay {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.topbar .relay::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #8a929b;
+}
+
+.topbar .relay.connected::before {
+  background: #4fbf8b;
+}
+
+.topbar .today {
+  font-variant-numeric: tabular-nums;
+}
+
+button.quiet.on-dark {
+  color: #e8ebee;
+}
+
+.welcome {
+  padding: 3rem 1.25rem;
+}
+
+.panel {
+  max-width: 44rem;
+}
+
+.panel.narrow {
+  max-width: 32rem;
+  margin: 0 auto;
+}
+
+.panel h1,
+.tip h1 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 2rem;
+  letter-spacing: -0.01em;
+}
+
+.panel > p {
+  font-family: var(--serif);
+  font-size: 1.0625rem;
+}
+
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .two {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pinned {
+  margin: -0.25rem 0 1rem;
+  padding: 0.75rem;
+  background: var(--rail);
+  border-radius: var(--radius);
+}
+
+.pinned p {
+  margin-bottom: 0.4rem;
+}
+
+/* ── Desk layout ───────────────────────────────────────── */
+
+.desk {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.desk-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(17rem, 22rem) 1fr;
+}
+
+@media (max-width: 820px) {
+  .desk-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rail {
+  background: var(--rail);
+  border-right: 1px solid var(--rule);
+  padding: 1.25rem 1rem;
+}
+
+.rail h2 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--graphite);
+  margin: 0;
+}
+
+.rail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.rail-sub {
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.story-list,
+.tip-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.story-item,
+.tip-item {
+  display: flex;
+  gap: 0.7rem;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  padding: 0.6rem 0.65rem;
+  font-weight: 400;
+  margin-bottom: 0.25rem;
+}
+
+.story-item {
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.story-item:hover,
+.tip-item:hover {
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  filter: none;
+}
+
+.story-item.current,
+.tip-item.current {
+  background: var(--surface);
+  border-color: var(--rule);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.story-item .title,
+.tip-item .title {
+  display: block;
+  font-family: var(--serif);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.story-item .meta,
+.tip-item .meta {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--graphite);
+}
+
+.source-mark {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 1.15rem;
+  background: var(--surface);
+}
+
+.source-mark.large {
+  width: 4rem;
+  height: 4rem;
+  font-size: 2.2rem;
+  border-width: 2px;
+}
+
+.refused {
+  margin-top: 1.5rem;
+  font-size: 0.8125rem;
+}
+
+.refused ul {
+  padding-left: 1rem;
+  margin: 0.5rem 0 0;
+}
+
+.refused li {
+  margin-bottom: 0.35rem;
+}
+
+/* ── Reading pane ──────────────────────────────────────── */
+
+.reading {
+  padding: 2rem clamp(1rem, 4vw, 3.5rem) 4rem;
+  background: var(--surface);
+  min-width: 0;
+}
+
+.reading > .notice {
+  max-width: 46rem;
+}
+
+.count {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  max-width: 38rem;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.5rem 1.25rem;
+  font-size: 0.9375rem;
+  margin: 1.5rem 0;
+}
+
+.facts dt {
+  color: var(--graphite);
+}
+
+.facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.evidence {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.tip {
+  max-width: 46rem;
+}
+
+.tip-head {
+  display: flex;
+  gap: 1.1rem;
+  align-items: flex-start;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 1.5rem;
+}
+
+.tip-head h1 {
+  margin-bottom: 0.2rem;
+}
+
+.verified {
+  color: var(--good);
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.subject {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.body {
+  font-family: var(--serif);
+  font-size: 1.125rem;
+  line-height: 1.65;
+  max-width: 38rem;
+  white-space: pre-wrap;
+}
+
+.tip h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--graphite);
+  margin-top: 2rem;
+}
+
+.attachments ul {
+  list-style: none;
+  padding: 0;
+}
+
+.attachment {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.attachment img,
+.attachment .file-icon {
+  width: 9rem;
+  max-height: 9rem;
+  object-fit: contain;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+}
+
+.attachment .file-icon {
+  height: 6rem;
+}
+
+.attachment .name {
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.clean {
+  color: var(--good);
+}
+
+.warn {
+  color: var(--warn);
+}
+
+.thread {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+}
+
+.thread li {
+  padding: 0.7rem 1rem;
+  margin-bottom: 0.6rem;
+  background: var(--paper);
+  border-left: 3px solid var(--rule);
+}
+
+.thread li.dropbox {
+  border-left-color: var(--accent);
+}
+
+.thread .who {
+  font-weight: 600;
+  font-size: 0.8125rem;
+  margin-bottom: 0.2rem;
+}
+
+.thread .who span {
+  font-weight: 400;
+  color: var(--graphite);
+  margin-left: 0.4rem;
+}
+
+.thread .text {
+  font-family: var(--serif);
+  font-size: 1.0625rem;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.proofs {
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+}
+
+.proofs .ok {
+  color: var(--good);
+}
+
+.proofs .bad {
+  color: var(--bad);
+}
