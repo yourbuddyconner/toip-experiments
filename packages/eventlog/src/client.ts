@@ -1,5 +1,5 @@
 /** What a controller or watcher needs from a witness, wherever it runs. */
-import type { Problem, Qb64, SignedMessage } from "./types";
+import type { Problem, Qb64, SignedMessage } from "./types.js";
 
 export type Refusal = "invalid" | "duplicity" | "unknownController" | "clockSkew";
 

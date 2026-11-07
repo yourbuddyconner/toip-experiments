@@ -6,11 +6,11 @@
  * - toCompactLog / fromCompactLog: a whole log, leaving out what its position gives (i, s, p and the SAID), with receipts.
  */
 import { decode as cborDecode, encode as cborEncode } from "cborg";
-import { decode, DUAL_CODES, encode } from "./cesr";
-import { isDigestSeal, isEventSeal } from "./kel";
-import { buildMessage, FIELDS, hexNumber } from "./said";
-import { ISO_MS } from "./trail";
-import type { Couple, IndexedSig, IndexedSigCode, KeyRefSig, MessageType, Qb64, SignedMessage } from "./types";
+import { decode, DUAL_CODES, encode } from "./cesr.js";
+import { isDigestSeal, isEventSeal } from "./kel.js";
+import { buildMessage, FIELDS, hexNumber } from "./said.js";
+import { ISO_MS } from "./trail.js";
+import type { Couple, IndexedSig, IndexedSigCode, KeyRefSig, MessageType, Qb64, SignedMessage } from "./types.js";
 
 const TYPES: MessageType[] = ["icp", "rot", "ixn", "rct", "tin", "ten", "tcl", "trc"];
 const PRIM_CODES = ["D", "B", "E", "I", "1AAJ", "1AAI", "0A", "0B", "0I"];

@@ -12,11 +12,11 @@ import {
 import { TspConsumer, TspEnvelopeError, TspTransport, advertisedSender, newUrnUuid, packTrustTask, type Unpacked } from "@openvtc/trust-tasks-tsp";
 import { pack as packTsp, unpack as unpackTsp, type UnpackKeys } from "@openvtc/vti-tsp-js";
 import { DataIntegrityProofVerifier, signTrustTask } from "@openvtc/trust-tasks-proof";
-import type { WireRecord } from "./bus";
-import type { Clock } from "./clock";
-import type { Delivery, Transport } from "./transport";
-import { resolveDidKey, type Identity } from "./identity";
-import { BodyError, decodeBody, encodeBody, type BodyCodec } from "./compact";
+import type { WireRecord } from "./bus.js";
+import type { Clock } from "./clock.js";
+import type { Delivery, Transport } from "./transport.js";
+import { resolveDidKey, type Identity } from "./identity.js";
+import { BodyError, decodeBody, encodeBody, type BodyCodec } from "./compact.js";
 
 /** A handler returns this to refuse a request. It becomes a signed trust-task-error. */
 export class Refusal {

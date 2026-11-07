@@ -8,15 +8,15 @@
  */
 import { ed25519 } from "@noble/curves/ed25519.js";
 import { resolveDidKey, type Delivery, type Identity, type Transport } from "@toip-tools/trust-core";
-import { AirtimeBudget, type TrafficClass } from "./airtime";
-import { concat, equal, hex, Lru, utf8 } from "./bytes";
-import { BEACON_BYTES, FRAME_HEADER, MAX_FRAGMENTS, ackLength, beaconSigned, decodeFrame, encodeFrame, estimate as estimateFrames, fragment, type Frame } from "./frame";
-import { ackMac, addressTag, keyHint, openSender, pairKeys, receiptMac, receiptTag, sealRoute, sealSender, type PeerKeys } from "./keys";
-import type { Link, ReceivedFrame } from "./link";
-import { RECEIPT_CUSTODY, RECEIPT_OPENED, RECEIPT_REFUSED, custodyMessage, decodePacket, encodePacket, packetId, type Packet, type PacketKind } from "./packet";
-import { realScheduler, type Scheduler } from "./scheduler";
-import { joinTsp, splitTsp, tspSignatureValid, type TspParts } from "./tsp";
-import { exportBundle as makeBundle } from "./bundle";
+import { AirtimeBudget, type TrafficClass } from "./airtime.js";
+import { concat, equal, hex, Lru, utf8 } from "./bytes.js";
+import { BEACON_BYTES, FRAME_HEADER, MAX_FRAGMENTS, ackLength, beaconSigned, decodeFrame, encodeFrame, estimate as estimateFrames, fragment, type Frame } from "./frame.js";
+import { ackMac, addressTag, keyHint, openSender, pairKeys, receiptMac, receiptTag, sealRoute, sealSender, type PeerKeys } from "./keys.js";
+import type { Link, ReceivedFrame } from "./link.js";
+import { RECEIPT_CUSTODY, RECEIPT_OPENED, RECEIPT_REFUSED, custodyMessage, decodePacket, encodePacket, packetId, type Packet, type PacketKind } from "./packet.js";
+import { realScheduler, type Scheduler } from "./scheduler.js";
+import { joinTsp, splitTsp, tspSignatureValid, type TspParts } from "./tsp.js";
+import { exportBundle as makeBundle } from "./bundle.js";
 
 // ---------------------------------------------------------------- public types
 

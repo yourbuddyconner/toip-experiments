@@ -1,7 +1,7 @@
 import { hmac } from "@noble/hashes/hmac.js";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { canonicalJson } from "@toip-tools/trust-core";
-import { fieldFromBytes, fieldToHex, toField, type Field } from "./field";
+import { fieldFromBytes, fieldToHex, toField, type Field } from "./field.js";
 
 const enc = new TextEncoder();
 const DAY_MS = 86_400_000;

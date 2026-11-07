@@ -1,6 +1,6 @@
 import { sha256 } from "@noble/hashes/sha2.js";
 import { canonicalJson, utf8 } from "@toip-tools/trust-core";
-import type { Action, Mandate } from "./types";
+import type { Action, Mandate } from "./types.js";
 
 const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
 

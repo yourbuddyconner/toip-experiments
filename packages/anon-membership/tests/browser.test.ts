@@ -15,7 +15,7 @@ function graph(entry: string, seen = new Set<string>()): Set<string> {
     const spec = m[1];
     if (spec.startsWith(".")) {
       const p = resolve(dirname(entry), spec);
-      if (!p.endsWith(".json")) graph(p.endsWith(".ts") ? p : p + ".ts", seen);
+      if (!p.endsWith(".json")) graph(p.endsWith(".ts") ? p : p.endsWith(".js") ? p.slice(0, -3) + ".ts" : p + ".ts", seen);
     }
   }
   return seen;

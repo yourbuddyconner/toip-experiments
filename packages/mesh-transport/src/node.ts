@@ -7,12 +7,12 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { SerialPort, SerialPortMock } from "serialport";
 import type { ReplayRecord, ReplayStore } from "@toip-tools/trust-core";
-import type { GatewayStore } from "./gateway";
-import type { Contact, ContactStore, MeshOutboxItem, MeshOutboxStore } from "./mesh";
-import type { SerialPortLike } from "./serial";
+import type { GatewayStore } from "./gateway.js";
+import type { Contact, ContactStore, MeshOutboxItem, MeshOutboxStore } from "./mesh.js";
+import type { SerialPortLike } from "./serial.js";
 
-export { GwmpServer, GwmpLink, GWMP, txpkFor } from "./gwmp";
-export { detectRadios, probeSerial, listenForGateways, kissEncode, KissDecoder, type RadioDetection } from "./detect";
+export { GwmpServer, GwmpLink, GWMP, txpkFor } from "./gwmp.js";
+export { detectRadios, probeSerial, listenForGateways, kissEncode, KissDecoder, type RadioDetection } from "./detect.js";
 
 interface StreamLike {
   readonly path: string;

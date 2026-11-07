@@ -1,9 +1,9 @@
 import type { Clock } from "@toip-tools/trust-core";
-import { dayOf, groupFieldOf } from "./encode";
-import { fieldFromHex, type Field } from "./field";
-import { parseMembershipProof, type MembershipVerifier } from "./prove";
-import { checkRootLog, epochIndex, type GroupRoot } from "./roots";
-import { sameStatement, type Predicate, type Statement } from "./statement";
+import { dayOf, groupFieldOf } from "./encode.js";
+import { fieldFromHex, type Field } from "./field.js";
+import { parseMembershipProof, type MembershipVerifier } from "./prove.js";
+import { checkRootLog, epochIndex, type GroupRoot } from "./roots.js";
+import { sameStatement, type Predicate, type Statement } from "./statement.js";
 
 /** What a verifier accepts. Groups are in statement slot order. */
 export interface AcceptPolicy {

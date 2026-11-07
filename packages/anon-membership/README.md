@@ -6,6 +6,12 @@ Tipline (`projects/tipline`) and Agora (`projects/agora`) use it. It runs in Nod
 
 The proof system is UltraHonk from Barretenberg (bb.js 6.0.0), always in its zero-knowledge mode. The circuit is Noir 1.0.0. The hash is Poseidon2 over BN254, the same in the circuit and in TypeScript.
 
+## Install
+
+```sh
+npm install @toip-tools/anon-membership
+```
+
 ## Zero knowledge: how strong the claim is
 
 UltraHonk's zero-knowledge mode is **designed to be zero-knowledge**. We found no published proof that it is. Earlier releases had a soundness flaw in this mode, fixed before 5.0.0. Noir says it is not yet for production use. Say "designed to be zero-knowledge" in any UI or document that uses this library.

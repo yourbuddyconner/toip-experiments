@@ -1,23 +1,65 @@
 {
   "name": "@toip-tools/eventlog",
-  "version": "0.0.0",
-  "private": true,
-  "license": "UNLICENSED",
+  "version": "0.1.0",
+  "description": "KERI key histories and witnessed audit trails that make tampering detectable.",
+  "keywords": [
+    "toip",
+    "keri",
+    "kel",
+    "cesr",
+    "witness",
+    "audit-log",
+    "did-keri"
+  ],
+  "homepage": "https://toip.tools/toolkit/eventlog/",
+  "bugs": {
+    "url": "https://github.com/yourbuddyconner/toip-tools/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourbuddyconner/toip-tools.git",
+    "directory": "packages/eventlog"
+  },
+  "license": "Apache-2.0",
+  "author": "Conner Swann",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./node": "./src/node/index.ts"
+    ".": {
+      "@toip-tools/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./node": {
+      "@toip-tools/source": "./src/node/index.ts",
+      "types": "./dist/node/index.d.ts",
+      "default": "./dist/node/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@noble/curves": "2.4.0",
     "@noble/hashes": "2.4.0",
-    "@toip-tools/trust-core": "0.0.0",
+    "@toip-tools/trust-core": "0.1.0",
     "cborg": "6.2.1"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 /** Log storage: first-seen versions, receipts, bodies and evidence. Never overwrites. */
-import { fromStream, toStream } from "./stream";
-import type { DuplicityEvidence, MessageType, Qb64, SignedMessage } from "./types";
+import { fromStream, toStream } from "./stream.js";
+import type { DuplicityEvidence, MessageType, Qb64, SignedMessage } from "./types.js";
 
 export interface StoredMessage {
   logId: Qb64;

@@ -8,6 +8,12 @@ Keeps an account's identity seed in the browser, sealed. It was Settle's `web/sr
 - **Backup code.** The seed as text. It restores the account in another browser. Without it, losing the passkey loses the account.
 - **CryptoKeys.** A non-extractable `CryptoKey` (such as Capture's capture key) can be kept in IndexedDB next to the sealed seed.
 
+## Install
+
+```sh
+npm install @toip-tools/web-vault
+```
+
 ## Use
 
 ```ts

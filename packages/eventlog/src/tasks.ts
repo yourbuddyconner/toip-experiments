@@ -1,12 +1,12 @@
 /** Trust Task transport for witnesses, disclosure and duplicity reports, over trust-core's Endpoint (TSP). */
 import { ourSpec, Refusal, type Endpoint } from "@toip-tools/trust-core";
-import { aidOfDidKey } from "./cesr";
-import type { SubmitResult, WitnessClient } from "./client";
-import { evidenceFromJson, evidenceToJson, type StoredEvidence } from "./store";
-import { fromStream, toStream } from "./stream";
-import type { DuplicityEvidence, Qb64 } from "./types";
-import type { Bundle } from "./verify";
-import type { Witness } from "./witness";
+import { aidOfDidKey } from "./cesr.js";
+import type { SubmitResult, WitnessClient } from "./client.js";
+import { evidenceFromJson, evidenceToJson, type StoredEvidence } from "./store.js";
+import { fromStream, toStream } from "./stream.js";
+import type { DuplicityEvidence, Qb64 } from "./types.js";
+import type { Bundle } from "./verify.js";
+import type { Witness } from "./witness.js";
 
 export const TRAIL_TASKS = {
   submit: ourSpec("trail/witness/submit"),

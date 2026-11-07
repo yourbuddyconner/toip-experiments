@@ -1,6 +1,6 @@
 import type { TrustTaskDocument } from "@openvtc/trust-tasks/runtime";
-import type { Clock } from "./clock";
-import type { Delivery, Transport } from "./transport";
+import type { Clock } from "./clock.js";
+import type { Delivery, Transport } from "./transport.js";
 
 /** One message on the simulated network, as an observer sees it, plus what its recipient opened. */
 export interface WireRecord {

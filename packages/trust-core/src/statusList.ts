@@ -1,8 +1,8 @@
 import type { Proof } from "@openvtc/trust-tasks/runtime";
-import type { Clock } from "./clock";
-import { signDocument, verifyDocument } from "./credentials";
-import { fromB64u, toB64u } from "./encoding";
-import type { Identity } from "./identity";
+import type { Clock } from "./clock.js";
+import { signDocument, verifyDocument } from "./credentials.js";
+import { fromB64u, toB64u } from "./encoding.js";
+import type { Identity } from "./identity.js";
 
 /** A signed revocation list: one bit per credential index. Our own format, after the W3C Bitstring Status List. */
 export interface StatusListDoc {

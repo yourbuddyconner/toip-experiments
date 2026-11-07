@@ -1,6 +1,6 @@
 /** Revocation: the issuer's side (StatusRegistry) and the verifier's side (resolvers). */
 import { fromB64u, isRevokedIn, signDocument, toB64u, type Clock, type Identity, type StatusListDoc } from "@toip-tools/trust-core";
-import type { Mandate, StatusEntry, StatusResolver } from "./types";
+import type { Mandate, StatusEntry, StatusResolver } from "./types.js";
 
 export interface StatusRegistryState {
   length: number;

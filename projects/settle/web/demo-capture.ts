@@ -3,7 +3,7 @@
  * what happens when. A video editor (or a Remotion project) cuts the story from footage/*.webm and markers.json.
  *
  *   npm run build:web --workspace @toip-tools/settle
- *   npx tsx web/demo-capture.ts --cluster devnet --out <dir>      # from projects/settle
+ *   npx tsx --conditions=@toip-tools/source web/demo-capture.ts --cluster devnet --out <dir>      # from projects/settle
  *
  * The cast: Joe's Plumbing (the business, payee), Dana (the customer, payer), and Sam at Settle (an operator,
  * who rules disputes as Settle Arbitration). Two jobs: one released when Dana confirms the work, one disputed

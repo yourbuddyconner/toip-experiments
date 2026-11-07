@@ -3,6 +3,7 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "customConditions": ["@toip-tools/source"],
     "strict": true,
     "noUncheckedIndexedAccess": false,
     "esModuleInterop": true,

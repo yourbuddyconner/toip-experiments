@@ -1,9 +1,9 @@
 /** CESR 1.0 text streams: each message followed by its attachments. */
 import { fromUtf8, utf8 } from "@toip-tools/trust-core";
-import { AttachmentReader, counter, decode, encode, encodeKeyRefSig, encodeSigGroup } from "./cesr";
-import { hexNumber, parseMessage, readVersion } from "./said";
-import type { Couple, Problem, SignedMessage } from "./types";
-import { problem } from "./types";
+import { AttachmentReader, counter, decode, encode, encodeKeyRefSig, encodeSigGroup } from "./cesr.js";
+import { hexNumber, parseMessage, readVersion } from "./said.js";
+import type { Couple, Problem, SignedMessage } from "./types.js";
+import { problem } from "./types.js";
 
 /** The CESR text of a message's attachments. */
 export function attachmentsOf(m: SignedMessage): string {

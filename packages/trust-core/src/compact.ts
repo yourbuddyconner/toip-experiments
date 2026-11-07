@@ -12,7 +12,7 @@
 import type { TrustTaskDocument } from "@openvtc/trust-tasks/runtime";
 import { ENVELOPE_TYPE } from "@openvtc/trust-tasks-tsp";
 import { didKeyFromPublicKey, fromMultibase, publicKeyFromDidKey, toMultibase } from "@openvtc/trust-tasks-proof";
-import { CborReader, CborWriter, MT } from "./cbor";
+import { CborReader, CborWriter, MT } from "./cbor.js";
 
 export interface BodyContext {
   /** The TSP envelope's sender and receiver VIDs. CTT1 writes each as one byte. */

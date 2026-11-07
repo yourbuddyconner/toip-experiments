@@ -1,12 +1,12 @@
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { Refusal, fromB64u, ourSpec, signDocument, toB64u, type Clock, type Endpoint, type Identity } from "@toip-tools/trust-core";
-import { CIRCUIT_ID } from "./artifacts";
-import { groupFieldOf, groupIdOf } from "./encode";
-import { fieldFromHex, fieldToHex, type Field } from "./field";
-import { commitmentOf, leafHash, plainLeaf, type Leaf } from "./hash";
-import { DAY_SECONDS, ROOT_TYPE, epochOf, rootDocHash, type GroupRoot } from "./roots";
-import { GroupTree } from "./tree";
+import { CIRCUIT_ID } from "./artifacts.js";
+import { groupFieldOf, groupIdOf } from "./encode.js";
+import { fieldFromHex, fieldToHex, type Field } from "./field.js";
+import { commitmentOf, leafHash, plainLeaf, type Leaf } from "./hash.js";
+import { DAY_SECONDS, ROOT_TYPE, epochOf, rootDocHash, type GroupRoot } from "./roots.js";
+import { GroupTree } from "./tree.js";
 
 /** ourSpec("anon-membership/enroll"): member DID → issuer, request and response. */
 export const ENROLL = ourSpec("anon-membership/enroll");

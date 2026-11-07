@@ -6,7 +6,7 @@
  * COSE Sig_structure. The caller then checks `signature` (DER ECDSA P-256) over `signed`.
  */
 import { sha256 } from "@noble/hashes/sha2.js";
-import { decodeCbor, equal } from "./cbor";
+import { decodeCbor, equal } from "./cbor.js";
 
 export interface WebAuthnInfo {
   origin: string;

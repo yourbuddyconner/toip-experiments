@@ -1,5 +1,5 @@
 /** Decisions in plain sentences (agents design §8.3). Every reason code has one sentence template. */
-import type { Decision, Period, Reason, Units } from "./types";
+import type { Decision, Period, Reason, Units } from "./types.js";
 
 export interface ExplainOptions {
   /** A person's or an agent's name for a DID. Default: the DID. */

@@ -1,4 +1,4 @@
-import type { Clock } from "./clock";
+import type { Clock } from "./clock.js";
 
 /** What one agent has learned about another, and how. Drives the "what I know" view and the disclosure tests. */
 export interface Fact {

@@ -7,9 +7,9 @@
  */
 import { ed25519 } from "@noble/curves/ed25519.js";
 import { p256 } from "@noble/curves/nist.js";
-import { decodeCbor, encodeCbor, Tagged } from "./cbor";
-import { curveOf, type AsyncSigner, type CoseAlg, type PublicKey } from "./signers";
-import { checkWebAuthn, type WebAuthnInfo } from "./webauthn";
+import { decodeCbor, encodeCbor, Tagged } from "./cbor.js";
+import { curveOf, type AsyncSigner, type CoseAlg, type PublicKey } from "./signers.js";
+import { checkWebAuthn, type WebAuthnInfo } from "./webauthn.js";
 
 const ALGS: readonly CoseAlg[] = [-19, -9, -8, -7, -65600];
 const COSE_SIGN1 = 18;

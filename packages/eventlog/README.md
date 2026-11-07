@@ -13,6 +13,12 @@ The design is `projects/trail/docs/design.md`. Section 13 is the API.
 
 The core runs in browsers and Node. `JsonFileStore`, `serveHttp` and `startWitness` are Node only, in `@toip-tools/eventlog/node`.
 
+## Install
+
+```sh
+npm install @toip-tools/eventlog
+```
+
 ## KERI compatibility
 
 **Produced and accepted:**

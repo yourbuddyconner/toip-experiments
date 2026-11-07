@@ -5,9 +5,9 @@
  * wait for TX_ACK. Node only (node:dgram).
  */
 import { createSocket, type RemoteInfo, type Socket } from "node:dgram";
-import { loraAirtimeMs, plans, type ChannelPlan, type LoRaSetting } from "./airtime";
+import { loraAirtimeMs, plans, type ChannelPlan, type LoRaSetting } from "./airtime.js";
 
-import { LinkEvents, type Link, type LinkInfo, type LinkState, type ReceivedFrame } from "./link";
+import { LinkEvents, type Link, type LinkInfo, type LinkState, type ReceivedFrame } from "./link.js";
 
 export const GWMP = { PUSH_DATA: 0x00, PUSH_ACK: 0x01, PULL_DATA: 0x02, PULL_RESP: 0x03, PULL_ACK: 0x04, TX_ACK: 0x05 } as const;
 

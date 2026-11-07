@@ -6,6 +6,12 @@ Capture signs its manifests and sensor frames with it (Capture design §8, §12,
 
 It uses `cborg` for CBOR, and `@noble/curves` and `@noble/hashes` for Ed25519, P-256 and SHA-256.
 
+## Install
+
+```sh
+npm install @toip-tools/cose
+```
+
 ## CBOR
 
 ```ts

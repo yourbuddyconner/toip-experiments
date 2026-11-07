@@ -2,12 +2,12 @@
  * Trails: our audit logs on top of a KEL (trail design §7.4, §11.2). Not KERI.
  */
 import { utf8 } from "@toip-tools/trust-core";
-import { verifyCouple, verifyKeySig } from "./keys";
-import { isEventSeal, sealsOf, type KelResult, type KeyState, type VerifyOptions } from "./kel";
-import { buildMessage, checkBody, hexNumber } from "./said";
-import { fromStream } from "./stream";
-import type { Body, DuplicityEvidence, KeyRef, KeyRefSig, Problem, Qb64, Seal, SignedMessage } from "./types";
-import { problem } from "./types";
+import { verifyCouple, verifyKeySig } from "./keys.js";
+import { isEventSeal, sealsOf, type KelResult, type KeyState, type VerifyOptions } from "./kel.js";
+import { buildMessage, checkBody, hexNumber } from "./said.js";
+import { fromStream } from "./stream.js";
+import type { Body, DuplicityEvidence, KeyRef, KeyRefSig, Problem, Qb64, Seal, SignedMessage } from "./types.js";
+import { problem } from "./types.js";
 
 const hex = (n: number) => n.toString(16);
 export const ISO_MS = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;

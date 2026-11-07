@@ -1,6 +1,7 @@
+#!/usr/bin/env node
 // Starts the relay. Configure with PORT (default 8787), RELAY_DB (default ./relay.db),
 // RELAY_PUBLIC_URL (the URL clients use, e.g. wss://relay.example.com/v1) and HOST.
-import { startRelay } from "./server";
+import { startRelay } from "./server.js";
 
 const port = Number(process.env.PORT ?? 8787);
 const relay = await startRelay({

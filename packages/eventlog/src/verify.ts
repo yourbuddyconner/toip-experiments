@@ -2,16 +2,16 @@
 import { sha256 } from "@noble/hashes/sha2.js";
 import { blake3 } from "@noble/hashes/blake3.js";
 import { utf8, type Clock } from "@toip-tools/trust-core";
-import { verifyBinding, type DidBinding } from "./binding";
-import { encode, isQb64 } from "./cesr";
-import type { WitnessClient } from "./client";
-import { isDigestSeal, retiredAt, sealsOf, verifyKel, type KelResult, type VerifyOptions } from "./kel";
-import { verifyCouple, verifyKeySig } from "./keys";
-import type { LogStore } from "./store";
-import { fromStream } from "./stream";
-import { checkKeyRefSig, cutStatus, verifyTrail, type TrailResult, type TrailVerifyOptions } from "./trail";
-import type { Body, KeyRef, KeyRefSig, Problem, Qb64, SignedMessage } from "./types";
-import { problem } from "./types";
+import { verifyBinding, type DidBinding } from "./binding.js";
+import { encode, isQb64 } from "./cesr.js";
+import type { WitnessClient } from "./client.js";
+import { isDigestSeal, retiredAt, sealsOf, verifyKel, type KelResult, type VerifyOptions } from "./kel.js";
+import { verifyCouple, verifyKeySig } from "./keys.js";
+import type { LogStore } from "./store.js";
+import { fromStream } from "./stream.js";
+import { checkKeyRefSig, cutStatus, verifyTrail, type TrailResult, type TrailVerifyOptions } from "./trail.js";
+import type { Body, KeyRef, KeyRefSig, Problem, Qb64, SignedMessage } from "./types.js";
+import { problem } from "./types.js";
 
 /** The digest forms we look for when matching anchors: Blake3 (E) and SHA-256 (I). */
 export function digestForms(bytes: Uint8Array): Qb64[] {

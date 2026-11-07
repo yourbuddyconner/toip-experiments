@@ -1,13 +1,13 @@
 /** Watchers: a verifier's first-seen copies, witness polling, and duplicity evidence (trail design §10). */
 import { utf8, type Clock } from "@toip-tools/trust-core";
-import type { WitnessClient } from "./client";
-import { KelProcessor, type KelResult } from "./kel";
-import { verifyCouple } from "./keys";
-import { receiptMessage, type LogStore } from "./store";
-import { fromStream, toStream } from "./stream";
-import { checkKeyRefSig, cutStatus } from "./trail";
-import type { DuplicityEvidence, Problem, Qb64, SignedMessage } from "./types";
-import { LogKeeper } from "./witness";
+import type { WitnessClient } from "./client.js";
+import { KelProcessor, type KelResult } from "./kel.js";
+import { verifyCouple } from "./keys.js";
+import { receiptMessage, type LogStore } from "./store.js";
+import { fromStream, toStream } from "./stream.js";
+import { checkKeyRefSig, cutStatus } from "./trail.js";
+import type { DuplicityEvidence, Problem, Qb64, SignedMessage } from "./types.js";
+import { LogKeeper } from "./witness.js";
 
 export class Watcher extends LogKeeper {
   readonly id: string;

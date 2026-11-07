@@ -5,7 +5,7 @@ import { existsSync, mkdtempSync, readFileSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
-import { build } from "vite";
+import { build, defaultClientConditions } from "vite";
 import { chromium } from "playwright";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
@@ -24,6 +24,7 @@ export async function buildPage(): Promise<string> {
     root: here,
     logLevel: "error",
     configFile: false,
+    resolve: { conditions: ["@toip-tools/source", ...defaultClientConditions] },
     build: { outDir, emptyOutDir: true, target: "esnext", chunkSizeWarningLimit: 100_000 },
     worker: { format: "es" },
   });

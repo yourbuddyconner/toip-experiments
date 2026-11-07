@@ -1,5 +1,5 @@
 /** The link interface every radio adapter implements (design §13). An adapter only frames bytes. */
-import type { AirtimePolicy } from "./airtime";
+import type { AirtimePolicy } from "./airtime.js";
 
 export interface LinkInfo {
   /** "gwmp:AA555A0000000000", "rak:/dev/tty.usbserial-0001", "sim:door". */

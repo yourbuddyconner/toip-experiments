@@ -4,7 +4,7 @@
  */
 import { ed25519 } from "@noble/curves/ed25519.js";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { encodeCbor } from "./cbor";
+import { encodeCbor } from "./cbor.js";
 
 /** Ed25519 (-19), ESP256 (-9), EdDSA (-8), ES256 (-7), and the private-use WebAuthn-wrapped ES256 (-65600). */
 export type CoseAlg = -19 | -9 | -8 | -7 | -65600;

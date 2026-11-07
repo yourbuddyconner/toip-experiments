@@ -4,8 +4,8 @@
  * so an old presentation fails even after a restart.
  */
 import type { Identity } from "@toip-tools/trust-core";
-import { equal } from "./bytes";
-import type { MeshTransport } from "./mesh";
+import { equal } from "./bytes.js";
+import type { MeshTransport } from "./mesh.js";
 
 export class ChallengeBeacon {
   private readonly nonces: Uint8Array[] = [];

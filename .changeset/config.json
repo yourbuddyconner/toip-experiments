@@ -1,0 +1,23 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@4.0.1/schema.json",
+  "baseBranch": "main",
+  "access": "public",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "ignore": [],
+  "fixed": [
+    [
+      "@toip-tools/trust-core",
+      "@toip-tools/relay",
+      "@toip-tools/cose",
+      "@toip-tools/web-vault",
+      "@toip-tools/mandates",
+      "@toip-tools/anon-membership",
+      "@toip-tools/eventlog",
+      "@toip-tools/mesh-transport"
+    ]
+  ],
+  "linked": [],
+  "updateInternalDependencies": "patch",
+  "privatePackages": { "version": false, "tag": false }
+}

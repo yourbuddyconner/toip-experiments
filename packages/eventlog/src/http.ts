@@ -1,9 +1,9 @@
 /** The witness HTTP API, as a fetch-style handler and a client. Browser-safe. */
-import type { SubmitResult, WitnessClient } from "./client";
-import { evidenceFromJson, evidenceToJson, type StoredEvidence } from "./store";
-import { fromStream, toStream } from "./stream";
-import type { DuplicityEvidence, Qb64 } from "./types";
-import type { Witness } from "./witness";
+import type { SubmitResult, WitnessClient } from "./client.js";
+import { evidenceFromJson, evidenceToJson, type StoredEvidence } from "./store.js";
+import { fromStream, toStream } from "./stream.js";
+import type { DuplicityEvidence, Qb64 } from "./types.js";
+import type { Witness } from "./witness.js";
 
 const text = (body: string, status = 200) => new Response(body, { status, headers: { "content-type": "application/cesr; charset=utf-8" } });
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });

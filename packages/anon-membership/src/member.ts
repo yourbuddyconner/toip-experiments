@@ -1,9 +1,9 @@
-import { groupFieldOf } from "./encode";
-import type { Field } from "./field";
-import { commitmentOf, leafHash, plainLeaf, type Leaf } from "./hash";
-import { MembershipError } from "./prove";
-import type { Predicate, Statement, Witness } from "./statement";
-import type { GroupTree } from "./tree";
+import { groupFieldOf } from "./encode.js";
+import type { Field } from "./field.js";
+import { commitmentOf, leafHash, plainLeaf, type Leaf } from "./hash.js";
+import { MembershipError } from "./prove.js";
+import type { Predicate, Statement, Witness } from "./statement.js";
+import type { GroupTree } from "./tree.js";
 
 export interface MembershipInputsOptions {
   secret: Field;

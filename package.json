@@ -1,6 +1,7 @@
 {
   "name": "toip-tools",
   "private": true,
+  "license": "Apache-2.0",
   "type": "module",
   "workspaces": [
     "packages/trust-core",
@@ -22,7 +23,13 @@
   ],
   "scripts": {
     "test": "npm test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run build --workspace packages",
     "licenses": "node scripts/check-licenses.mjs",
+    "release:check": "npm run build && node scripts/release-check.mjs",
+    "changeset": "changeset",
+    "version-packages": "changeset version && npm install --package-lock-only --ignore-scripts --no-audit --no-fund",
+    "release": "npm run build && changeset publish",
     "dev": "node scripts/dev.mjs",
     "settle": "npm run app --workspace @toip-tools/settle",
     "trail": "npm run app --workspace @toip-tools/trail",
@@ -31,5 +38,8 @@
     "agents": "npm run app --workspace @toip-tools/agents",
     "mesh": "npm run app --workspace @toip-tools/mesh",
     "capture": "npm run app --workspace @toip-tools/capture"
+  },
+  "devDependencies": {
+    "@changesets/cli": "3.0.3"
   }
 }

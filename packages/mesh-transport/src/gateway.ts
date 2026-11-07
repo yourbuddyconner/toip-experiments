@@ -6,11 +6,11 @@
  */
 import { ed25519 } from "@noble/curves/ed25519.js";
 import { resolveDidKey, type Delivery, type Identity } from "@toip-tools/trust-core";
-import { concat, h, hex, utf8 } from "./bytes";
-import { openRoute, pairKeys, receiptTag } from "./keys";
-import type { MeshTransport, ViaArrival } from "./mesh";
-import { RECEIPT_CUSTODY, custodyMessage, encodePacket } from "./packet";
-import { joinTsp, tspSignatureValid } from "./tsp";
+import { concat, h, hex, utf8 } from "./bytes.js";
+import { openRoute, pairKeys, receiptTag } from "./keys.js";
+import type { MeshTransport, ViaArrival } from "./mesh.js";
+import { RECEIPT_CUSTODY, custodyMessage, encodePacket } from "./packet.js";
+import { joinTsp, tspSignatureValid } from "./tsp.js";
 
 export interface GatewayStore {
   has(pid: string): Promise<boolean>;

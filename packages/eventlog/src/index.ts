@@ -1,5 +1,5 @@
 // Browser-safe core. JsonFileStore and serveHttp are in "@toip-tools/eventlog/node".
-export * from "./types";
+export * from "./types.js";
 export {
   Code,
   encode,
@@ -17,10 +17,10 @@ export {
   decodeIndexedSig,
   encodeKeyRefSig,
   decodeKeyRefSig,
-} from "./cesr";
-export { saidify, makeBody, checkBody, versionString, parseMessage, type Protocol } from "./said";
-export { toStream, fromStream, attachmentsOf } from "./stream";
-export { toCompact, fromCompact, toCompactLog, fromCompactLog } from "./compact";
+} from "./cesr.js";
+export { saidify, makeBody, checkBody, versionString, parseMessage, type Protocol } from "./said.js";
+export { toStream, fromStream, attachmentsOf } from "./stream.js";
+export { toCompact, fromCompact, toCompactLog, fromCompactLog } from "./compact.js";
 export {
   ed25519Signer,
   p256Signer,
@@ -37,7 +37,7 @@ export {
   type WebAuthnAssertion,
   type WebAuthnPolicy,
   type SigOptions,
-} from "./keys";
+} from "./keys.js";
 export {
   verifyKel,
   KelProcessor,
@@ -54,16 +54,16 @@ export {
   type KelEvent,
   type VerifyOptions,
   type EventStatus,
-} from "./kel";
-export { verifyTrail, TrailProcessor, buildTin, buildTen, buildTcl, buildTrc, type TrailResult, type TrailEntry, type EntryStatus, type TrailVerifyOptions } from "./trail";
-export { Controller, Trail, type InceptOptions, type RotateOptions, type PublishReport } from "./controller";
-export { WitnessError, type WitnessClient, type SubmitResult, type Refusal } from "./client";
-export { Witness, localWitnessClient } from "./witness";
-export { Watcher, verifyEvidence } from "./watcher";
-export { makeReceipt, endorse } from "./receipts";
-export { witnessHttpHandler, httpWitnessClient } from "./http";
-export { TRAIL_TASKS, serveWitnessTasks, taskWitnessClient, disclose, onDisclose, reportDuplicity, onDuplicity } from "./tasks";
-export { makeBinding, bindingSeal, bindingDigest, verifyBinding, type DidBinding } from "./binding";
+} from "./kel.js";
+export { verifyTrail, TrailProcessor, buildTin, buildTen, buildTcl, buildTrc, type TrailResult, type TrailEntry, type EntryStatus, type TrailVerifyOptions } from "./trail.js";
+export { Controller, Trail, type InceptOptions, type RotateOptions, type PublishReport } from "./controller.js";
+export { WitnessError, type WitnessClient, type SubmitResult, type Refusal } from "./client.js";
+export { Witness, localWitnessClient } from "./witness.js";
+export { Watcher, verifyEvidence } from "./watcher.js";
+export { makeReceipt, endorse } from "./receipts.js";
+export { witnessHttpHandler, httpWitnessClient } from "./http.js";
+export { TRAIL_TASKS, serveWitnessTasks, taskWitnessClient, disclose, onDisclose, reportDuplicity, onDuplicity } from "./tasks.js";
+export { makeBinding, bindingSeal, bindingDigest, verifyBinding, type DidBinding } from "./binding.js";
 export {
   verifySignature,
   anchoredIn,
@@ -76,5 +76,5 @@ export {
   type SignatureCheck,
   type TrailRefCheck,
   type Anchor,
-} from "./verify";
-export { MemoryStore, evidenceToJson, evidenceFromJson, type LogStore, type StoredMessage, type StoredReceipt, type StoreData } from "./store";
+} from "./verify.js";
+export { MemoryStore, evidenceToJson, evidenceFromJson, type LogStore, type StoredMessage, type StoredReceipt, type StoreData } from "./store.js";

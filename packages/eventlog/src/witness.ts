@@ -1,17 +1,17 @@
 /** Witnesses: receipt the first version seen at each location (trail design §9). Runs in browsers and Node. */
 import { utf8, type Clock } from "@toip-tools/trust-core";
-import { didKeyOf } from "./cesr";
-import type { Refusal, SubmitResult, WitnessClient } from "./client";
-import { KelProcessor, type KelResult } from "./kel";
-import { verifyCouple, type SigOptions, type Signer } from "./keys";
-import { makeReceipt, makeTimedReceipt, signerAid, toStoredReceipt } from "./receipts";
-import { fromStored, receiptMessage, type LogStore, type StoredMessage } from "./store";
-import { attachmentsOf, fromStream, toStream } from "./stream";
-import { TrailProcessor } from "./trail";
-import type { DuplicityEvidence, Problem, Qb64, SignedMessage } from "./types";
-import { problem } from "./types";
+import { didKeyOf } from "./cesr.js";
+import type { Refusal, SubmitResult, WitnessClient } from "./client.js";
+import { KelProcessor, type KelResult } from "./kel.js";
+import { verifyCouple, type SigOptions, type Signer } from "./keys.js";
+import { makeReceipt, makeTimedReceipt, signerAid, toStoredReceipt } from "./receipts.js";
+import { fromStored, receiptMessage, type LogStore, type StoredMessage } from "./store.js";
+import { attachmentsOf, fromStream, toStream } from "./stream.js";
+import { TrailProcessor } from "./trail.js";
+import type { DuplicityEvidence, Problem, Qb64, SignedMessage } from "./types.js";
+import { problem } from "./types.js";
 
-export type { SubmitResult, WitnessClient } from "./client";
+export type { SubmitResult, WitnessClient } from "./client.js";
 
 const KEL_T = new Set(["icp", "rot", "ixn"]);
 const TRAIL_T = new Set(["tin", "ten", "tcl"]);
