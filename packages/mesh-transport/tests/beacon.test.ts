@@ -33,6 +33,36 @@ describe("ChallengeBeacon", () => {
     expect(door.inbox).toHaveLength(1);
   });
 
+  it("still introduces itself to a door it only heard beacon: the door doesn't know the guest", async () => {
+    const { VirtualScheduler } = await import("../src/scheduler");
+    const { SimMedium } = await import("../src/sim");
+    const { MeshTransport } = await import("../src/mesh");
+    const { setting } = await import("./helpers");
+    const { regions } = await import("../src/airtime");
+    const { decodePacket } = await import("../src/packet");
+    const sched = new VirtualScheduler();
+    const medium = new SimMedium({ scheduler: sched, seed: 2 });
+    const radio = { setting: setting(), mtu: 250, budget: regions.us915, turnaroundMs: 10 };
+    const [guestId, doorId] = [ident("intro/guest"), ident("intro/door")];
+    const guest = new MeshTransport({ identities: [guestId], links: [medium.node("guest", radio)], scheduler: sched });
+    const door = new MeshTransport({ identities: [doorId], links: [medium.node("door", radio)], scheduler: sched });
+    medium.connect("guest", "door");
+    const inbox: Uint8Array[] = [];
+    door.attach(doorId.did, async (w) => void inbox.push(w));
+    await guest.start();
+    await door.start();
+    guest.addContact(doorId.did); // from the pass; the door has never heard of the guest
+    const beacon = new ChallengeBeacon({ identity: doorId, mesh: door });
+    beacon.start();
+    await sched.advance(500);
+    expect(guest.neighbors().map((c) => c.vid)).toEqual([doorId.did]);
+    expect(await sched.run(guest.post(guestId.did, doorId.did, await wireOf(guestId, doorId.did, 300)))).toBe("live");
+    beacon.stop();
+    const first = medium.records().map((r) => decodeFrame(r.bytes)).find((f) => f?.type === "data");
+    expect(first?.type === "data" && decodePacket(first.chunk)?.kind).toBe("intro");
+    expect(inbox).toHaveLength(1);
+  });
+
   it("ignores beacons from keys it doesn't know", async () => {
     const w = await meshWorld({ names: ["rosa", "door"], links: [["rosa", "door"]] });
     const stranger = ident("stranger");

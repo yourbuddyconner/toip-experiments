@@ -436,10 +436,11 @@ export class MeshTransport implements Transport {
     void this.opts.contacts?.save([...this.contacts.values()]);
   }
 
-  private heard(c: Contact, hops: number, slot: Slot, rssi?: number): void {
+  /** `knowsUs`: what we heard shows they know us (an ACK, a receipt, a message), so PAIR works. A beacon doesn't. */
+  private heard(c: Contact, hops: number, slot: Slot, rssi?: number, knowsUs = true): void {
     const wasFresh = c.heard && this.sched.now() - c.heard.atMs < HEARD_FRESH_MS;
-    const changed = !c.introduced;
-    c.introduced = true;
+    const changed = knowsUs && !c.introduced;
+    if (knowsUs) c.introduced = true;
     c.heard = { atMs: this.sched.now(), hops, link: slot.label, ...(rssi !== undefined ? { rssi } : {}) };
     if (changed) this.contactsChanged();
     if (!wasFresh) this.retryWaiting(c.vid);
@@ -1232,7 +1233,8 @@ export class MeshTransport implements Transport {
     if (!vid) return this.drop("unknown-beacon");
     this.beaconsSeen.set(key, this.sched.now());
     const c = this.contacts.get(vid)!;
-    this.heard(c, f.hops, slot, rx.rssi);
+    // A beacon is a broadcast: it gives a route, not an introduction. The door may never have heard of us.
+    this.heard(c, f.hops, slot, rx.rssi, false);
     const info: BeaconInfo = { role: f.role, vid, atMs: this.sched.now(), ...(f.role === "verifier" ? { nonce: f.body } : {}), ...(rx.rssi !== undefined ? { rssi: rx.rssi } : {}) };
     for (const fn of [...this.beaconListeners]) fn(info);
     if (this.relayOn && f.role === "gateway" && f.hops + 1 <= this.maxTtl) {
