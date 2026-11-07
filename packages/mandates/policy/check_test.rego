@@ -116,3 +116,8 @@ test_wildcard_coverage if {
 	not check.covered("software.*", "software.ci")
 	not check.covered("software", "software.*")
 }
+
+test_approval_from_outside_the_chain_clears_nothing if {
+	i := object.union(base([root, leaf], "31"), {"approvals": [{"id": "ap", "approverLink": -1, "actionHash": "sha256:a", "validUntilS": 100, "used": false}]})
+	check.decision.outcome == "escalate" with input as i
+}

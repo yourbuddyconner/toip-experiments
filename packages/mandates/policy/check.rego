@@ -314,7 +314,7 @@ satisfied(c, v) if {
 	num(v) >= num(c.min)
 }
 
-approvable(name) := true if {
+approvable(name) if {
 	member(name, input.chain[leaf].escalation.approvable)
 } else := false
 
@@ -374,6 +374,7 @@ cleared(r) if {
 	a.actionHash == input.actionHash
 	a.used == false
 	a.validUntilS > input.nowS
+	a.approverLink >= 0
 	a.approverLink <= r.link
 }
 
