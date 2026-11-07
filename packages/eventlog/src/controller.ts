@@ -190,6 +190,11 @@ export class Controller {
     }
     const latest = kel.latest();
     if (!latest) throw new Error(`no KEL for ${aid}`);
+    for (const p of kel.trunk)
+      for (const r of await opts.store.receipts(aid, p.msg.s, p.msg.d)) {
+        const rm = receiptMessage(r);
+        if (rm) kel.addReceipt(rm);
+      }
     let hot = opts.hot;
     if (!hot) {
       if (!opts.cold) throw new Error("load needs hot keys or cold keys");
