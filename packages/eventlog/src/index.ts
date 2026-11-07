@@ -6,6 +6,7 @@ export {
   decode,
   isQb64,
   digest,
+  digestSeal,
   nextKeyDigest,
   nonTransferableAid,
   didKeyOf,

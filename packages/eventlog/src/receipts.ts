@@ -32,6 +32,13 @@ export async function makeReceipt(msg: SignedMessage, signer: Signer, opts: { in
   return { t: "trc", raw, body, logId: msg.logId, s: msg.s, d: msg.d, couples: [{ signer: signerAid(signer), sig }] };
 }
 
+/** A timed receipt of a KEL event: a `trc` naming the event, with the witness's time. Not KERI. */
+export async function makeTimedReceipt(msg: SignedMessage, signer: Signer, dt: string): Promise<SignedMessage> {
+  const { raw, body } = buildTrc({ logId: msg.logId, s: msg.s, said: msg.d, dt });
+  const { sig } = await signWith(signer, utf8(raw));
+  return { t: "trc", raw, body, logId: msg.logId, s: msg.s, d: msg.d, couples: [{ signer: signerAid(signer), sig }] };
+}
+
 /** An endorsement of a trail entry by a did:key identity (a counterparty, a principal). */
 export function endorse(entry: SignedMessage, identity: Identity, dt: string): SignedMessage {
   const { raw, body } = buildTrc({ logId: entry.logId, s: entry.s, said: entry.d, dt });

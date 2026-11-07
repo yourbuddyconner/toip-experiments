@@ -46,7 +46,7 @@ export function anchoredIn(kel: KelResult, digest: Qb64 | Uint8Array, trails: Tr
   for (const m of kel.messages) {
     if (!sealsOf(m).some((a) => isDigestSeal(a) && forms.has(a.d))) continue;
     const ev = kel.events.find((e) => e.s === m.s && e.d === m.d);
-    out.push({ kelSn: m.s, receipts: ev?.receipts ?? [], status: ev?.status ?? "valid" });
+    out.push({ kelSn: m.s, receipts: ev?.receipts ?? [], status: ev?.status ?? "valid", ...(ev?.earliestReceipt ? { earliestReceipt: ev.earliestReceipt } : {}) });
   }
   for (const t of trails) {
     for (const e of t.entries) {

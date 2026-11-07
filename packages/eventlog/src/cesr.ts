@@ -155,6 +155,11 @@ export function nonTransferableAid(publicKey: Uint8Array): Qb64 {
   return encode("B", publicKey);
 }
 
+/** A digest seal {d} for 32 raw digest bytes: SHA-256 (code I, the default, as capture's Merkle roots) or Blake3 (code E). */
+export function digestSeal(raw: Uint8Array, alg: "sha256" | "blake3" = "sha256"): { d: Qb64 } {
+  return { d: encode(alg === "sha256" ? "I" : "E", raw) };
+}
+
 // ---- did:key <-> B AIDs (Ed25519 only)
 
 const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";

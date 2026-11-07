@@ -4,7 +4,7 @@ import { didKeyOf } from "./cesr";
 import type { Refusal, SubmitResult, WitnessClient } from "./client";
 import { KelProcessor, type KelResult } from "./kel";
 import { verifyCouple, type SigOptions, type Signer } from "./keys";
-import { makeReceipt, signerAid, toStoredReceipt } from "./receipts";
+import { makeReceipt, makeTimedReceipt, signerAid, toStoredReceipt } from "./receipts";
 import { fromStored, receiptMessage, type LogStore, type StoredMessage } from "./store";
 import { attachmentsOf, fromStream, toStream } from "./stream";
 import { TrailProcessor } from "./trail";
@@ -160,6 +160,10 @@ export class LogKeeper {
       const p = await this.kel(r.logId);
       const at = p?.trunk[r.s];
       witnesses = at && at.msg.d === r.d ? at.state.witnesses : (p?.latest()?.witnesses ?? []);
+    } else if (r.t === "trc" && target && KEL_T.has(target.t)) {
+      const p = await this.kel(r.logId);
+      const at = p?.trunk[r.s];
+      witnesses = at && at.msg.d === r.d ? at.state.witnesses : [];
     } else if (r.t === "trc" && target) {
       const controller = await this.controllerOf(r.logId);
       const kel = controller ? await this.kelResult(controller) : undefined;
@@ -199,10 +203,16 @@ export class LogKeeper {
         await this.store.putEvidence(e);
       }
       if (!target) continue;
-      const kind = witnesses.includes(by) ? "witness" : "endorsement";
+      const onKel = KEL_T.has(target.t);
+      let kind: "witness" | "endorsement" | "timed" = witnesses.includes(by) ? "witness" : "endorsement";
+      if (onKel && r.t === "trc") {
+        if (kind !== "witness") continue;
+        kind = "timed";
+      }
       if (r.t === "rct" && kind !== "witness") continue;
       await this.store.addReceipt(r.logId, r.s, r.d, toStoredReceipt(one, by, kind));
       if (r.t === "rct") (await this.kel(r.logId))?.addReceipt(one);
+      if (kind === "timed") (await this.kel(r.logId))?.addTimedReceipt(one);
       stored.push(by);
     }
     return { stored, evidence };
@@ -234,15 +244,23 @@ export class Witness extends LogKeeper implements WitnessClient {
     this.maxSkewMs = opts.maxSkewMs ?? 5 * 60_000;
   }
 
-  private async ownReceipt(m: SignedMessage, witnesses: Qb64[]): Promise<SignedMessage | undefined> {
+  private async ownReceipt(m: SignedMessage, witnesses: Qb64[]): Promise<SignedMessage[]> {
     const index = witnesses.indexOf(this.aid);
-    if (index < 0) return undefined;
-    const held = (await this.store.receipts(m.logId, m.s, m.d)).find((r) => r.by === this.aid);
-    if (held) return receiptMessage(held);
+    if (index < 0) return [];
+    const held = (await this.store.receipts(m.logId, m.s, m.d)).filter((r) => r.by === this.aid);
+    if (held.length) return held.map((h) => receiptMessage(h)!).filter(Boolean);
     const r = await makeReceipt(m, this.signer, { index, dt: this.clock.iso() });
     await this.store.addReceipt(m.logId, m.s, m.d, toStoredReceipt(r, this.aid, "witness"));
-    if (r.t === "rct") (await this.kel(m.logId))?.addReceipt(r);
-    return r;
+    const out = [r];
+    if (r.t === "rct") {
+      (await this.kel(m.logId))?.addReceipt(r);
+      // and a timed receipt, so "not after" verifies offline (not KERI)
+      const timed = await makeTimedReceipt(m, this.signer, this.clock.iso());
+      await this.store.addReceipt(m.logId, m.s, m.d, toStoredReceipt(timed, this.aid, "timed"));
+      (await this.kel(m.logId))?.addTimedReceipt(timed);
+      out.push(timed);
+    }
+    return out;
   }
 
   async submit(stream: string): Promise<SubmitResult> {
@@ -258,8 +276,7 @@ export class Witness extends LogKeeper implements WitnessClient {
         const firstSeen = r.firstSeen ? await this.withReceipts(r.firstSeen) : undefined;
         return { ok: false, refusal: r.refusal, problems: r.problems, ...(firstSeen ? { firstSeen } : {}), receipts: toStream(receipts) };
       }
-      const own = await this.ownReceipt(m, r.witnesses);
-      if (own) receipts.push(own);
+      receipts.push(...(await this.ownReceipt(m, r.witnesses)));
     }
     if (problems.length) return { ok: false, refusal: "invalid", problems, receipts: toStream(receipts) };
     return { ok: true, receipts: toStream(receipts) };
@@ -282,7 +299,7 @@ export class Witness extends LogKeeper implements WitnessClient {
   async head(logId: Qb64): Promise<SignedMessage | undefined> {
     const msgs = await this.store.range(logId);
     for (let i = msgs.length - 1; i >= 0; i--) {
-      const own = (await this.store.receipts(logId, msgs[i].s, msgs[i].d)).find((r) => r.by === this.aid);
+      const own = (await this.store.receipts(logId, msgs[i].s, msgs[i].d)).find((r) => r.by === this.aid && r.kind === "witness");
       if (own) return receiptMessage(own);
     }
     return undefined;

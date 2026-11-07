@@ -193,7 +193,8 @@ export class Controller {
     for (const p of kel.trunk)
       for (const r of await opts.store.receipts(aid, p.msg.s, p.msg.d)) {
         const rm = receiptMessage(r);
-        if (rm) kel.addReceipt(rm);
+        if (rm?.t === "rct") kel.addReceipt(rm);
+        else if (rm?.t === "trc") kel.addTimedReceipt(rm);
       }
     let hot = opts.hot;
     if (!hot) {
@@ -467,8 +468,8 @@ export class Controller {
         const out: SignedMessage[] = [];
         for (const { msg } of all) {
           for (const r of await this.store.receipts(msg.logId, msg.s, msg.d)) {
-            const id = `${key(msg)}|${r.by}`;
-            if (r.by === w.aid || r.kind !== "witness" || fwd.has(id)) continue;
+            const id = `${key(msg)}|${r.by}|${r.kind}`;
+            if (r.by === w.aid || r.kind === "endorsement" || fwd.has(id)) continue;
             const rm = receiptMessage(r);
             if (rm) {
               out.push(rm);
@@ -480,7 +481,7 @@ export class Controller {
         try {
           await withTimeout(w.addReceipts(toStream(out)), timeoutMs, `witness ${w.aid}`);
         } catch {
-          for (const r of out) fwd.delete(`${key(r)}|${r.couples?.[0]?.signer ?? ""}`);
+          fwd.clear();
         }
       }),
     );
@@ -494,6 +495,12 @@ export class Controller {
       if (!added.includes(by)) return (await this.store.receipts(r.logId, r.s, r.d)).some((x) => x.by === by);
       await this.store.addReceipt(r.logId, r.s, r.d, toStoredReceipt(r, by, "witness"));
       return true;
+    }
+    if (r.t === "trc" && r.logId === this.aid) {
+      const c = r.couples?.find((x) => x.signer === by);
+      if (!c || this.kel.addTimedReceipt({ ...r, couples: [c] }) !== by) return false;
+      await this.store.addReceipt(r.logId, r.s, r.d, toStoredReceipt({ ...r, couples: [c] }, by, "timed"));
+      return false; // a timed receipt doesn't count toward bt; its rct does
     }
     if (r.t === "trc") {
       const t = this.trailMap.get(r.logId);

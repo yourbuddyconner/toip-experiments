@@ -21,7 +21,8 @@ export interface StoredMessage {
 
 export interface StoredReceipt {
   by: Qb64;
-  kind: "witness" | "endorsement";
+  /** "timed": a witness's trc over a KEL event, giving its time (ours, additive). */
+  kind: "witness" | "endorsement" | "timed";
   raw: string;
   attachments: string;
   dt?: string;
@@ -41,7 +42,7 @@ export interface LogStore {
   head(logId: Qb64): Promise<StoredMessage | undefined>;
   markSuperseded(logId: Qb64, s: number, d: Qb64, by: Qb64): Promise<void>;
   markCut(logId: Qb64, s: number, d: Qb64, byKelSn: number): Promise<void>;
-  /** Idempotent per (by, d). */
+  /** Idempotent per (by, d, kind). */
   addReceipt(logId: Qb64, s: number, d: Qb64, r: StoredReceipt): Promise<void>;
   receipts(logId: Qb64, s: number, d: Qb64): Promise<StoredReceipt[]>;
   putBody(said: Qb64, raw: string): Promise<void>;
@@ -188,7 +189,7 @@ export class MemoryStore implements LogStore {
   async addReceipt(logId: Qb64, s: number, d: Qb64, r: StoredReceipt) {
     const k = rkey(logId, s, d);
     const list = this.receiptMap.get(k) ?? [];
-    if (list.some((x) => x.by === r.by)) return;
+    if (list.some((x) => x.by === r.by && x.kind === r.kind)) return;
     list.push({ ...r });
     this.receiptMap.set(k, list);
     this.changed();

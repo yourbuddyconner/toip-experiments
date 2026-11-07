@@ -49,7 +49,9 @@ describe("witnesses and receipts", () => {
     const kel = await verifyKel(c.kelMessages());
     expect(kel.problems).toEqual([]);
     for (const w of ws) {
-      expect((await w.store.receipts(c.aid, 0, c.aid)).map((r) => r.by).sort()).toEqual(ws.map((x) => x.aid).sort());
+      const held = await w.store.receipts(c.aid, 0, c.aid);
+      expect(held.filter((r) => r.kind === "witness").map((r) => r.by).sort()).toEqual(ws.map((x) => x.aid).sort());
+      expect(held.filter((r) => r.kind === "timed").map((r) => r.by).sort()).toEqual(ws.map((x) => x.aid).sort());
       expect(await w.store.receipts(t.id, 1, t.head().d)).toHaveLength(3);
     }
     const b = await exportBundle(store, c.aid);

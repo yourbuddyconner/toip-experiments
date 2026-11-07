@@ -50,6 +50,9 @@ export interface KelEvent {
   t: string;
   status: EventStatus;
   receipts: Qb64[];
+  /** Timed witness receipts (our trc over a KEL event; not KERI): each witness's own time. (Additive.) */
+  receiptTimes: { witness: Qb64; dt: string }[];
+  earliestReceipt?: string;
 }
 
 export interface KelResult {
@@ -155,6 +158,7 @@ interface Pending {
   msg: SignedMessage;
   state: KeyState;
   receipts: Map<Qb64, true>;
+  times: Map<Qb64, string>;
   status: EventStatus;
 }
 
@@ -355,7 +359,7 @@ export class KelProcessor {
 
   private push(msg: SignedMessage, state: KeyState): void {
     const copy: SignedMessage = { ...msg, witnessSigs: [] };
-    const p: Pending = { msg: copy, state, receipts: new Map(), status: "pending" };
+    const p: Pending = { msg: copy, state, receipts: new Map(), times: new Map(), status: "pending" };
     this.trunk.push(p);
     if (msg.t !== "ixn") {
       // keep one state per establishment event; a superseding rot replaces nothing here, as A0 only supersedes ixns
@@ -411,6 +415,23 @@ export class KelProcessor {
     return [];
   }
 
+  /**
+   * Adds a timed receipt: a `trc` over a KEL event, signed by one of its witnesses (our extension).
+   * It gives a "not after" time that verifies offline. Returns the witness, if it counted.
+   */
+  addTimedReceipt(trc: SignedMessage): Qb64 | undefined {
+    const p = this.trunk[trc.s];
+    if (!p || p.msg.d !== trc.d || typeof trc.body.dt !== "string") return undefined;
+    for (const c of trc.couples ?? []) {
+      if (!p.state.witnesses.includes(c.signer) || p.times.has(c.signer)) continue;
+      if (verifyCouple(c.signer, utf8(trc.raw), c.sig)) {
+        p.times.set(c.signer, trc.body.dt);
+        return c.signer;
+      }
+    }
+    return undefined;
+  }
+
   receiptsOf(s: number, d: Qb64): Qb64[] {
     const p = this.trunk[s];
     return p && p.msg.d === d ? [...p.receipts.keys()] : [];
@@ -424,9 +445,11 @@ export class KelProcessor {
       const witnessed = n >= p.state.bt;
       if (!witnessed && !this.opts.allowUnwitnessed)
         problems.push(problem("notWitnessed", `${n} of ${p.state.bt} witness receipts`, p.msg.logId, p.msg.s));
-      events.push({ s: p.msg.s, d: p.msg.d, t: p.msg.t, status: witnessed ? "valid" : "pending", receipts: [...p.receipts.keys()] });
+      const receiptTimes = [...p.times.entries()].map(([witness, dt]) => ({ witness, dt }));
+      const earliest = receiptTimes.map((x) => x.dt).sort()[0];
+      events.push({ s: p.msg.s, d: p.msg.d, t: p.msg.t, status: witnessed ? "valid" : "pending", receipts: [...p.receipts.keys()], receiptTimes, ...(earliest ? { earliestReceipt: earliest } : {}) });
     }
-    for (const x of this.superseded) events.push({ s: x.s, d: x.d, t: x.msg.t, status: "superseded", receipts: [] });
+    for (const x of this.superseded) events.push({ s: x.s, d: x.d, t: x.msg.t, status: "superseded", receipts: [], receiptTimes: [] });
     const latest = this.latest();
     return {
       ok: problems.length === 0 && this.evidence.length === 0 && !!latest,
@@ -453,10 +476,14 @@ export async function verifyKel(input: string | SignedMessage[], opts: VerifyOpt
   proc.problems.push(...parsed.problems);
   const receipts: SignedMessage[] = [];
   for (const m of parsed.messages) {
-    if (m.t === "rct") receipts.push(m);
+    if (m.t === "rct" || m.t === "trc") receipts.push(m);
     else await proc.addEvent(m);
   }
-  for (const r of receipts) if (!proc.aid || r.logId === proc.aid) proc.addReceipt(r);
+  for (const r of receipts) {
+    if (proc.aid && r.logId !== proc.aid) continue;
+    if (r.t === "rct") proc.addReceipt(r);
+    else proc.addTimedReceipt(r);
+  }
   if (opts.firstSeen && proc.aid) {
     for (const p of proc.trunk) {
       const held = await opts.firstSeen.get(proc.aid, p.msg.s);
