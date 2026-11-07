@@ -17,7 +17,8 @@
     "projects/agora",
     "projects/tipline",
     "projects/agents",
-    "projects/mesh"
+    "projects/mesh",
+    "projects/capture"
   ],
   "scripts": {
     "test": "npm test --workspaces --if-present",
@@ -28,6 +29,7 @@
     "agora": "npm run app --workspace @zk-toip/agora",
     "tipline": "npm run app --workspace @zk-toip/tipline",
     "agents": "npm run app --workspace @zk-toip/agents",
-    "mesh": "npm run app --workspace @zk-toip/mesh"
+    "mesh": "npm run app --workspace @zk-toip/mesh",
+    "capture": "npm run app --workspace @zk-toip/capture"
   }
 }
